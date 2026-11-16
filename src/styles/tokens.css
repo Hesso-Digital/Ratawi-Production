@@ -1,0 +1,67 @@
+/* Ratawi token set, derived from Al-Haris IOC Dark Operational and WBMS dark. */
+:root {
+  --ratawi-bg: #060b14;
+  --ratawi-bg-vignette: radial-gradient(ellipse at 38% -8%, #17344a 0%, transparent 42%),
+    radial-gradient(ellipse at 88% 110%, rgba(245, 158, 11, 0.06), transparent 36%),
+    linear-gradient(150deg, #081521, #050d15);
+  --ratawi-surface: rgba(25, 23, 22, 0.65);
+  --ratawi-surface-solid: #111820;
+  --ratawi-surface-elevated: #161d28;
+  --ratawi-viewport: #080d16;
+  --ratawi-overlay: rgba(6, 11, 20, 0.95);
+  --ratawi-border: rgba(245, 158, 11, 0.15);
+  --ratawi-border-hover: rgba(245, 158, 11, 0.4);
+  --ratawi-border-subtle: rgba(255, 255, 255, 0.06);
+  --ratawi-glass-border: rgba(90, 110, 130, 0.28);
+  --ratawi-text: #c8d4dc;
+  --ratawi-text-strong: #e8eef2;
+  --ratawi-muted: #6f8a97;
+  --ratawi-subtle: rgba(111, 138, 151, 0.6);
+  --ratawi-amber: #f59e0b;
+  --ratawi-amber-dim: rgba(245, 158, 11, 0.08);
+  --ratawi-cyan: #2be7ff;
+  --ratawi-cyan-dim: rgba(43, 231, 255, 0.1);
+  --ratawi-critical: #ff4444;
+  --ratawi-critical-dim: rgba(255, 68, 68, 0.12);
+  --ratawi-success: #00d087;
+  --ratawi-success-dim: rgba(0, 208, 135, 0.1);
+  --ratawi-gold: #f5d07a;
+  --ratawi-gold-deep: #e0b34a;
+  --ratawi-gas: #b08cff;
+  --ratawi-export: #7fe3c4;
+  --ratawi-glow-ok: 0 0 16px rgba(0, 208, 135, 0.4);
+  --ratawi-glow-crit: 0 0 16px rgba(255, 68, 68, 0.4);
+  --ratawi-glow-cyan: 0 0 18px rgba(43, 231, 255, 0.45);
+  --ratawi-glow-amber: 0 0 16px rgba(245, 158, 11, 0.4);
+  --ratawi-glow-gold: 0 0 36px rgba(245, 208, 122, 0.55);
+  --ratawi-font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --ratawi-font-numeric: "IBM Plex Mono", ui-monospace, monospace;
+  --ratawi-radius: 13px;
+  --ratawi-radius-sm: 8px;
+  --ratawi-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 58%);
+  --ratawi-backdrop: blur(18px) saturate(1.3);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--ratawi-bg);
+  color: var(--ratawi-text);
+  font-family: var(--ratawi-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+}
+
+button,
+input {
+  font-family: inherit;
+}
