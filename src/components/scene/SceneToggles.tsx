@@ -79,12 +79,8 @@ export function SceneToggles() {
   const flowLabel = flows ? 'Flows on/off (on): hide flow animations' : 'Flows on/off (off): show flow animations';
   const tourLabel = playing ? 'Stop field tour' : 'Field tour';
   return (
+    <>
     <div className="scene-toggles" role="group" aria-label="Scene view">
-      {caption ? (
-        <div className="field-tour-caption" aria-live="polite">
-          {caption}
-        </div>
-      ) : null}
       <button
         type="button"
         className="scene-toggle"
@@ -118,5 +114,11 @@ export function SceneToggles() {
         {playing ? <StopIcon /> : <PlayIcon />}
       </button>
     </div>
+    {caption ? (
+      <div className="field-tour-caption" aria-live="polite">
+        {caption}
+      </div>
+    ) : null}
+    </>
   );
 }

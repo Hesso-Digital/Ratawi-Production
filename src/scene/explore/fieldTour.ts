@@ -9,6 +9,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import type { CameraState } from '../ceremonyTimeline';
+import { sceneSettings } from '../../state/sceneSettings';
 
 export type FieldTourState = {
   playing: boolean;
@@ -37,11 +38,13 @@ export const fieldTour = {
   start() {
     if (state.playing) return;
     state = { playing: true, caption: 'Whole field', startSeq: state.startSeq + 1, stopSeq: state.stopSeq };
+    sceneSettings.setHudDimmed(true);
     emit();
   },
   stop() {
     if (!state.playing) return;
     state = { playing: false, caption: null, startSeq: state.startSeq, stopSeq: state.stopSeq + 1 };
+    sceneSettings.setHudDimmed(false);
     emit();
   },
   toggle() {

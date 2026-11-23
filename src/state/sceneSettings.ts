@@ -7,6 +7,7 @@
  *
  *   const { mode, setMode, toggle } = useTimeOfDay();
  *   const { flows, setFlows, toggleFlows } = useFlows();
+ *   const { hudDimmed, setHudDimmed } = useHudFocus();
  *
  * The scene reads `dayBlend.value` (0 = night, 1 = day) every frame. It is
  * crossfaded with GSAP over ~1 s whenever the mode changes.
@@ -49,6 +50,12 @@ function fromUrl(base: SceneSettings): SceneSettings {
 let state: SceneSettings = fromUrl(read());
 const listeners = new Set<() => void>();
 
+/**
+ * Ephemeral HUD dim for a cinematic focus (the field tour). Not persisted
+ * and not mirrored across tabs, so a refresh always restores the full HUD.
+ */
+let hudDimmed = false;
+
 /** Mutable crossfade value read by the scene in useFrame (0 night, 1 day). */
 export const dayBlend = { value: state.mode === 'day' ? 1 : 0 };
 
@@ -66,6 +73,7 @@ function syncDom() {
   if (typeof document === 'undefined') return;
   document.documentElement.dataset.timeOfDay = state.mode;
   document.documentElement.dataset.flows = state.flows ? 'on' : 'off';
+  document.documentElement.dataset.hudDimmed = hudDimmed ? 'on' : 'off';
 }
 
 function apply(next: SceneSettings, broadcast: boolean) {
@@ -98,6 +106,13 @@ export const sceneSettings = {
   toggle: () => apply({ ...state, mode: state.mode === 'day' ? 'night' : 'day' }, true),
   setFlows: (flows: boolean) => apply({ ...state, flows }, true),
   toggleFlows: () => apply({ ...state, flows: !state.flows }, true),
+  getHudDimmed: () => hudDimmed,
+  setHudDimmed(next: boolean) {
+    if (hudDimmed === next) return;
+    hudDimmed = next;
+    syncDom();
+    listeners.forEach((l) => l());
+  },
 };
 
 function useSettings() {
@@ -112,4 +127,9 @@ export function useTimeOfDay() {
 export function useFlows() {
   const { flows } = useSettings();
   return { flows, setFlows: sceneSettings.setFlows, toggleFlows: sceneSettings.toggleFlows };
+}
+
+export function useHudFocus() {
+  const hudDimmed = useSyncExternalStore(sceneSettings.subscribe, sceneSettings.getHudDimmed, () => false);
+  return { hudDimmed, setHudDimmed: sceneSettings.setHudDimmed };
 }

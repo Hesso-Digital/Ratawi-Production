@@ -9,6 +9,7 @@ import {
   REF_ASPECT,
 } from './fieldTour';
 import { buildTourShots, tourCaptions, tourDuration } from './fieldTourShots';
+import { sceneSettings } from '../../state/sceneSettings';
 
 afterEach(() => {
   fieldTour.reset();
@@ -193,5 +194,15 @@ describe('fieldTour store', () => {
     expect(fieldTour.get().playing).toBe(false);
     expect(fieldTour.get().caption).toBe(null);
     expect(fieldTour.get().stopSeq).toBe(1);
+  });
+
+  it('dims the HUD while the tour plays and restores it when the tour stops', () => {
+    expect(sceneSettings.getHudDimmed()).toBe(false);
+    fieldTour.start();
+    expect(sceneSettings.getHudDimmed()).toBe(true);
+    expect(document.documentElement.dataset.hudDimmed).toBe('on');
+    fieldTour.stop();
+    expect(sceneSettings.getHudDimmed()).toBe(false);
+    expect(document.documentElement.dataset.hudDimmed).toBe('off');
   });
 });

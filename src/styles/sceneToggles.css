@@ -45,23 +45,24 @@
   opacity: 0.8;
 }
 
-/* Caption sits just above the toggle group so it follows any HUD repositioning. */
+/* Quiet section name at the lower-left edge while the tour runs. */
 .field-tour-caption {
   position: absolute;
-  right: 0;
-  bottom: calc(100% + 10px);
+  left: 22px;
+  bottom: 18px;
+  z-index: 6;
   padding: 0;
   border: 0;
   background: none;
-  color: rgba(232, 236, 242, 0.86);
+  color: rgba(232, 236, 242, 0.4);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
-  text-shadow: 0 1px 6px rgba(6, 10, 18, 0.85);
+  text-shadow: 0 1px 4px rgba(6, 10, 18, 0.45);
 }
 
 .scene-toggle[data-field-tour-control][aria-pressed='true'] {
@@ -71,8 +72,8 @@
 }
 
 :root[data-time-of-day='day'] .field-tour-caption {
-  color: rgba(16, 22, 32, 0.82);
-  text-shadow: 0 1px 4px rgba(255, 250, 240, 0.9);
+  color: rgba(16, 22, 32, 0.38);
+  text-shadow: 0 1px 3px rgba(255, 250, 240, 0.45);
 }
 
 /* Touch-friendly Play (and the rest of the group) on small / coarse-pointer screens. */
@@ -81,4 +82,39 @@
     width: 44px;
     height: 44px;
   }
+}
+
+/* Dim the hall HUD while the field tour has focus so the 3D can take the stage.
+   Compass and the Day/Night, Flows and Play/Stop cluster stay usable. */
+:root[data-hud-dimmed='on'] .reveal-hud > *:not(.reveal-compass),
+:root[data-hud-dimmed='on'] .explore-overlay,
+:root[data-hud-dimmed='on'] .explore-panel,
+:root[data-hud-dimmed='on'] .kpi-drawer,
+:root[data-hud-dimmed='on'] .admin-menu,
+:root[data-hud-dimmed='on'] .reveal-bottom-dock,
+:root[data-hud-dimmed='on'] .reveal-compact-bar,
+:root[data-hud-dimmed='on'] .reveal-kpi-sheet,
+:root[data-hud-dimmed='on'] .area-marker {
+  opacity: 0.14;
+  pointer-events: none;
+  filter: saturate(0.65);
+  transition: opacity 0.55s ease, filter 0.55s ease;
+}
+
+:root[data-hud-dimmed='on'] .reveal-compass {
+  opacity: 0.55;
+  transition: opacity 0.55s ease;
+}
+
+:root:not([data-hud-dimmed='on']) .reveal-hud > *,
+:root:not([data-hud-dimmed='on']) .explore-overlay,
+:root:not([data-hud-dimmed='on']) .explore-panel,
+:root:not([data-hud-dimmed='on']) .kpi-drawer,
+:root:not([data-hud-dimmed='on']) .admin-menu,
+:root:not([data-hud-dimmed='on']) .reveal-bottom-dock,
+:root:not([data-hud-dimmed='on']) .reveal-compact-bar,
+:root:not([data-hud-dimmed='on']) .reveal-kpi-sheet,
+:root:not([data-hud-dimmed='on']) .area-marker,
+:root:not([data-hud-dimmed='on']) .reveal-compass {
+  transition: opacity 0.55s ease, filter 0.55s ease;
 }
