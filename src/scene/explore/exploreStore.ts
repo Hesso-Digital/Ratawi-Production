@@ -10,12 +10,15 @@
  */
 import { useSyncExternalStore } from 'react';
 import type { KpiId } from '../../data/kpis';
+import type { CameraState } from '../ceremonyTimeline';
 
 export type ExploreMode = 'show' | 'explore' | 'returning';
 
 export type FlyRequest =
   | { kind: 'preset'; id: string; seq: number }
-  | { kind: 'asset'; id: string; seq: number };
+  | { kind: 'asset'; id: string; seq: number }
+  /** A framing supplied directly, e.g. the exploded layers or production ribbon views. */
+  | { kind: 'camera'; camera: CameraState; seq: number };
 
 export type ExploreState = {
   mode: ExploreMode;
@@ -83,6 +86,10 @@ export const exploreStore = {
   },
   flyToPreset(id: string) {
     set({ fly: { kind: 'preset', id, seq: ++seq }, areaId: id, selectedId: null, kpiId: null });
+  },
+  /** Fly to a camera framing that is not a named viewpoint. */
+  flyToCamera(camera: CameraState) {
+    set({ fly: { kind: 'camera', camera, seq: ++seq }, areaId: null, selectedId: null, kpiId: null });
   },
   /** Highlight an area without issuing a camera fly (used by the field tour). */
   focusArea(id: string | null) {

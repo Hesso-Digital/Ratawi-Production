@@ -1,0 +1,185 @@
+/* Exploded layers + production ribbon: slim 3D callouts and HUD focus. */
+
+.scene-toggle[data-state='active'] {
+  opacity: 1;
+  color: #ffc247;
+  border-color: rgba(255, 194, 71, 0.55);
+  background: rgba(40, 28, 8, 0.55);
+}
+
+/* The HUD dim itself lives in sceneToggles.css (requestHudDim). In the ribbon
+   view the timeline dock stays usable, because scrubbing it drives the ribbon. */
+:root[data-hud-dimmed='on'][data-view-mode='ribbon'] .reveal-bottom-dock {
+  opacity: 0.72;
+  pointer-events: auto;
+  filter: none;
+}
+
+.xv-callout,
+.xv-hero,
+.xv-ref,
+.xv-milestone,
+.xv-month,
+.xv-cursor {
+  font-family: Inter, system-ui, sans-serif;
+  white-space: nowrap;
+  user-select: none;
+  animation: xv-in 0.5s ease both;
+}
+.xv-callout {
+  animation-delay: 1s;
+  display: grid;
+  gap: 1px;
+  padding: 5px 9px 6px;
+  border-left: 2px solid rgba(232, 244, 255, 0.7);
+  background: rgba(4, 10, 18, 0.5);
+  backdrop-filter: blur(3px);
+  border-radius: 0 4px 4px 0;
+  color: #e8f4ff;
+}
+.xv-callout .k {
+  font-size: clamp(9px, 0.62vw, 15px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+.xv-callout b {
+  font-size: clamp(14px, 1.05vw, 28px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.xv-callout small,
+.xv-hero small {
+  font-weight: 400;
+  font-size: 0.62em;
+  opacity: 0.75;
+}
+
+.xv-hero {
+  animation-delay: 1.15s;
+  text-align: center;
+  color: #e8f4ff;
+  text-shadow: 0 0 18px rgba(56, 214, 255, 0.45);
+}
+.xv-hero b {
+  display: block;
+  font-size: clamp(30px, 3.4vw, 96px);
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.xv-hero > span {
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(9px, 0.7vw, 18px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.xv-hero.gold {
+  color: #ffd98a;
+  text-shadow: 0 0 22px rgba(255, 194, 71, 0.55);
+}
+
+.xv-ref {
+  font-size: clamp(9px, 0.6vw, 15px);
+  color: rgba(214, 226, 240, 0.8);
+  letter-spacing: 0.04em;
+}
+.xv-ref b {
+  font-weight: 600;
+  margin-left: 3px;
+}
+
+.xv-milestone {
+  display: grid;
+  justify-items: center;
+  color: #9fe6ff;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  animation: none;
+  text-shadow: 0 0 12px rgba(56, 214, 255, 0.5);
+}
+.xv-milestone.on {
+  opacity: 1;
+  transform: none;
+}
+.xv-milestone.gold {
+  color: #ffd98a;
+  text-shadow: 0 0 14px rgba(255, 194, 71, 0.55);
+}
+.xv-milestone span {
+  font-size: clamp(9px, 0.62vw, 15px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.xv-milestone b {
+  font-size: clamp(16px, 1.35vw, 36px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.xv-month {
+  font-size: clamp(8px, 0.58vw, 14px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(214, 226, 240, 0.6);
+}
+.xv-month.forecast {
+  color: rgba(255, 214, 140, 0.6);
+}
+.xv-month.on {
+  color: #ffffff;
+}
+
+.xv-cursor {
+  font-size: clamp(9px, 0.62vw, 15px);
+  padding: 3px 7px;
+  border-radius: 3px;
+  color: #fff4d6;
+  background: rgba(4, 10, 18, 0.55);
+  animation: none;
+}
+
+/* Day: dark text on bright sand. */
+html[data-time-of-day='day'] .xv-callout {
+  color: #0c1a26;
+  background: rgba(255, 255, 255, 0.62);
+  border-left-color: rgba(12, 26, 38, 0.6);
+}
+html[data-time-of-day='day'] .xv-hero {
+  color: #0c2a3e;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.8);
+}
+html[data-time-of-day='day'] .xv-hero.gold {
+  color: #8a5a00;
+}
+html[data-time-of-day='day'] .xv-ref,
+html[data-time-of-day='day'] .xv-month {
+  color: rgba(12, 26, 38, 0.75);
+}
+html[data-time-of-day='day'] .xv-milestone {
+  color: #0b5c80;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+}
+html[data-time-of-day='day'] .xv-milestone.gold {
+  color: #8a5a00;
+}
+
+@keyframes xv-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .xv-month:not(.on) {
+    display: none;
+  }
+}

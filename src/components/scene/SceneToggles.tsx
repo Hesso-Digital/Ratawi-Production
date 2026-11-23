@@ -6,6 +6,7 @@
 import { useFlows, useTimeOfDay } from '../../state/sceneSettings';
 import { useFieldTour } from '../../scene/explore/fieldTour';
 import '../../styles/sceneToggles.css';
+import { ViewModeButtons } from './ViewModeButtons';
 
 function SunIcon() {
   return (
@@ -113,6 +114,7 @@ export function SceneToggles() {
       >
         {playing ? <StopIcon /> : <PlayIcon />}
       </button>
+      <ViewModeButtons />
     </div>
     {caption ? (
       <div className="field-tour-caption" aria-live="polite">

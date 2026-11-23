@@ -295,8 +295,12 @@ export function ExploreCameraRig({
       if (s.northUpSeq !== prev.northUpSeq) orientNorth();
       if (s.returnSeq !== prev.returnSeq) startReturn();
       if (s.fly && s.fly !== prev.fly) {
-        const dest = s.fly.kind === 'preset' ? presetById(s.fly.id)?.camera : assetById(s.fly.id)?.view;
-        if (dest) flyTo(dest, s.fly.kind, s.fly.id);
+        const f = s.fly;
+        if (f.kind === 'camera') flyTo(f.camera, 'preset');
+        else {
+          const dest = f.kind === 'preset' ? presetById(f.id)?.camera : assetById(f.id)?.view;
+          if (dest) flyTo(dest, f.kind, f.id);
+        }
       }
       // Any panel / chart interaction keeps free roam alive.
       lastInput.current = performance.now();
@@ -409,7 +413,8 @@ export function ExploreCameraRig({
     const idleFor = performance.now() - lastInput.current;
     const st = exploreStore.get();
     const limit = st.selectedId || st.kpiId ? EXPLORE_IDLE_PANEL_MS : EXPLORE_IDLE_MS;
-    if (!flying.current && idleFor > limit) {
+    // A showpiece view (exploded layers, production ribbon) holds its framing until it is closed.
+    if (!flying.current && idleFor > limit && sceneSettings.get().viewMode === 'field') {
       exploreStore.select(null);
       exploreStore.hover(null);
       exploreStore.openKpi(null);

@@ -33,6 +33,11 @@ import type { Quality } from '../data/types';
 import { SceneToggles } from '../components/scene/SceneToggles';
 import { AreaFocusHighlight } from './explore/AreaFocusHighlight';
 import { useAdaptiveDpr } from '../hooks/useAdaptiveDpr';
+import { useViewMode } from '../state/sceneSettings';
+import { LayerLift } from './showpiece/LayerLift';
+import { ExplodedLayers } from './showpiece/ExplodedLayers';
+import { ProductionRibbon3D } from './showpiece/ProductionRibbon3D';
+import { ViewModeDirector } from './showpiece/ViewModeDirector';
 
 export function NightRevealCanvas({
   quality,
@@ -55,6 +60,8 @@ export function NightRevealCanvas({
 }) {
   const profile = QUALITY_PROFILES[quality];
   const dpr = useAdaptiveDpr(profile.dpr);
+  /** Exploded layers / production ribbon: field-level tags and markers step aside. */
+  const showpiece = useViewMode().viewMode !== 'field';
   const [frameloop] = useState<'always'>('always');
 
   const handleCreated = useCallback(({ gl }: { gl: WebGLRenderer }) => {
@@ -85,14 +92,21 @@ export function NightRevealCanvas({
         <Lighting quality={profile} />
         <FieldTerrain quality={profile} />
         <ConcessionPentagon />
-        <SppSolar />
-        <FieldFacilities quality={profile} />
-        <FlowLines quality={profile} />
+        <LayerLift layer="surface">
+          <SppSolar />
+          <FieldFacilities quality={profile} />
+        </LayerLift>
+        <LayerLift layer="network">
+          <FlowLines quality={profile} />
+        </LayerLift>
         <MilestoneShockwave quality={profile} />
-        {showRibbon ? <ProductionRibbon /> : <AnchoredTags />}
-        {locked ? null : <InspectTargets />}
-        {locked ? null : <AreaMarkers />}
-        {locked ? null : <AreaFocusHighlight />}
+        <ExplodedLayers quality={profile} />
+        <ProductionRibbon3D quality={profile} />
+        <ViewModeDirector enabled={!locked} />
+        {showpiece ? null : showRibbon ? <ProductionRibbon /> : <AnchoredTags />}
+        {locked || showpiece ? null : <InspectTargets />}
+        {locked || showpiece ? null : <AreaMarkers />}
+        {locked || showpiece ? null : <AreaFocusHighlight />}
         {profile.bloom ? <PostFX /> : null}
         {onQualityDrop ? (
           <PerformanceMonitor
