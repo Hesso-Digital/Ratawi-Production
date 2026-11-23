@@ -3,10 +3,12 @@ import { PLAYBACK_END_INDEX, TRAJECTORY } from '../../data/defaults';
 import { CONCESSION_WORLD } from '../world';
 import {
   EXPLODED_CAMERA,
+  EXPLODED_CAMERA_PORTRAIT,
   FIELD_CENTER,
   LAYERS,
   RIBBON,
   RIBBON_CAMERA,
+  RIBBON_CAMERA_PORTRAIT,
   framingFor,
   layerLift,
   ribbonColor,
@@ -49,14 +51,16 @@ describe('exploded layout', () => {
 
 describe('responsive framing', () => {
   const dist = (c: { position: number[]; target: number[] }) => Math.hypot(...c.position.map((p, i) => p - c.target[i]));
-  it('keeps 16:9 as designed, pulls back a little on portrait and widens the lens', () => {
+  it('keeps 16:9 as designed and switches to the end-on shot on portrait', () => {
     const base = dist(EXPLODED_CAMERA);
-    expect(dist(framingFor(EXPLODED_CAMERA, 16 / 9))).toBeCloseTo(base, 5);
-    const phone = framingFor(EXPLODED_CAMERA, 0.46);
-    expect(dist(phone)).toBeGreaterThan(base);
-    expect(dist(phone)).toBeLessThan(base * 1.5);
-    expect(phone.fov).toBeGreaterThan(EXPLODED_CAMERA.fov);
-    expect(dist(framingFor(EXPLODED_CAMERA, 32 / 9))).toBeLessThan(240);
+    expect(dist(framingFor(EXPLODED_CAMERA, 16 / 9, EXPLODED_CAMERA_PORTRAIT))).toBeCloseTo(base, 5);
+    const phone = framingFor(EXPLODED_CAMERA, 0.46, EXPLODED_CAMERA_PORTRAIT);
+    expect(phone.target).toEqual(EXPLODED_CAMERA_PORTRAIT.target);
+    expect(dist(phone)).toBeGreaterThan(dist(EXPLODED_CAMERA_PORTRAIT));
+    for (const a of [0.46, 0.7, 1.33, 16 / 9, 32 / 9]) {
+      expect(dist(framingFor(EXPLODED_CAMERA, a, EXPLODED_CAMERA_PORTRAIT))).toBeLessThan(240);
+      expect(dist(framingFor(RIBBON_CAMERA, a, RIBBON_CAMERA_PORTRAIT))).toBeLessThan(240);
+    }
   });
 });
 

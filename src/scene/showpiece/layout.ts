@@ -192,29 +192,45 @@ export function ribbonColor(value: number, commitment: number, target: number): 
 }
 
 /**
- * Responsive framing for the showpiece views. Wide screens follow the tour's
- * rule; portrait screens pull back less and widen the lens instead, so the
- * stack stays large on a phone or tablet held upright.
+ * Portrait framings: look up the long north–south axis so the stack's narrow
+ * side spans the narrow screen, instead of shrinking the side-on 16:9 shot.
  */
-export function framingFor(view: CameraState, aspect: number): CameraState {
+export const EXPLODED_CAMERA_PORTRAIT: CameraState = {
+  position: [FIELD_CENTER[0] + 46, 104, FIELD_CENTER[1] + 128],
+  target: [FIELD_CENTER[0], 12, FIELD_CENTER[1] + 4],
+  fov: 34,
+};
+export const RIBBON_CAMERA_PORTRAIT: CameraState = {
+  position: [78, 64, 118],
+  target: [-14, 16, 0],
+  fov: 36,
+};
+
+/**
+ * Responsive framing for the showpiece views. Wide screens keep the designed
+ * shot (easing back a touch on ultra-wide walls); portrait screens switch to
+ * the end-on shot and pull back only as far as the narrower width needs.
+ */
+export function framingFor(view: CameraState, aspect: number, portrait?: CameraState): CameraState {
   const a = Math.min(3.2, Math.max(0.4, aspect));
   const ref = 16 / 9;
+  let base = view;
   let distance = 1;
-  let fov = view.fov;
-  if (a < ref) {
-    const raw = ref / a;
-    distance = Math.min(1.45, 1 + (raw - 1) * 0.28);
-    fov = Math.min(54, view.fov + (raw - 1) * 9);
+  if (a < 1 && portrait) {
+    base = portrait;
+    distance = Math.min(1.45, 1 + (1 / a - 1) * 0.4);
+  } else if (a < ref) {
+    distance = Math.min(1.8, 1 + (ref / a - 1) * 0.7);
   } else {
     distance = 1 + Math.min(0.12, ((a - ref) / ref) * 0.15);
   }
   return {
     position: [
-      view.target[0] + (view.position[0] - view.target[0]) * distance,
-      view.target[1] + (view.position[1] - view.target[1]) * distance,
-      view.target[2] + (view.position[2] - view.target[2]) * distance,
+      base.target[0] + (base.position[0] - base.target[0]) * distance,
+      base.target[1] + (base.position[1] - base.target[1]) * distance,
+      base.target[2] + (base.position[2] - base.target[2]) * distance,
     ],
-    target: view.target,
-    fov,
+    target: base.target,
+    fov: base.fov,
   };
 }
