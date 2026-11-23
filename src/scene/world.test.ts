@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WELLS } from '../data/field';
+import { CONCESSION, SPP, WELLS } from '../data/field';
 import { AGUP_WELLS, CONCESSION_WORLD, CPF_WORLD, heightAt, inPolygon, ONLINE_WELLS, toWorld, WORLD_WELLS } from './world';
 
 describe('world.ts', () => {
@@ -63,6 +63,15 @@ describe('world.ts', () => {
     expect(rt10).toBeTruthy();
     expect(rt10!.x).toBe(4.5);
     expect(rt10!.y).toBe(3.6);
+  });
+
+  it('keeps the SPP footprint straddling the eastern concession line', () => {
+    // Official satellite: the east red line cuts through the panel field, so the
+    // SPP is a dotted area at the side, not a point wholly inside the block.
+    const eastX = Math.max(...CONCESSION.map((p) => p[0]));
+    const xs = SPP.map((p) => p[0]);
+    expect(Math.min(...xs)).toBeLessThan(eastX);
+    expect(Math.max(...xs)).toBeGreaterThan(eastX);
   });
 
   it('places RT-60 north of CPF-1, not east of it', () => {

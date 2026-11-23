@@ -1,14 +1,26 @@
 /**
- * SPP (solar project): a dotted blue outline + tilted panel rows, ported from
- * design-3d/src/scene.js `buildSPP`. The footprint comes from field.ts's SPP
- * polygon (open input #1 also covers this footprint's accuracy).
+ * SPP (solar project): a dotted blue area at the side of the concession
+ * (translucent blue fill + dotted blue outline) with tilted panel rows.
+ * The footprint comes from field.ts's SPP polygon. Materials are unlit so the
+ * area stays clearly blue in both night and day lighting.
  */
 import { useMemo } from 'react';
-import { BoxGeometry, InstancedMesh, MeshBasicMaterial, MeshStandardMaterial, Object3D } from 'three';
+import {
+  BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  DoubleSide,
+  InstancedMesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Object3D,
+  ShapeUtils,
+  Vector2,
+} from 'three';
 import { SPP_WORLD, heightAt, inPolygon, polygonBounds } from './world';
-import { hdr } from './shaders/materials';
 
 const SPP_BLUE = '#3f8cff';
+const SPP_BLUE_FILL = '#1a5fd4';
 const dummy = new Object3D();
 
 function outlineDots() {
@@ -19,7 +31,7 @@ function outlineDots() {
     const [bx, bz] = closed[e + 1];
     const len = Math.hypot(bx - ax, bz - az);
     const angle = Math.atan2(bz - az, bx - ax);
-    for (let s = 0; s < len; s += 0.75) {
+    for (let s = 0; s < len; s += 0.7) {
       const t = s / len;
       dots.push({ x: ax + (bx - ax) * t, z: az + (bz - az) * t, angle });
     }
@@ -40,23 +52,61 @@ function panelRows() {
   return rows;
 }
 
+/** Ground-hugging fill so the SPP reads as a blue area, not only an outline. */
+function areaGeometry() {
+  const pts = SPP_WORLD.map(([x, z]) => new Vector2(x, z));
+  const faces = ShapeUtils.triangulateShape(pts, []);
+  const geo = new BufferGeometry();
+  const pos = new Float32Array(pts.length * 3);
+  pts.forEach((p, i) => {
+    pos[i * 3] = p.x;
+    pos[i * 3 + 1] = heightAt(p.x, p.y) + 0.05;
+    pos[i * 3 + 2] = p.y;
+  });
+  geo.setAttribute('position', new BufferAttribute(pos, 3));
+  geo.setIndex(faces.flat());
+  geo.computeVertexNormals();
+  return geo;
+}
+
 export function SppSolar() {
   const dots = useMemo(() => outlineDots(), []);
   const rows = useMemo(() => panelRows(), []);
+  const fillGeo = useMemo(() => areaGeometry(), []);
+
+  const fillMesh = useMemo(
+    () => (
+      <mesh geometry={fillGeo} renderOrder={1}>
+        <meshBasicMaterial
+          color={SPP_BLUE_FILL}
+          transparent
+          opacity={0.38}
+          depthWrite={false}
+          side={DoubleSide}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
+      </mesh>
+    ),
+    [fillGeo],
+  );
 
   const dotMesh = useMemo(() => {
     const mesh = new InstancedMesh(
-      new BoxGeometry(0.42, 0.08, 0.16),
-      new MeshBasicMaterial({ color: hdr(SPP_BLUE, 5) }),
+      new BoxGeometry(0.55, 0.12, 0.22),
+      // Unlit mid-blue (no HDR boost) so the dashes stay blue instead of blooming to white.
+      new MeshBasicMaterial({ color: SPP_BLUE }),
       Math.max(1, dots.length),
     );
     dots.forEach((d, i) => {
-      dummy.position.set(d.x, heightAt(d.x, d.z) + 0.12, d.z);
+      dummy.position.set(d.x, heightAt(d.x, d.z) + 0.14, d.z);
       dummy.rotation.set(0, -d.angle, 0);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     });
     mesh.count = dots.length;
+    mesh.renderOrder = 2;
     return mesh;
   }, [dots]);
 
@@ -85,6 +135,7 @@ export function SppSolar() {
 
   return (
     <group>
+      {fillMesh}
       <primitive object={dotMesh} />
       <primitive object={panelMesh} />
     </group>

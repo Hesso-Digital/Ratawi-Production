@@ -291,7 +291,7 @@ export function FieldMap({
           strokeWidth={2.4 * U}
           filter="url(#lglow)"
         />
-        <polygon points={pts(SPP_ISO)} fill="rgba(80,140,220,0.08)" />
+        <polygon points={pts(SPP_ISO)} fill="rgba(50,120,230,0.32)" />
         <g clipPath="url(#sppClip)">
           {sppPanels.map((d, i) => (
             <path key={i} d={d} fill="none" stroke="rgba(91,156,245,0.35)" strokeWidth={3.2 * U} />
@@ -300,8 +300,8 @@ export function FieldMap({
         <polygon
           points={pts(SPP_ISO)}
           fill="none"
-          stroke="#5b9cf5"
-          strokeWidth={2.2 * U}
+          stroke="#3d8eff"
+          strokeWidth={2.6 * U}
           strokeDasharray={`${9 * U} ${5 * U}`}
         />
 

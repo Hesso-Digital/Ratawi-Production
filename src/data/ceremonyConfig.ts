@@ -105,6 +105,6 @@ export const OPEN_QUESTIONS = {
   exportHeading: 'southeast-indicative',
   /** Scale assumed the north highway on the wells photo is the road south of SPP. Bearings hold if this is wrong; distances scale uniformly. */
   wellsPhotoHighwayScale: 'assumed-road-south-of-spp',
-  /** Official KML/SHP outline, if it arrives, replaces CONCESSION/SPP in field.ts. */
-  officialVector: 'pending',
+  /** Official KML/SHP outline, if it arrives, replaces CONCESSION/SPP in field.ts. No public polygon was found; published point coordinates conflict (see OPEN_QUESTIONS notes in the boundaries report). Photo trace stands until a vector arrives. */
+  officialVector: 'pending-no-public-polygon',
 } as const;

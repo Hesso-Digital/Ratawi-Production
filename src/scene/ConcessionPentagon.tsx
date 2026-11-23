@@ -1,8 +1,9 @@
 /**
- * Ratawi concession boundary: a glowing extruded wall + a sharp ground tube +
- * corner posts, ported from design-3d/src/scene.js `buildBoundary`. Takes any
- * vertex list (today field.ts's 8-vertex chamfered shape; swap in the official
- * vector per open input #1 without touching this component).
+ * Ratawi concession boundary: a red outline (unlit ground core so it stays
+ * legible in day lighting, plus a glowing wall and posts for night) and corner
+ * posts, ported from design-3d/src/scene.js `buildBoundary`. Takes any vertex
+ * list (today field.ts's 8-vertex chamfered shape; swap in the official vector
+ * without touching this component).
  */
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
@@ -41,18 +42,23 @@ function densify(points: readonly Vec2[], lift: number) {
   return out;
 }
 
-function tubeFromPoints(points: Vector3[], radius: number, color: string, opacity = 1) {
+function tubeFromPoints(points: Vector3[], radius: number, color: string, opacity = 1, boost = 1) {
   const curve = new CurvePath<Vector3>();
   for (let i = 0; i < points.length - 1; i++) curve.add(new LineCurve3(points[i], points[i + 1]));
   const geo = new TubeGeometry(curve, points.length * 2, radius, 8, false);
-  const mat = new MeshBasicMaterial({ color: hdr(color, opacity < 1 ? 1.2 : 3.6), transparent: opacity < 1, opacity });
+  const mat = new MeshBasicMaterial({
+    color: boost === 1 ? color : hdr(color, boost),
+    transparent: opacity < 1,
+    opacity,
+    depthWrite: opacity >= 1,
+  });
   return new Mesh(geo, mat);
 }
 
 export function ConcessionPentagon() {
   const wallMatRef = useRef<ShaderMaterial | null>(null);
 
-  const { wallGeometry, groundTube, topTube, posts } = useMemo(() => {
+  const { wallGeometry, coreTube, groundTube, topTube, posts } = useMemo(() => {
     const groundPts = densify(CONCESSION_WORLD, 0.07);
     const topPts = groundPts.map((v) => v.clone().setY(v.y + WALL_HEIGHT * 0.98));
 
@@ -92,8 +98,10 @@ export function ConcessionPentagon() {
 
     return {
       wallGeometry: wallGeo,
-      groundTube: tubeFromPoints(groundPts, 0.11, RED, 1),
-      topTube: tubeFromPoints(topPts, 0.025, RED, 0.5),
+      // Unlit solid core: stays clearly red on a bright day sky, not only as night bloom.
+      coreTube: tubeFromPoints(groundPts, 0.16, '#c41022', 1, 1),
+      groundTube: tubeFromPoints(groundPts, 0.11, RED, 1, 2.2),
+      topTube: tubeFromPoints(topPts, 0.025, RED, 0.55, 1.2),
       posts,
     };
     // Concession geometry is static for the session; rebuild only if it changes.
@@ -113,13 +121,14 @@ export function ConcessionPentagon() {
   return (
     <group>
       <mesh geometry={wallGeometry} material={wallMaterial} />
+      <primitive object={coreTube} />
       <primitive object={groundTube} />
       <primitive object={topTube} />
       {posts.map((p, i) => (
         <group key={i} position={[p.x, p.y, p.z]}>
           <mesh position={[0, (WALL_HEIGHT * 1.25) / 2, 0]}>
-            <cylinderGeometry args={[0.09, 0.09, WALL_HEIGHT * 1.25, 8]} />
-            <meshBasicMaterial color={hdr(RED, 4)} />
+            <cylinderGeometry args={[0.1, 0.1, WALL_HEIGHT * 1.25, 8]} />
+            <meshBasicMaterial color="#c41022" />
           </mesh>
           <pointLight color={RED} intensity={6} distance={10} position={[0, WALL_HEIGHT * 1.27, 0]} />
         </group>
