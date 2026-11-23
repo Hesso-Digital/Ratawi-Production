@@ -14,7 +14,7 @@ export const SNAPSHOT_FIELDS = [
 ] as const;
 
 export const LINE_FIELDS = [
-  { key: 'commitmentKbopd', label: 'Commitment line', unit: 'kbopd', min: 0, max: 500, step: 0.1, integer: false },
+  { key: 'commitmentKbopd', label: 'Target line', unit: 'kbopd', min: 0, max: 500, step: 0.1, integer: false },
   { key: 'targetKbopd', label: 'AGUP target line', unit: 'kbopd', min: 0, max: 500, step: 0.1, integer: false },
 ] as const;
 

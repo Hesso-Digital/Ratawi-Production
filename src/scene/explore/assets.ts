@@ -126,7 +126,7 @@ export const FACILITY_ASSETS: InspectAsset[] = [
     view: frameFrom([cpfCenter[0] + 0.5, cpfCenter[1] + 1.2, cpfCenter[2]], 30, 30, -40),
     status: (s) =>
       s.oil >= TARGET_KBOPD - 1e-6
-        ? { label: 'Above 120 target', tone: 'gold' }
+        ? { label: 'Above 120 AGUP target', tone: 'gold' }
         : s.valves > 0.5
           ? { label: 'Receiving · inlet valves open', tone: 'ok' }
           : { label: 'Receiving', tone: 'ok' },

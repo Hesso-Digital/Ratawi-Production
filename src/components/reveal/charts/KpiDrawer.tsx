@@ -36,7 +36,7 @@ function Side({ id, state, gold }: { id: KpiId; state: SceneState; gold: boolean
     return (
       <div className="drawer-side">
         <Gauge
-          label="Production versus target"
+          label="Production versus AGUP target"
           value={state.oil}
           max={130}
           unit="kbopd"
@@ -138,8 +138,8 @@ export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneSt
   const focus = FOCUS[id];
   const oilRefs = oilSeries
     ? [
-        { value: presets.commitmentKbopd, label: `Commitment ${presets.commitmentKbopd}`, tone: 'commit' as const },
-        { value: presets.targetKbopd, label: `Target ${presets.targetKbopd}`, tone: 'target' as const },
+        { value: presets.commitmentKbopd, label: `Target ${presets.commitmentKbopd}`, tone: 'commit' as const },
+        { value: presets.targetKbopd, label: `AGUP target ${presets.targetKbopd}`, tone: 'target' as const },
       ]
     : series.refs;
 

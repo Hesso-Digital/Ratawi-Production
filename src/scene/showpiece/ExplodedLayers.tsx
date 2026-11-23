@@ -386,9 +386,9 @@ export function ExplodedLayers({ quality }: { quality: QualityProfile }) {
               </b>
               <span>
                 {above
-                  ? 'Oil production above target'
+                  ? 'Oil production above AGUP target'
                   : onTarget
-                    ? 'Oil production on target'
+                    ? 'Oil production on AGUP target'
                     : `Oil production · ${WORDING.targetLabel} ${target}`}
               </span>
             </div>

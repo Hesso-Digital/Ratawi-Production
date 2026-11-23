@@ -30,14 +30,14 @@ export function OilCompare({
         </b>
       </div>
       <div>
-        <span className="k">Commitment</span>
+        <span className="k">Target</span>
         <b>
           {commitment}
           <small className={actual >= commitment ? 'up' : 'down'}>{formatDelta(actual - commitment)}</small>
         </b>
       </div>
       <div>
-        <span className="k">Target</span>
+        <span className="k">AGUP target</span>
         <b>
           {target}
           <small className={actual >= target ? 'up' : 'down'}>{formatDelta(actual - target)}</small>

@@ -26,7 +26,7 @@ export function HeroNumber({ state }: { state: SceneState }) {
   const fillPct = Math.min(100, (state.oil / 140) * 100);
   const tickPct = (v: number) => (v / 140) * 100;
   const statusText = gold || state.oil >= target - 0.05
-    ? `Above target · ${target} kbopd reached`
+    ? `Above ${WORDING.targetLabel} · ${target} kbopd reached`
     : state.agupWave > 0 && state.agupWave < 0.999
       ? `Production rising · +${(state.oil - commitment).toFixed(1)} vs ${WORDING.commitmentLabel.toLowerCase()}`
       : state.oil > commitment

@@ -4,7 +4,7 @@ const STEPS = [
   { k: 'Today', v: '105', unit: 'kbopd' },
   { k: 'Step 1 · Valves open', v: '110', unit: 'kbopd' },
   { k: 'Step 2 · AGUP + gas', v: '120', unit: 'kbopd' },
-  { k: 'Milestone', v: '120+', unit: 'above target' },
+  { k: 'Milestone', v: '120+', unit: 'above AGUP target' },
 ];
 
 export function StepTracker({ state }: { state: SceneState }) {

@@ -47,7 +47,7 @@ export const KPIS: KpiDef[] = [
     sub: (s) => {
       const target = s.targetKbopd ?? TARGET_KBOPD;
       const commitment = s.commitmentKbopd ?? BUDGET_KBOPD;
-      return isGold(s.oil, target) ? `Above ${target} target` : `Above ${commitment} commitment`;
+      return isGold(s.oil, target) ? `Above ${target} AGUP target` : `Above ${commitment} target`;
     },
     tone: (s) => (isGold(s.oil, s.targetKbopd ?? TARGET_KBOPD) ? 'gold' : 'default'),
   },

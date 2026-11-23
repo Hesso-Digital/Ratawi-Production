@@ -44,7 +44,7 @@ export function TrajectoryChart({ oil, playback }: { oil: number; playback: { in
           <span>
             <b style={{ color: 'var(--ratawi-export)' }}>Export</b>
           </span>
-          <span>{WORDING.commitmentLabel} {commitment}  ·  Target {target}</span>
+          <span>{WORDING.commitmentLabel} {commitment}  ·  {WORDING.targetLabel} {target}</span>
         </div>
       </div>
       <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Oil and export trajectory">

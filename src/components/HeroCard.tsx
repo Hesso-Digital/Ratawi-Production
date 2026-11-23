@@ -34,7 +34,7 @@ export function HeroCard({ oil }: { oil: number }) {
   }, [celebrate, reduced]);
 
   const tone = celebrate ? 'gold' : aboveCommitment ? 'budget' : 'warn';
-  const label = celebrate ? 'Target reached' : aboveCommitment ? 'Above commitment' : 'Below commitment';
+  const label = celebrate ? 'AGUP target reached' : aboveCommitment ? 'Above target' : 'Below target';
   const fill = Math.min(100, (oil / 140) * 100);
   const tick = (v: number) => ({ left: `${(v / 140) * 100}%` });
 
@@ -56,7 +56,7 @@ export function HeroCard({ oil }: { oil: number }) {
           </div>
           <div className="hero-targets">
             <span>
-              Commitment <b className={aboveCommitment ? 'on' : ''}>{commitment}</b>
+              Target <b className={aboveCommitment ? 'on' : ''}>{commitment}</b>
             </span>
             <span>
               AGUP target <b className={celebrate ? 'on' : ''}>{target}</b>

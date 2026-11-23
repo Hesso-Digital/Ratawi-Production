@@ -47,8 +47,8 @@ export const KPI_SERIES: Record<KpiId, KpiSeries> = {
     values: monthly('oil'),
     domain: [0, 130],
     refs: [
-      { value: BUDGET_KBOPD, label: `Commitment ${BUDGET_KBOPD}`, tone: 'commit' },
-      { value: TARGET_KBOPD, label: `Target ${TARGET_KBOPD}`, tone: 'target' },
+      { value: BUDGET_KBOPD, label: `Target ${BUDGET_KBOPD}`, tone: 'commit' },
+      { value: TARGET_KBOPD, label: `AGUP target ${TARGET_KBOPD}`, tone: 'target' },
     ],
     tone: 'oil',
   },

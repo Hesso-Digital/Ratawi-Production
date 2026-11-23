@@ -78,7 +78,7 @@ export const MONTHLY_QUALITY: ReadonlyArray<{ bsw: number; salt: number; efficie
 export const WORDING = {
   title: 'Ratawi Production',
   eyebrow: 'AGUP Phase 1 · RFSU Opening',
-  commitmentLabel: 'Commitment',
+  commitmentLabel: 'Target',
   targetLabel: 'AGUP target',
 } as const;
 
