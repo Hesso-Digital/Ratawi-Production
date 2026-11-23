@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { CHANNEL_NAME, PLAYBACK_MS, STORAGE_KEY } from '../config';
-import { defaultState, snapshotAtPlayback } from './defaults';
-import type { AppState, CeremonyStep, ChannelMessage, Snapshot } from './types';
+import { defaultState, PLAYBACK_END_INDEX, snapshotAtPlayback } from './defaults';
+import type {
+  AppState,
+  CeremonyStep,
+  ChannelMessage,
+  Cue,
+  CueKind,
+  Quality,
+  Snapshot,
+  ViewMode,
+} from './types';
 
 type Playback =
   | { playing: false }
@@ -9,18 +18,33 @@ type Playback =
 
 type ViewState = AppState & { playback: Playback; display: Snapshot };
 
+const VALID_CUE_KINDS: CueKind[] = ['idle', 'countdown', 'step1', 'step2', 'playback'];
+const VALID_VIEWS: ViewMode[] = ['reveal', 'classic', 'fallback'];
+const VALID_QUALITIES: Quality[] = ['low', 'medium', 'high'];
+
+function isSnapshot(v: unknown): v is Snapshot {
+  return !!v && typeof v === 'object' && typeof (v as Snapshot).oil === 'number';
+}
+
 function readStored(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
-    const parsed = JSON.parse(raw) as AppState;
-    if (!parsed?.snapshot || typeof parsed.snapshot.oil !== 'number') {
-      return defaultState();
-    }
+    const parsed = JSON.parse(raw) as Partial<AppState>;
+    if (!isSnapshot(parsed?.snapshot)) return defaultState();
+    const fallback = defaultState();
+    const cue: Cue =
+      parsed.cue && VALID_CUE_KINDS.includes(parsed.cue.kind) && typeof parsed.cue.startedAt === 'number'
+        ? parsed.cue
+        : fallback.cue;
     return {
       snapshot: parsed.snapshot,
+      prevSnapshot: isSnapshot(parsed.prevSnapshot) ? parsed.prevSnapshot : parsed.snapshot,
       step: (parsed.step === 1 || parsed.step === 2 ? parsed.step : 0) as CeremonyStep,
       origin: 'mock',
+      cue,
+      view: parsed.view && VALID_VIEWS.includes(parsed.view) ? parsed.view : fallback.view,
+      quality: parsed.quality && VALID_QUALITIES.includes(parsed.quality) ? parsed.quality : fallback.quality,
     };
   } catch {
     return defaultState();
@@ -63,7 +87,7 @@ export function stopPlaybackBroadcast() {
 export function useCeremonyStore() {
   const [core, setCore] = useState<AppState>(() => readStored());
   const [playback, setPlayback] = useState<Playback>({ playing: false });
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -79,6 +103,7 @@ export function useCeremonyStore() {
       const msg = e.data;
       if (!msg || typeof msg !== 'object') return;
       if (msg.type === 'state') setCore(msg.state);
+      if (msg.type === 'cue') setCore((c) => ({ ...c, cue: msg.cue }));
       if (msg.type === 'playback-start') {
         setPlayback({ playing: true, startedAt: msg.startedAt, duration: msg.duration });
       }
@@ -113,24 +138,62 @@ export function useCeremonyStore() {
     ? Math.min(1, Math.max(0, (Date.now() - playback.startedAt) / playback.duration))
     : 0;
 
-  const display: Snapshot = playback.playing
-    ? snapshotAtPlayback(progress)
-    : core.snapshot;
+  const display: Snapshot = playback.playing ? snapshotAtPlayback(progress) : core.snapshot;
 
   const setState = (next: AppState) => {
     setCore(next);
     publishState(next);
   };
 
-  const applySnapshot = (snapshot: Snapshot, step: CeremonyStep = core.step) => {
+  /**
+   * Apply a target snapshot. `cueKind` decides the ceremony behaviour:
+   * - 'idle' (default): a manual edit or reset. No cinematic; the HUD count-up
+   *   tweens directly to the new value (Apply values / Reset).
+   * - 'step1' / 'step2': a ceremony beat. `prevSnapshot` is frozen at the
+   *   current snapshot so the 3D scene and HUD lerp from it to the new target
+   *   using the same eases on every display, live or manual.
+   */
+  const applySnapshot = (
+    snapshot: Snapshot,
+    step: CeremonyStep = core.step,
+    cueKind: CueKind = 'idle',
+  ) => {
     setPlayback({ playing: false });
     stopPlaybackBroadcast();
-    setState({ ...core, snapshot, step });
+    const prevSnapshot = cueKind === 'idle' ? snapshot : core.snapshot;
+    const cue: Cue = { kind: cueKind, startedAt: Date.now() };
+    setState({ ...core, snapshot, prevSnapshot, step, cue });
+  };
+
+  /** Countdown "3, 2, 1" cue. Snapshot/step are untouched; only the clock moves. */
+  const startCountdown = () => {
+    setPlayback({ playing: false });
+    stopPlaybackBroadcast();
+    const cue: Cue = { kind: 'countdown', startedAt: Date.now() };
+    setState({ ...core, cue });
+  };
+
+  /**
+   * Jump the cue clock to a rehearsal offset without waiting in real time, by
+   * back-dating `startedAt`. Used by the operator's "Jump to beat" control.
+   */
+  const jumpToCue = (kind: CueKind, offsetS: number) => {
+    const cue: Cue = { kind, startedAt: Date.now() - Math.max(0, offsetS) * 1000 };
+    setState({ ...core, cue });
   };
 
   const playStory = () => {
     const meta = startPlaybackBroadcast();
     setPlayback({ playing: true, ...meta });
+    const cue: Cue = { kind: 'playback', startedAt: meta.startedAt };
+    setState({ ...core, cue });
+  };
+
+  const stopStory = () => {
+    setPlayback({ playing: false });
+    stopPlaybackBroadcast();
+    const cue: Cue = { kind: 'idle', startedAt: Date.now() };
+    setState({ ...core, cue });
   };
 
   const reset = () => {
@@ -139,19 +202,22 @@ export function useCeremonyStore() {
     setState(defaultState());
   };
 
+  const setView = (view: ViewMode) => setState({ ...core, view });
+  const setQuality = (quality: Quality) => setState({ ...core, quality });
+
   const view: ViewState = { ...core, playback, display };
 
   return {
     ...view,
     progress,
-    playbackIndex: playback.playing ? progress * 6 : null,
+    playbackIndex: playback.playing ? progress * PLAYBACK_END_INDEX : null,
     applySnapshot,
+    startCountdown,
+    jumpToCue,
     playStory,
-    stopStory: () => {
-      setPlayback({ playing: false });
-      stopPlaybackBroadcast();
-    },
+    stopStory,
     reset,
-    tick,
+    setView,
+    setQuality,
   };
 }

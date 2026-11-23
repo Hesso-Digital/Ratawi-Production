@@ -3,11 +3,12 @@ import gsap from 'gsap';
 import { useCountUp } from '../hooks/useCountUp';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { BUDGET_KBOPD, TARGET_KBOPD } from '../data/defaults';
+import { isAboveCommitment } from '../data/kpis';
 import { OilDrop } from './OilDrop';
 
 export function HeroCard({ oil }: { oil: number }) {
   const celebrate = oil >= TARGET_KBOPD;
-  const aboveBudget = oil > BUDGET_KBOPD;
+  const aboveCommitment = isAboveCommitment(oil);
   const valueRef = useCountUp<HTMLSpanElement>(oil, { decimals: 1, durationS: 0.9 });
   const cardRef = useRef<HTMLElement>(null);
   const wasGold = useRef(celebrate);
@@ -28,8 +29,8 @@ export function HeroCard({ oil }: { oil: number }) {
     wasGold.current = celebrate;
   }, [celebrate, reduced]);
 
-  const tone = celebrate ? 'gold' : aboveBudget ? 'budget' : 'warn';
-  const label = celebrate ? 'Target reached' : aboveBudget ? 'Above budget' : 'Below budget';
+  const tone = celebrate ? 'gold' : aboveCommitment ? 'budget' : 'warn';
+  const label = celebrate ? 'Target reached' : aboveCommitment ? 'Above commitment' : 'Below commitment';
   const fill = Math.min(100, (oil / 140) * 100);
   const tick = (v: number) => ({ left: `${(v / 140) * 100}%` });
 
@@ -51,7 +52,7 @@ export function HeroCard({ oil }: { oil: number }) {
           </div>
           <div className="hero-targets">
             <span>
-              Commitment <b className={oil >= BUDGET_KBOPD ? 'on' : ''}>{BUDGET_KBOPD}</b>
+              Commitment <b className={isAboveCommitment(oil) ? 'on' : ''}>{BUDGET_KBOPD}</b>
             </span>
             <span>
               AGUP target <b className={celebrate ? 'on' : ''}>{TARGET_KBOPD}</b>

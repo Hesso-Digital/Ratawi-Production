@@ -1,12 +1,23 @@
-import type { MonthPoint, Snapshot } from './types';
+import { DEFAULT_QUALITY, DEFAULT_VIEW } from '../config';
+import { GAS_STEP2_MMSCFD } from './openInputs';
+import type { AppState, MonthPoint, Snapshot } from './types';
 
+/**
+ * The brief and design frames call this the "Commitment" (not "Budget").
+ * Kept as BUDGET_KBOPD for compatibility with existing imports; COMMITMENT_KBOPD
+ * is the preferred name going forward (plan section 2 / open input #7).
+ */
 export const BUDGET_KBOPD = 90;
+export const COMMITMENT_KBOPD = BUDGET_KBOPD;
 export const TARGET_KBOPD = 120;
 
 export const LIMITS = {
   bsw: 0.5,
   salt: 270,
 } as const;
+
+/** Fixed operating rule (not one of the plan's open inputs): AG-25 needs this much gas to run. */
+export const GAS_MIN_TO_OPERATE_MMSCFD = 50;
 
 /** Current snapshot from the requirements document, 16 Nov 2026. */
 export const BASELINE: Snapshot = {
@@ -28,15 +39,16 @@ export const STEP_1: Snapshot = {
 };
 
 /**
- * Step 2 gas is 50 MMscfd. The brief says "50+" and the v8 prototype used 40.
- * This 50 value is an assumption pending confirmation from Mohammad or Gulmira.
+ * Step 2 gas: the repo assumed 50 MMscfd, the approved design frames show 52.
+ * Single source of truth lives in src/data/openInputs.ts (open input #3) so this
+ * stays easy to flip once Mohammad/Gulmira confirm the real figure.
  */
 export const STEP_2: Snapshot = {
   ...BASELINE,
   oil: 120,
   wells: 32,
   exportKbopd: 118,
-  gas: 50,
+  gas: GAS_STEP2_MMSCFD,
 };
 
 export const STEPS = [BASELINE, STEP_1, STEP_2] as const;
@@ -86,10 +98,14 @@ export function snapshotAtPlayback(progress: number): Snapshot {
   };
 }
 
-export function defaultState() {
+export function defaultState(): AppState {
   return {
     snapshot: { ...BASELINE },
-    step: 0 as const,
-    origin: 'mock' as const,
+    prevSnapshot: { ...BASELINE },
+    step: 0,
+    origin: 'mock',
+    cue: { kind: 'idle', startedAt: Date.now() },
+    view: DEFAULT_VIEW,
+    quality: DEFAULT_QUALITY,
   };
 }
