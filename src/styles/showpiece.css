@@ -178,9 +178,21 @@ html[data-time-of-day='day'] .xv-milestone.gold {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 700px), (max-aspect-ratio: 1/1) {
   .xv-month:not(.on) {
     display: none;
+  }
+  .xv-callout {
+    padding: 3px 6px 4px;
+  }
+  .xv-callout .k {
+    font-size: 8px;
+  }
+  .xv-callout b {
+    font-size: 12px;
+  }
+  .xv-hero b {
+    font-size: clamp(22px, 6vw, 40px);
   }
 }
 

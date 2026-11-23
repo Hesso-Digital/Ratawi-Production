@@ -7,6 +7,7 @@ import {
   LAYERS,
   RIBBON,
   RIBBON_CAMERA,
+  framingFor,
   layerLift,
   ribbonColor,
   ribbonMilestones,
@@ -43,6 +44,19 @@ describe('exploded layout', () => {
       const d = Math.hypot(...c.position.map((p, i) => p - c.target[i]));
       expect(d).toBeLessThan(240);
     }
+  });
+});
+
+describe('responsive framing', () => {
+  const dist = (c: { position: number[]; target: number[] }) => Math.hypot(...c.position.map((p, i) => p - c.target[i]));
+  it('keeps 16:9 as designed, pulls back a little on portrait and widens the lens', () => {
+    const base = dist(EXPLODED_CAMERA);
+    expect(dist(framingFor(EXPLODED_CAMERA, 16 / 9))).toBeCloseTo(base, 5);
+    const phone = framingFor(EXPLODED_CAMERA, 0.46);
+    expect(dist(phone)).toBeGreaterThan(base);
+    expect(dist(phone)).toBeLessThan(base * 1.5);
+    expect(phone.fov).toBeGreaterThan(EXPLODED_CAMERA.fov);
+    expect(dist(framingFor(EXPLODED_CAMERA, 32 / 9))).toBeLessThan(240);
   });
 });
 

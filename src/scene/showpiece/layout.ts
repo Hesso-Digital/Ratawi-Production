@@ -190,3 +190,31 @@ export function ribbonColor(value: number, commitment: number, target: number): 
   const k = (value - commitment) / Math.max(1e-6, target - commitment);
   return k < 0.5 ? mix(CYAN, ICE, k * 2) : mix(ICE, GOLD, (k - 0.5) * 2);
 }
+
+/**
+ * Responsive framing for the showpiece views. Wide screens follow the tour's
+ * rule; portrait screens pull back less and widen the lens instead, so the
+ * stack stays large on a phone or tablet held upright.
+ */
+export function framingFor(view: CameraState, aspect: number): CameraState {
+  const a = Math.min(3.2, Math.max(0.4, aspect));
+  const ref = 16 / 9;
+  let distance = 1;
+  let fov = view.fov;
+  if (a < ref) {
+    const raw = ref / a;
+    distance = Math.min(1.45, 1 + (raw - 1) * 0.28);
+    fov = Math.min(54, view.fov + (raw - 1) * 9);
+  } else {
+    distance = 1 + Math.min(0.12, ((a - ref) / ref) * 0.15);
+  }
+  return {
+    position: [
+      view.target[0] + (view.position[0] - view.target[0]) * distance,
+      view.target[1] + (view.position[1] - view.target[1]) * distance,
+      view.target[2] + (view.position[2] - view.target[2]) * distance,
+    ],
+    target: view.target,
+    fov,
+  };
+}
