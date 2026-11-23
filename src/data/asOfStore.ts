@@ -64,7 +64,7 @@ export const asOfStore = {
     const i = Math.max(0, Math.min(TIMELINE_LAST_INDEX, index));
     set({ index: i, playing: false });
   },
-  play() {
+  play(durationMs: number = TIMELINE_DURATION_MS) {
     const start = state.index == null ? 0 : Math.min(state.index, TIMELINE_LAST_INDEX);
     if (start >= TIMELINE_LAST_INDEX - 1e-4) {
       playFrom = 0;
@@ -72,10 +72,8 @@ export const asOfStore = {
       playFrom = start;
     }
     playStartedAt = performance.now();
-    playDuration = Math.max(
-      200,
-      ((TIMELINE_LAST_INDEX - playFrom) / TIMELINE_LAST_INDEX) * TIMELINE_DURATION_MS,
-    );
+    const span = TIMELINE_LAST_INDEX <= 0 ? 1 : (TIMELINE_LAST_INDEX - playFrom) / TIMELINE_LAST_INDEX;
+    playDuration = Math.max(200, span * Math.max(200, durationMs));
     set({ index: playFrom, playing: true });
     stopPlayLoop();
     raf = requestAnimationFrame(tick);

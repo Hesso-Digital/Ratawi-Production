@@ -125,6 +125,12 @@
   transition: opacity 0.55s ease;
 }
 
+:root[data-hud-dimmed='on'] .reveal-bottom-dock.scrub-on {
+  opacity: 0.72;
+  pointer-events: auto;
+  filter: none;
+}
+
 :root:not([data-hud-dimmed='on']) .reveal-hud > *,
 :root:not([data-hud-dimmed='on']) .explore-overlay,
 :root:not([data-hud-dimmed='on']) .explore-panel,

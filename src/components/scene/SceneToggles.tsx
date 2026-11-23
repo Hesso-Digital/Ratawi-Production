@@ -78,7 +78,7 @@ export function SceneToggles() {
   const { playing, caption, toggle: toggleTour } = useFieldTour();
   const dayLabel = mode === 'day' ? 'Switch to night view' : 'Switch to day view';
   const flowLabel = flows ? 'Flows on/off (on): hide flow animations' : 'Flows on/off (off): show flow animations';
-  const tourLabel = playing ? 'Stop field tour' : 'Field tour';
+  const tourLabel = playing ? 'Stop field tour and timeline' : 'Play field tour and production timeline';
   return (
     <>
     <div className="scene-toggles" role="group" aria-label="Scene view">

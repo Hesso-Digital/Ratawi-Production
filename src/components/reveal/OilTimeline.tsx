@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { asOfStore, TIMELINE_LAST_INDEX, useAsOfState } from '../../data/asOfStore';
+import { fieldTour } from '../../scene/explore/fieldTour';
 import { TODAY_INDEX, TRAJECTORY } from '../../data/defaults';
 import { CountText } from '../CountText';
 
@@ -46,25 +47,36 @@ export function OilCompare({
   );
 }
 
+function scrubAsOf(index: number) {
+  if (fieldTour.get().playing) fieldTour.stop({ restoreLive: false });
+  asOfStore.setIndex(index);
+}
+
 export function OilTimeline({
   compact = false,
   collapsible = false,
+  hall = false,
 }: {
   compact?: boolean;
   /** Hall HUD: start as a compact reserved strip; months expand on demand. */
   collapsible?: boolean;
+  /** Hall overlay: slim scrubber only, no Play / Live / Months chrome. */
+  hall?: boolean;
 }) {
   const { index, playing } = useAsOfState();
   const cursor = index ?? TODAY_INDEX;
   const month = TRAJECTORY[Math.round(Math.max(0, Math.min(TIMELINE_LAST_INDEX, cursor)))];
   const live = index == null;
   const [expanded, setExpanded] = useState(!collapsible);
-  const showMonths = !collapsible || expanded;
+  const showMonths = !hall && (!collapsible || expanded);
   const classes = [
     'oil-timeline',
     compact ? 'compact' : '',
-    collapsible ? 'docked' : '',
-    collapsible && !expanded ? 'collapsed' : '',
+    collapsible || hall ? 'docked' : '',
+    hall ? 'hall' : '',
+    (collapsible && !expanded && !hall) ? 'collapsed' : '',
+    playing ? 'playing' : '',
+    live ? 'is-live' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -72,9 +84,20 @@ export function OilTimeline({
   return (
     <div className={classes}>
       <div className="oil-timeline-head">
-        <div className="oil-timeline-title">
-          {live ? 'Live' : `As of ${month.label} ${month.year}`}
-        </div>
+        {hall && !live ? (
+          <button
+            type="button"
+            className="oil-timeline-title live-back"
+            onClick={() => asOfStore.live()}
+          >
+            {`As of ${month.label} ${month.year}`}
+          </button>
+        ) : (
+          <div className="oil-timeline-title">
+            {live ? 'Live' : `As of ${month.label} ${month.year}`}
+          </div>
+        )}
+        {hall ? null : (
         <div className="oil-timeline-actions">
           {playing ? (
             <button type="button" className="chip" onClick={() => asOfStore.pause()}>
@@ -100,6 +123,7 @@ export function OilTimeline({
             </button>
           ) : null}
         </div>
+        )}
       </div>
       <input
         type="range"
@@ -108,8 +132,8 @@ export function OilTimeline({
         step={0.01}
         value={cursor}
         aria-label="Production date"
-        onPointerDown={() => asOfStore.setIndex(cursor)}
-        onChange={(e) => asOfStore.setIndex(Number(e.target.value))}
+        onPointerDown={() => scrubAsOf(cursor)}
+        onChange={(e) => scrubAsOf(Number(e.target.value))}
       />
       {showMonths ? (
         <div

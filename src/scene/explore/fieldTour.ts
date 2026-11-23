@@ -1,6 +1,6 @@
 /**
  * Cinematic field tour: a Play control beside Day/Night starts a guided
- * camera flight around the hall field. The viewer can cut it short at any
+ * camera flight around the hall field and plays the oil timeline in sync. The viewer can cut it short at any
  * time by touching the map or the 3D model; the camera stays where it is.
  *
  * Camera distance and FOV are scaled from the live canvas aspect so each
@@ -10,6 +10,9 @@
 import { useSyncExternalStore } from 'react';
 import type { CameraState } from '../ceremonyTimeline';
 import { sceneSettings } from '../../state/sceneSettings';
+import { asOfStore } from '../../data/asOfStore';
+import { prefersReducedMotion } from './areas';
+import { tourDuration } from './fieldTourShots';
 
 export type FieldTourState = {
   playing: boolean;
@@ -40,12 +43,14 @@ export const fieldTour = {
     state = { playing: true, caption: 'Whole field', startSeq: state.startSeq + 1, stopSeq: state.stopSeq };
     sceneSettings.setHudDimmed(true);
     emit();
+    asOfStore.play(tourDuration({ reducedMotion: prefersReducedMotion() }) * 1000);
   },
-  stop() {
+  stop(opts: { restoreLive?: boolean } = {}) {
     if (!state.playing) return;
     state = { playing: false, caption: null, startSeq: state.startSeq, stopSeq: state.stopSeq + 1 };
     sceneSettings.setHudDimmed(false);
     emit();
+    if (opts.restoreLive !== false) asOfStore.live();
   },
   toggle() {
     if (state.playing) fieldTour.stop();

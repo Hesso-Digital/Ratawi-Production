@@ -10,9 +10,11 @@ import {
 } from './fieldTour';
 import { buildTourShots, tourCaptions, tourDuration } from './fieldTourShots';
 import { sceneSettings } from '../../state/sceneSettings';
+import { asOfStore } from '../../data/asOfStore';
 
 afterEach(() => {
   fieldTour.reset();
+  asOfStore.live();
 });
 
 describe('framingForAspect', () => {
@@ -204,5 +206,23 @@ describe('fieldTour store', () => {
     fieldTour.stop();
     expect(sceneSettings.getHudDimmed()).toBe(false);
     expect(document.documentElement.dataset.hudDimmed).toBe('off');
+  });
+
+  it('plays the oil timeline for the tour duration and returns to Live on stop', () => {
+    expect(asOfStore.get().playing).toBe(false);
+    expect(asOfStore.get().index).toBe(null);
+    fieldTour.start();
+    expect(asOfStore.get().playing).toBe(true);
+    expect(asOfStore.get().index).toBe(0);
+    fieldTour.stop();
+    expect(asOfStore.get().playing).toBe(false);
+    expect(asOfStore.get().index).toBe(null);
+  });
+
+  it('can stop the tour without forcing the timeline back to Live', () => {
+    fieldTour.start();
+    fieldTour.stop({ restoreLive: false });
+    expect(fieldTour.get().playing).toBe(false);
+    expect(asOfStore.get().playing).toBe(true);
   });
 });

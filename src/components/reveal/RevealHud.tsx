@@ -11,6 +11,8 @@ import { OilTimeline } from './OilTimeline';
 import { exploreStore } from '../../scene/explore/exploreStore';
 import { useTimeOfDay } from '../../state/sceneSettings';
 import { useHudAutoDim } from '../../hooks/useHudAutoDim';
+import { useAsOfState } from '../../data/asOfStore';
+import { useFieldTour } from '../../scene/explore/fieldTour';
 
 function formatNow(d: Date) {
   const time = d.toLocaleTimeString('en-GB', {
@@ -31,6 +33,10 @@ export function RevealHud({ interactive = false }: { interactive?: boolean }) {
   const showDateTime = useCeremonyStore().settings.showDateTime;
   const { mode } = useTimeOfDay();
   useHudAutoDim();
+  const asOf = useAsOfState();
+  const tour = useFieldTour();
+  const [bottomHover, setBottomHover] = useState(false);
+  const showScrub = bottomHover || asOf.playing || asOf.index != null || tour.playing;
   const gold = state.gold > 0.5;
   const [clock, setClock] = useState(() => formatNow(new Date()));
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -82,9 +88,15 @@ export function RevealHud({ interactive = false }: { interactive?: boolean }) {
         <HeroNumber state={state} />
       )}
       <Compass />
-      <div className={`reveal-bottom-dock${sheetOpen ? ' sheet-open' : ''}`} ref={dockRef}>
+      <div
+        className={`reveal-bottom-dock${sheetOpen ? ' sheet-open' : ''}${showScrub ? ' scrub-on' : ''}`}
+        ref={dockRef}
+        onPointerEnter={() => setBottomHover(true)}
+        onPointerLeave={() => setBottomHover(false)}
+      >
+        <div className="reveal-scrub-hotspot" aria-hidden="true" />
         <div className="reveal-compact-bar">
-          <OilTimeline collapsible />
+          <OilTimeline hall />
           <button
             type="button"
             className="reveal-kpi-toggle"

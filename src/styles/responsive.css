@@ -5,23 +5,24 @@
  * compact horizontal scroller. Small screens collapse KPIs into a sheet.
  */
 
-/* —— Area nav: vertical right text list, no panel, spreads to available height —— */
+/* —— Area nav: compact vertical text list, top-anchored under the brand —— */
 .explore-bar {
   position: absolute;
   right: var(--hud-gutter, 56px);
   top: clamp(88px, 12cqb, 128px);
-  bottom: calc(var(--reveal-dock-height, 170px) + var(--scene-cluster-h, 52px) + 28px);
-  height: auto;
+  bottom: auto;
+  height: fit-content;
   left: auto;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
   align-items: stretch;
-  justify-content: space-between;
-  gap: 0;
+  justify-content: flex-start;
+  /* Row pitch stays in the 40–56px band: number height + this gap. */
+  gap: clamp(10px, 1.4cqb, 16px);
   width: var(--explore-stack-width, 10.25rem);
   max-width: 11rem;
-  max-height: none;
+  max-height: calc(100cqb - var(--reveal-dock-height, 170px) - var(--scene-cluster-h, 52px) - 140px);
   overflow: visible;
   pointer-events: none;
   padding: 0;
@@ -47,7 +48,7 @@
 }
 
 /* Short or narrow: compact horizontal scroller, still text-only. */
-@container stage (max-width: 719px) or (max-height: 639px) {
+@container stage (max-height: 639px) {
   .explore-bar {
     left: var(--hud-gutter, 12px);
     right: var(--hud-gutter, 12px);
@@ -76,15 +77,19 @@
     min-height: var(--touch-min, 44px);
     flex: 0 0 auto;
     grid-template-columns: auto auto auto;
-    column-gap: 6px;
+    column-gap: 4px;
   }
 
   .explore-nav-item.mode {
-    grid-template-columns: auto auto auto;
+    grid-template-columns: auto auto;
   }
 
   .explore-nav-num {
-    font-size: 1.45rem;
+    font-size: 1.2rem;
+  }
+
+  .explore-nav-item.on .explore-nav-num {
+    font-size: 1.35rem;
   }
 
   .explore-nav-item.on .explore-nav-label {
@@ -259,10 +264,18 @@
 /* 4K / big hall: slightly roomier cluster, still capped. */
 @container stage (min-width: 3000px) {
   .explore-nav-num {
-    font-size: 2.5rem;
+    font-size: 1.85rem;
+  }
+
+  .explore-nav-item.on .explore-nav-num {
+    font-size: 2.15rem;
   }
 
   .explore-nav-label {
+    font-size: 12px;
+  }
+
+  .explore-nav-item.on .explore-nav-label {
     font-size: 14px;
   }
 }
@@ -310,20 +323,7 @@
 }
 
 
-/* Slim, edge-hugging, more translucent panels so the 3D field stays primary.
-   Aim for well under a quarter of the desktop viewport covered by HUD. */
-.reveal-bottom-dock .oil-timeline,
-.reveal-bottom-dock .reveal-rail {
-  background: rgba(8, 14, 22, 0.42);
-}
-
-.reveal-kpi .v {
-  font-size: var(--kpi-size, 1.35rem);
-}
-
-.reveal-kpi {
-  padding-top: 10px;
-}
+/* Slim, edge-hugging panels so the 3D field stays primary. */
 
 .field-tour-caption {
   left: var(--hud-gutter, 22px);

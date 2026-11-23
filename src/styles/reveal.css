@@ -704,12 +704,15 @@
 /* Text-only area nav: no panel, no pill chrome. */
 .explore-nav-item {
   pointer-events: auto;
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: "num label mark";
+  grid-template-columns: auto auto;
+  grid-template-areas: "num label";
+  justify-content: end;
   align-items: center;
-  column-gap: 8px;
+  column-gap: 5px;
   width: 100%;
+  padding-right: 16px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -722,7 +725,8 @@
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  transition: color 0.28s ease, transform 0.28s ease, opacity 0.28s ease;
+  transition: color 0.28s ease, transform 0.28s ease, opacity 0.28s ease,
+    padding 0.28s ease;
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.85),
     0 0 14px rgba(0, 0, 0, 0.7),
@@ -730,8 +734,8 @@
 }
 
 .explore-nav-item.mode {
-  grid-template-columns: 1fr auto auto;
-  grid-template-areas: "label key mark";
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "label key";
 }
 
 .explore-nav-num {
@@ -739,18 +743,19 @@
   font-family: var(--ratawi-font-numeric);
   font-variant-numeric: tabular-nums;
   font-weight: 300;
-  font-size: clamp(1.55rem, 2.1cqi, 2.35rem);
+  font-size: clamp(1.125rem, 1.5cqi, 1.65rem);
   line-height: 1;
   letter-spacing: -0.04em;
   color: rgba(232, 240, 248, 0.42);
-  transition: color 0.28s ease, font-weight 0.28s ease, text-shadow 0.28s ease, transform 0.28s ease;
+  transition: color 0.28s ease, font-size 0.28s ease, font-weight 0.28s ease,
+    text-shadow 0.28s ease, transform 0.28s ease;
 }
 
 .explore-nav-label {
   grid-area: label;
   justify-self: end;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 400;
   letter-spacing: 0.08em;
   line-height: 1.2;
   white-space: nowrap;
@@ -776,15 +781,19 @@
 }
 
 .explore-nav-mark {
-  grid-area: mark;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(200, 214, 224, 0.45);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.55);
-  justify-self: end;
-  align-self: center;
-  transition: width 0.28s ease, height 0.28s ease, border-radius 0.28s ease,
+  /* Inactive items (and Back to show) have no trailing mark. */
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  border-radius: 1px;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: width 0.28s ease, height 0.28s ease, opacity 0.28s ease,
     background 0.28s ease, box-shadow 0.28s ease;
 }
 
@@ -816,6 +825,7 @@
 }
 
 .explore-nav-item.on .explore-nav-num {
+  font-size: clamp(1.35rem, 1.8cqi, 2rem);
   color: var(--ratawi-cyan);
   font-weight: 400;
   text-shadow:
@@ -833,6 +843,7 @@
 .explore-nav-item.on .explore-nav-mark {
   width: 14px;
   height: 2px;
+  opacity: 1;
   border-radius: 1px;
   background: var(--ratawi-cyan);
   box-shadow: 0 0 10px rgba(43, 231, 255, 0.7);
@@ -1524,12 +1535,22 @@ button.reveal-compass:focus-visible {
   position: absolute;
   left: var(--hud-gutter, 56px);
   right: var(--hud-gutter, 56px);
-  bottom: clamp(10px, 2.2cqb, 24px);
+  bottom: clamp(8px, 1.5cqb, 14px);
   z-index: 4;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
+  gap: 4px;
+  pointer-events: auto;
+  background: none;
+}
+
+.reveal-scrub-hotspot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 28px;
+  pointer-events: auto;
 }
 
 .reveal-bottom-dock .oil-timeline,
@@ -1602,9 +1623,120 @@ button.reveal-compass:focus-visible {
   padding: 0 10px;
 }
 
-/* Keep 3D HTML labels (area markers, anchored tags) out of the reserved dock. */
-.reveal-canvas-wrap > div > div {
-  clip-path: inset(0 0 var(--reveal-dock-height, 170px) 0);
+/* Translucent, compact KPI rail so the field stays visible behind it. */
+.reveal-bottom-dock .reveal-rail {
+  background: rgba(8, 14, 22, 0.14);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-top: 0;
+  border-radius: 10px;
+  padding: 0 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.reveal-bottom-dock .reveal-kpi {
+  padding: 5px 10px 6px;
+}
+
+.reveal-bottom-dock .reveal-kpi .bar {
+  display: none;
+}
+
+.reveal-bottom-dock .reveal-kpi .k {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.reveal-bottom-dock .reveal-kpi .v {
+  margin-top: 1px;
+  font-size: clamp(0.95rem, 1.15cqi, 1.2rem);
+  line-height: 1.1;
+}
+
+.reveal-bottom-dock .reveal-kpi .v small {
+  font-size: 9px;
+  margin-left: 4px;
+}
+
+.reveal-bottom-dock .reveal-kpi .s {
+  margin-top: 1px;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.reveal-bottom-dock .kpi-tip {
+  display: none;
+}
+
+/* Slim hall scrubber: hidden until hover near the bottom or playback is on. */
+.reveal-hud .oil-timeline.hall {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "title scrub";
+  align-items: center;
+  column-gap: 10px;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  margin: 0;
+  pointer-events: none;
+  background: none;
+  backdrop-filter: none;
+  border-radius: 0;
+  transition: opacity 0.22s ease, height 0.22s ease;
+}
+
+.reveal-bottom-dock.scrub-on .oil-timeline.hall,
+.reveal-hud .oil-timeline.hall.playing {
+  height: 20px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.reveal-hud .oil-timeline.hall.is-live {
+  grid-template-columns: 1fr;
+  grid-template-areas: "scrub";
+}
+
+.reveal-hud .oil-timeline.hall .oil-timeline-head {
+  display: contents;
+}
+
+.reveal-hud .oil-timeline.hall .oil-timeline-title,
+.reveal-hud .oil-timeline.hall .oil-timeline-title.live-back {
+  grid-area: title;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(232, 240, 248, 0.72);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.reveal-hud .oil-timeline.hall.is-live .oil-timeline-title {
+  display: none;
+}
+
+.reveal-hud .oil-timeline.hall input[type='range'] {
+  grid-area: scrub;
+  margin: 0;
+  width: 100%;
+  height: 14px;
+  accent-color: var(--ratawi-cyan);
+}
+
+.reveal-hud .oil-timeline.hall .oil-months,
+.reveal-hud .oil-timeline.hall .oil-timeline-actions {
+  display: none;
 }
 
 /* Corner admin menu */
@@ -1801,8 +1933,6 @@ button.reveal-compass:focus-visible {
   color: rgba(236, 244, 252, 0.86);
 }
 
-:root[data-time-of-day='day'] .reveal-bottom-dock .oil-timeline,
-:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail,
 :root[data-time-of-day='day'] .admin-drawer,
 :root[data-time-of-day='day'] .kpi-drawer,
 :root[data-time-of-day='day'] .oil-timeline-actions .chip {
@@ -1811,10 +1941,31 @@ button.reveal-compass:focus-visible {
   color: #f4f9ff;
 }
 
+/* Keep the lower field bright so the glass rail is not a pre-darkened band. */
+:root[data-time-of-day='day'] .stage::after {
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 96px);
+  mask-image: linear-gradient(to top, transparent 0, #000 96px);
+}
+
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail {
+  background: rgba(8, 14, 22, 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-top: 0;
   border-radius: 10px;
-  padding-bottom: 8px;
+  color: #f4f9ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v,
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .k,
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .s {
+  text-shadow: 0 1px 8px rgba(8, 14, 22, 0.7);
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .oil-timeline.hall {
+  background: none;
+  backdrop-filter: none;
 }
 
 :root[data-time-of-day='day'] .area-marker,
