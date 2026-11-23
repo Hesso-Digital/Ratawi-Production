@@ -10,6 +10,10 @@ export default function App() {
       <div className="stage" style={{ transform: `scale(${scale})` }}>
         <Routes>
           <Route path="/" element={<AudiencePage />} />
+          {/* Forced routes for testing/rehearsal: always this view, regardless of the operator's choice. */}
+          <Route path="/classic" element={<AudiencePage forceView="classic" />} />
+          <Route path="/reveal" element={<AudiencePage forceView="reveal" />} />
+          <Route path="/fallback" element={<AudiencePage forceView="fallback" />} />
           <Route path="/operator" element={<OperatorPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

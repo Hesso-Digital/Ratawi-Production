@@ -1,26 +1,43 @@
-import { FieldMap } from '../components/FieldMap';
-import { HeaderBar } from '../components/HeaderBar';
-import { HeroCard } from '../components/HeroCard';
-import { KpiTiles } from '../components/KpiTiles';
-import { TrajectoryChart } from '../components/TrajectoryChart';
+/**
+ * Thin view switch (plan section 4.4): renders whichever audience screen the
+ * operator has selected, or a forced view for /classic, /reveal, /fallback.
+ * Falls back to the classic grid automatically if the 3D view can't run.
+ */
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { ClassicAudience } from './ClassicAudience';
+import { FallbackAudience } from './FallbackAudience';
 import { useCeremonyStore } from '../data/store';
-import { useTileEntrance } from '../hooks/useTileEntrance';
+import type { ViewMode } from '../data/types';
 
-export function AudiencePage() {
-  const { display, playback, progress } = useCeremonyStore();
-  const root = useTileEntrance<HTMLDivElement>();
+/**
+ * The 3D reveal screen (three/R3F/drei/postprocessing) is code-split into its
+ * own chunk, so /classic, /fallback and /operator never download it (plan
+ * section 4.4: "vite.config.ts manualChunks... so classic loads without
+ * them"). Prefetched eagerly below so switching to "Reveal" is instant.
+ */
+const loadReveal = () => import('./RevealAudience');
+const RevealAudience = lazy(() => loadReveal().then((m) => ({ default: m.RevealAudience })));
 
-  return (
-    <div ref={root}>
-      <HeaderBar />
-      <div className="audience">
-        <FieldMap wellsOnline={display.wells} gas={display.gas} />
-        <div className="right-col">
-          <HeroCard oil={display.oil} />
-          <KpiTiles data={display} />
-        </div>
-        <TrajectoryChart progress={progress} playing={playback.playing} />
-      </div>
-    </div>
-  );
+export function AudiencePage({ forceView }: { forceView?: ViewMode }) {
+  const store = useCeremonyStore();
+  const [autoFallback, setAutoFallback] = useState<string | null>(null);
+  const onFallback = useCallback((reason: string) => setAutoFallback(reason), []);
+
+  const view = forceView ?? (autoFallback ? 'classic' : store.view);
+
+  useEffect(() => {
+    if (view === 'reveal') loadReveal();
+  }, [view]);
+
+  if (view === 'reveal') {
+    return (
+      <Suspense fallback={<ClassicAudience />}>
+        <RevealAudience onFallback={onFallback} />
+      </Suspense>
+    );
+  }
+  if (view === 'fallback') {
+    return <FallbackAudience />;
+  }
+  return <ClassicAudience />;
 }
