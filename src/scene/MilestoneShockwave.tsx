@@ -6,8 +6,9 @@
  */
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { BufferAttribute, BufferGeometry, Points, type Mesh } from 'three';
+import { BufferAttribute, BufferGeometry, Points, type Group, type Mesh } from 'three';
 import { CPF_WORLD, heightAt } from './world';
+import { sceneSettings } from '../state/sceneSettings';
 import { createPointsMaterial, createShockwaveMaterial, hdr } from './shaders/materials';
 import { createGlowSprite } from './textures';
 import { useSceneClockRef } from './useSceneClock';
@@ -46,8 +47,12 @@ export function MilestoneShockwave({ quality }: { quality: QualityProfile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emberCount]);
 
+  const groupRef = useRef<Group>(null);
   useFrame(({ clock }) => {
     const { gold, milestoneSince: since } = sceneClock.current;
+    const flowsOn = sceneSettings.get().flows;
+    if (groupRef.current) groupRef.current.visible = flowsOn;
+    if (!flowsOn) return;
     const wave = waveRef.current?.material as typeof waveMaterial | undefined;
     if (wave) {
       wave.uniforms.uR.value = Math.max(0, since) * 14;
@@ -75,7 +80,7 @@ export function MilestoneShockwave({ quality }: { quality: QualityProfile }) {
   });
 
   return (
-    <group>
+    <group ref={groupRef}>
       <mesh ref={waveRef} material={waveMaterial} position={[cx, groundY + 0.05, cz]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[130, 130]} />
       </mesh>

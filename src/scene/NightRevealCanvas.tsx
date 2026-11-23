@@ -30,6 +30,7 @@ import { PostFX } from './PostFX';
 import { QUALITY_PROFILES } from './quality';
 import type { CameraState } from './ceremonyTimeline';
 import type { Quality } from '../data/types';
+import { SceneToggles } from '../components/scene/SceneToggles';
 
 export function NightRevealCanvas({
   quality,
@@ -61,6 +62,7 @@ export function NightRevealCanvas({
   }, []);
 
   return (
+    <>
     <Canvas
       className="reveal-canvas"
       frameloop={frameloop}
@@ -98,5 +100,7 @@ export function NightRevealCanvas({
         ) : null}
       </Suspense>
     </Canvas>
+    {locked ? null : <SceneToggles />}
+    </>
   );
 }

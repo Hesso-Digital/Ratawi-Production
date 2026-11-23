@@ -20,6 +20,8 @@ import {
   type Grid,
   type Well,
 } from '../data/field';
+import { demGreen, demHeightM, demWet } from './terrain/dem';
+import { DEM_CPF_M } from './terrain/demData';
 
 /** 1 grid unit ≈ 3.9 world units, so the ~20-unit-tall concession reads as ~78u. */
 export const WORLD_SCALE = 3.9;
@@ -117,18 +119,76 @@ function fbm(x: number, y: number, octaves = 5) {
   return sum;
 }
 
-/** Field half-extents in world units, used to fade dunes in near the facilities. */
-const FIELD_HALF_X = 22;
-const FIELD_HALF_Z = 42;
+/**
+ * Real-world metres per scene world unit, horizontally
+ * (agup-refs/field-layout.json scene_scale.real_metres_per_world_unit).
+ */
+export const METRES_PER_WORLD_UNIT = 290.9;
 
+/**
+ * Vertical exaggeration applied to the real DEM relative to the horizontal
+ * scene scale. The ground around Ratawi only varies ~0-170 m over 120 km
+ * (about 1 m per km), which is invisible at true scale (35 m = 0.12 world
+ * units). 60x turns the ~30 m fall to the northern marshes into ~6 units and
+ * the south-western rise into a low horizon swell. Tune here only.
+ */
+export const TERRAIN_V_EXAGGERATION = 60;
+
+/** Width, world units, of the blend from the flat field to the real DEM outside the concession. */
+export const TERRAIN_BLEND_WIDTH = 14;
+
+/** Distance from a point to the closest edge of a closed polygon. */
+function distanceToPolygonEdge(x: number, z: number, poly: readonly Vec2[]): number {
+  let best = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [ax, az] = poly[j];
+    const [bx, bz] = poly[i];
+    const dx = bx - ax;
+    const dz = bz - az;
+    const len2 = dx * dx + dz * dz || 1;
+    const t = Math.min(1, Math.max(0, ((x - ax) * dx + (z - az) * dz) / len2));
+    const d = Math.hypot(x - (ax + dx * t), z - (az + dz * t));
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+/** 0 inside the concession, rising smoothly to 1 at TERRAIN_BLEND_WIDTH outside it. */
+export function outsideFieldBlend(x: number, z: number): number {
+  if (inPolygon(x, z, CONCESSION_WORLD)) return 0;
+  const t = Math.min(1, distanceToPolygonEdge(x, z, CONCESSION_WORLD) / TERRAIN_BLEND_WIDTH);
+  return t * t * (3 - 2 * t);
+}
+
+/** World (x east, z south) to metres east / north of CPF-1. */
+export function worldToMetres(x: number, z: number): [number, number] {
+  return [x * METRES_PER_WORLD_UNIT, -z * METRES_PER_WORLD_UNIT];
+}
+
+/** Real DEM relief relative to CPF-1, in exaggerated world units. */
+export function demReliefAt(x: number, z: number): number {
+  const [e, n] = worldToMetres(x, z);
+  return ((demHeightM(e, n) - DEM_CPF_M) * TERRAIN_V_EXAGGERATION) / METRES_PER_WORLD_UNIT;
+}
+
+/** Ground cover shares from ESA WorldCover at a world point. */
+export function groundCoverAt(x: number, z: number): { wet: number; green: number } {
+  const [e, n] = worldToMetres(x, z);
+  return { wet: demWet(e, n), green: demGreen(e, n) };
+}
+
+/**
+ * Ground height. Inside the concession the field is kept essentially flat
+ * (a few centimetres of compacted-ground noise) so every model seats on it.
+ * Outside, it blends over TERRAIN_BLEND_WIDTH into the real Copernicus DEM
+ * trend (see terrain/demData.ts) plus low gravel-desert ripples.
+ */
 export function heightAt(x: number, z: number): number {
-  const fieldMask = Math.min(1, Math.max(0, (Math.hypot(x / FIELD_HALF_X, (z - 2) / FIELD_HALF_Z) - 1) / 1.2));
-  const m = fieldMask * fieldMask * (3 - 2 * fieldMask);
-  const w = fbm(x * 0.02, z * 0.02, 3) * 18;
-  const ridge = 1 - Math.abs(Math.sin((x * 0.55 + z * 0.84) * 0.09 + w * 0.25));
-  const dunes = Math.pow(ridge, 2.2) * 6.5 + fbm(x * 0.03 + 9, z * 0.03, 4) * 5;
-  const gentle = fbm(x * 0.05, z * 0.05, 3) * 0.55;
-  return gentle + m * dunes;
+  const flat = fbm(x * 0.05, z * 0.05, 3) * 0.25;
+  const m = outsideFieldBlend(x, z);
+  if (m <= 0) return flat;
+  const ripples = fbm(x * 0.09 + 9, z * 0.09, 3) * 0.35;
+  return flat + m * (demReliefAt(x, z) + ripples);
 }
 
 export function heightAtGrid(gx: number, gy: number): number {

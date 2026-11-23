@@ -1,28 +1,56 @@
 /**
- * Dune heightfield terrain, ported from design-3d/src/scene.js `buildTerrain`.
+ * Ground heightfield: flat compacted field inside the concession, blending
+ * into the real Copernicus DEM trend outside it (see world.ts heightAt).
+ * Vertex colours follow ESA WorldCover: compacted grey-tan pad ground in the
+ * field, warm sand / gravel desert beyond, darker wet ground and green-brown
+ * farmland toward the northern marshes. Originally ported from
+ * design-3d/src/scene.js `buildTerrain`.
  * Segment count comes from the active quality profile (plan section 8: medium
  * keeps this cheap enough for a venue PC).
  */
 import { useMemo } from 'react';
-import { PlaneGeometry, MeshStandardMaterial, Vector3 } from 'three';
-import { heightAt } from './world';
+import { useFrame } from '@react-three/fiber';
+import { BufferAttribute, Color, PlaneGeometry, MeshStandardMaterial, Vector3 } from 'three';
+import { groundCoverAt, heightAt, outsideFieldBlend } from './world';
+import { dayBlend } from '../state/sceneSettings';
+
+const FIELD_GROUND = new Color('#cdb79c');
+const SAND = new Color('#e3c59a');
+const GRAVEL = new Color('#c9b495');
+const WET = new Color('#4f5448');
+const FARM = new Color('#7d7a52');
 import { createGrainTexture, createTerrainColorTexture } from './textures';
 import type { QualityProfile } from './quality';
 
 const SIZE = 420;
 
 export function FieldTerrain({ quality }: { quality: QualityProfile }) {
-  const { geometry, material } = useMemo(() => {
+  const { geometry, material, uDay } = useMemo(() => {
     const seg = quality.terrainSegments;
     const geo = new PlaneGeometry(SIZE, SIZE, seg, seg);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
     const v = new Vector3();
+    const colors = new Float32Array(pos.count * 3);
+    const c = new Color();
     for (let i = 0; i < pos.count; i++) {
       v.fromBufferAttribute(pos, i);
-      pos.setY(i, heightAt(v.x, v.z));
+      const y = heightAt(v.x, v.z);
+      pos.setY(i, y);
+      const out = outsideFieldBlend(v.x, v.z);
+      const { wet, green } = groundCoverAt(v.x, v.z);
+      // Higher ground to the south-west is Dibdibba gravel; lower ground is finer sand.
+      c.copy(SAND).lerp(GRAVEL, Math.min(1, Math.max(0, y / 8)));
+      c.lerp(FARM, Math.min(1, green * 1.2));
+      c.lerp(WET, Math.min(1, wet * 1.1));
+      c.lerp(FIELD_GROUND, 1 - out);
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
     }
+    geo.setAttribute('color', new BufferAttribute(colors, 3));
     geo.computeVertexNormals();
+    const uDay = { value: dayBlend.value };
 
     const mat = new MeshStandardMaterial({
       map: createTerrainColorTexture(),
@@ -30,14 +58,16 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
       bumpScale: 0.12,
       roughness: 0.96,
       metalness: 0,
-      color: '#d9b994',
+      color: '#ffffff',
+      vertexColors: true,
     });
     mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uDay = uDay;
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vWp;')
         .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vWp;')
+        .replace('#include <common>', '#include <common>\nvarying vec3 vWp;\nuniform float uDay;')
         .replace(
           '#include <emissivemap_fragment>',
           `#include <emissivemap_fragment>
@@ -47,14 +77,20 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
           vec2 g = abs(fract(vWp.xz / 10.0) - 0.5) * 2.0;
           vec2 gw = fwidth(vWp.xz / 10.0) * 2.0;
           float grid = max(1.0 - smoothstep(0.0, gw.x * 1.2, 1.0 - g.x), 1.0 - smoothstep(0.0, gw.y * 1.2, 1.0 - g.y));
-          totalEmissiveRadiance += vec3(0.12, 0.2, 0.3) * grid * 0.05 * fade;
+          totalEmissiveRadiance += vec3(0.12, 0.2, 0.3) * grid * 0.05 * fade * (1.0 - uDay);
         }`,
         );
     };
-    return { geometry: geo, material: mat };
+    return { geometry: geo, material: mat, uDay };
     // Rebuild only when the terrain resolution changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quality.terrainSegments]);
+
+  useFrame(() => {
+    uDay.value = dayBlend.value;
+    // Day: lift the sand albedo so the desert reads bright in sunlight.
+    material.color.setScalar(1 + 0.55 * dayBlend.value);
+  });
 
   return <mesh geometry={geometry} material={material} receiveShadow />;
 }

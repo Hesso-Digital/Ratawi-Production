@@ -4,7 +4,12 @@
  */
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import type { Mesh, ShaderMaterial } from 'three';
+import { Color, type FogExp2, type Mesh, type ShaderMaterial } from 'three';
+import { useThree } from '@react-three/fiber';
+import { dayBlend } from '../state/sceneSettings';
+
+const FOG_NIGHT = new Color('#142238');
+const FOG_DAY = new Color('#d4cbb8');
 import { BackSide } from 'three';
 import { createSkyMaterial } from './shaders/materials';
 import { useSceneClockRef } from './useSceneClock';
@@ -18,9 +23,22 @@ export function SkyAndFog() {
     return mat;
   }, []);
 
+  const scene = useThree((st) => st.scene);
+  const gl = useThree((st) => st.gl);
   useFrame(() => {
+    const day = dayBlend.value;
     const mat = meshRef.current?.material as ShaderMaterial | undefined;
-    if (mat) mat.uniforms.uGold.value = sceneClock.current.gold;
+    if (mat) {
+      mat.uniforms.uGold.value = sceneClock.current.gold;
+      mat.uniforms.uDay.value = day;
+    }
+    const fog = scene.fog as FogExp2 | null;
+    if (fog) {
+      fog.color.copy(FOG_NIGHT).lerp(FOG_DAY, day);
+      // Desert haze: a little thinner than the night murk so the horizon swell reads.
+      fog.density = 0.0058 - day * 0.003;
+    }
+    gl.toneMappingExposure = 1.05 + day * 0.1;
   });
 
   return (

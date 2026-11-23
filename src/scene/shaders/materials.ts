@@ -132,7 +132,7 @@ export function createSkyMaterial() {
     side: DoubleSide,
     depthWrite: false,
     fog: false,
-    uniforms: { uGold: { value: 0 } },
+    uniforms: { uGold: { value: 0 }, uDay: { value: 0 } },
     vertexShader: /* glsl */ `
       varying vec3 vP;
       void main() {
@@ -141,7 +141,7 @@ export function createSkyMaterial() {
       }
     `,
     fragmentShader: /* glsl */ `
-      varying vec3 vP; uniform float uGold;
+      varying vec3 vP; uniform float uGold; uniform float uDay;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main() {
         float y = vP.y;
@@ -153,7 +153,15 @@ export function createSkyMaterial() {
         c += vec3(0.08, 0.12, 0.2) * exp(-abs(y) * 18.0);
         vec2 sp = floor(vP.xz / (max(y, 0.05)) * 260.0);
         float st = step(0.9975, h(sp)) * smoothstep(0.08, 0.4, y);
-        c += vec3(st) * 0.9;
+        c += vec3(st) * 0.9 * (1.0 - uDay);
+        // Day: pale dusty-blue desert sky, bright haze band at the horizon, sun glow.
+        vec3 dZen = vec3(0.28, 0.48, 0.74);
+        vec3 dHor = vec3(0.80, 0.78, 0.72);
+        vec3 d = mix(dHor, dZen, smoothstep(-0.02, 0.6, y));
+        vec3 sd = normalize(vec3(-0.42, 0.78, 0.33));
+        float sdot = max(0.0, dot(normalize(vP), sd));
+        d += vec3(1.0, 0.92, 0.75) * (pow(sdot, 900.0) * 6.0 + pow(sdot, 12.0) * 0.25);
+        c = mix(c, d, uDay);
         gl_FragColor = vec4(c, 1.0);
       }
     `,

@@ -7,7 +7,8 @@
  */
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { BufferAttribute, BufferGeometry, CatmullRomCurve3, Color, Points, TubeGeometry, Vector3, type Mesh } from 'three';
+import { BufferAttribute, BufferGeometry, CatmullRomCurve3, Color, MeshStandardMaterial, Points, TubeGeometry, Vector3, type Mesh } from 'three';
+import { sceneSettings } from '../state/sceneSettings';
 import { AG25_WORLD, CPF_WORLD, EXPORT_LINE_WORLD, WORLD_WELLS, pathPoints } from './world';
 import { createFlowMaterial, createPointsMaterial, hdr } from './shaders/materials';
 import { createGlowSprite } from './textures';
@@ -115,14 +116,27 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
     return { particleGeometry: geo, particleMaterial: createPointsMaterial(createGlowSprite()) };
   }, [totalDots]);
 
+  // Plain steel pipe shown instead of the animated glow tubes when Flows is off.
+  const pipeMaterial = useMemo(() => new MeshStandardMaterial({ color: '#7d858c', metalness: 0.6, roughness: 0.45 }), []);
+
   useFrame(({ gl, size }) => {
     const { t, agupFlow, gasFlow, gold, oilFlow } = sceneClock.current;
     const areaId = exploreStore.get().areaId;
+    const flowsOn = sceneSettings.get().flows;
+    if (pointsRef.current) pointsRef.current.visible = flowsOn;
+    if (!flowsOn) {
+      for (const tube of tubes) {
+        const mesh = tubeRefs.current.get(tube.id);
+        if (mesh) mesh.material = pipeMaterial;
+      }
+      return;
+    }
 
     for (const tube of tubes) {
       const mesh = tubeRefs.current.get(tube.id);
       if (!mesh) continue;
-      const mat = mesh.material as ReturnType<typeof createFlowMaterial>;
+      mesh.material = tube.material;
+      const mat = tube.material;
       const gain = focusGain(areaId, tube.kind, tube.wellName);
       mat.uniforms.uTime.value = t;
       if (tube.kind === 'oil') {

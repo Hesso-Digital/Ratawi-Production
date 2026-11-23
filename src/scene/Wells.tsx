@@ -16,6 +16,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { Color, CylinderGeometry, DoubleSide, InstancedMesh, MeshBasicMaterial, Object3D, RingGeometry } from 'three';
 import { heightAt, WORLD_WELLS } from './world';
+import { sceneSettings } from '../state/sceneSettings';
 import { hdr } from './shaders/materials';
 import { useSceneClockRef } from './useSceneClock';
 import type { QualityProfile } from './quality';
@@ -103,6 +104,10 @@ export function Wells({
     const ring = ringRef.current;
     if (!beacon || !beam || !ring) return;
     const { t, agupIgnite, agupWave } = sceneClock.current;
+    // Flows off: keep the lit beacons steady, drop the beams and ground rings for clean model inspection.
+    const flowsOn = sceneSettings.get().flows;
+    beam.visible = flowsOn;
+    ring.visible = flowsOn;
 
     if (mastAligned && beamMatRef.current) {
       let nearest = Infinity;
@@ -154,7 +159,7 @@ export function Wells({
       const beaconZ = mastAligned ? mast.z : w.world[1];
       const beamY = mastAligned ? mast.y + GLB_BEAM_HEIGHT / 2 : y + 0.08 + 0.95 + 1.8 + beaconLift;
 
-      const beaconColor = hdr(col, k * pulse);
+      const beaconColor = hdr(col, k * (flowsOn ? pulse : 1));
       dummy.rotation.set(0, 0, 0);
       dummy.position.set(beaconX, beaconY, beaconZ);
       dummy.scale.setScalar(1);

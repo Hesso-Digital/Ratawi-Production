@@ -10,6 +10,7 @@ import { hdr } from '../shaders/materials';
 import { useSceneClockRef } from '../useSceneClock';
 import type { SceneState } from '../ceremonyTimeline';
 import { FACILITY_MATERIALS } from './materials';
+import { sceneSettings } from '../../state/sceneSettings';
 
 export function Flare({
   position,
@@ -40,7 +41,7 @@ export function Flare({
 
   useFrame(({ clock }) => {
     const intensity = getIntensity ? getIntensity(sceneClock.current) : 1;
-    const flicker = 1 + 0.08 * Math.sin(clock.elapsedTime * 9);
+    const flicker = sceneSettings.get().flows ? 1 + 0.08 * Math.sin(clock.elapsedTime * 9) : 1;
     if (groupRef.current) groupRef.current.visible = intensity > 0.02;
     if (coreFlame.current) coreFlame.current.scale.setScalar(flicker * (0.6 + 0.4 * intensity));
     if (tipFlame.current) tipFlame.current.scale.setScalar(flicker * (0.6 + 0.4 * intensity));

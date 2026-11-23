@@ -10,6 +10,7 @@ import { memo, useEffect, useRef } from 'react';
 import type { BloomEffect } from 'postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import { useSceneClockRef } from './useSceneClock';
+import { dayBlend } from '../state/sceneSettings';
 
 export const PostFX = memo(function PostFX() {
   const sceneClock = useSceneClockRef();
@@ -32,7 +33,8 @@ export const PostFX = memo(function PostFX() {
     const bloom = bloomRef.current;
     if (!bloom) return;
     const { gold, bloomPulse } = sceneClock.current;
-    bloom.intensity = 0.7 + gold * 0.6 + bloomPulse * 1.4;
+    // Day keeps a tighter, softer glow so fixtures read as lit lamps rather than haze.
+    bloom.intensity = (0.7 + gold * 0.6 + bloomPulse * 1.4) * (1 - 0.55 * dayBlend.value);
   });
 
   return (

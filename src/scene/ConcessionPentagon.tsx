@@ -19,6 +19,7 @@ import {
 } from 'three';
 import type { ShaderMaterial } from 'three';
 import { CONCESSION_WORLD, heightAt, type Vec2 } from './world';
+import { sceneSettings } from '../state/sceneSettings';
 import { createBoundaryWallMaterial, hdr } from './shaders/materials';
 
 const RED = '#ff2a36';
@@ -115,7 +116,8 @@ export function ConcessionPentagon() {
   }, []);
 
   useFrame((_, delta) => {
-    wallMaterial.uniforms.uTime.value += delta;
+    // Flows off freezes the boundary shimmer; the red wall stays.
+    if (sceneSettings.get().flows) wallMaterial.uniforms.uTime.value += delta;
   });
 
   return (
