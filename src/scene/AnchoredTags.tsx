@@ -31,7 +31,7 @@ export function AnchoredTags() {
   const state = useSceneSnapshot();
   const gold = state.gold > 0.5;
   const agupLabel =
-    state.agupIgnite === 0 ? 'Ready · 7 wells' : state.agupIgnite === 1 ? 'Opening · 7 wells' : `Online · ${Math.max(0, Math.round(state.wells) - 25)} / 7 wells`;
+    state.agupIgnite === 0 ? 'Ready · 7 wells' : state.agupIgnite === 1 ? 'Armed · 7 wells' : `Online · ${Math.max(0, Math.round(state.wells) - 25)} / 7 wells`;
 
   return (
     <>
@@ -42,7 +42,7 @@ export function AnchoredTags() {
           </div>
           <div className="d">
             {state.oil.toFixed(1)}
-            <small>kbopd in</small>
+            <small>{state.valves > 0.5 ? 'kbopd in · valves open' : 'kbopd in'}</small>
           </div>
         </div>
       </Html>

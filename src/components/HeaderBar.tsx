@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { WORDING } from '../data/ceremonyConfig';
 
 function formatNow(d: Date) {
   const time = d.toLocaleTimeString('en-GB', {
@@ -24,8 +25,8 @@ export function HeaderBar() {
   return (
     <header className="header">
       <div className="brand-block">
-        <div className="kicker">AGUP Phase 1  ·  RFSU Opening</div>
-        <h1>Ratawi Production</h1>
+        <div className="kicker">{WORDING.eyebrow}</div>
+        <h1>{WORDING.title}</h1>
       </div>
       <div className="clock">{clock}</div>
     </header>

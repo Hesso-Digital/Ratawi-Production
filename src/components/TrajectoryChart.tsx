@@ -1,4 +1,5 @@
-import { BUDGET_KBOPD, TARGET_KBOPD, TODAY_INDEX, TRAJECTORY } from '../data/defaults';
+import { WORDING } from '../data/ceremonyConfig';
+import { BUDGET_KBOPD, TARGET_KBOPD, PLAYBACK_END_INDEX, TODAY_INDEX, TRAJECTORY } from '../data/defaults';
 
 const W = 1800;
 const H = 150;
@@ -17,8 +18,11 @@ function poly(key: 'oil' | 'exportKbopd', from: number, to: number) {
     .join(' ');
 }
 
-export function TrajectoryChart({ progress, playing }: { progress: number; playing: boolean }) {
-  const cursor = playing ? progress * 6 : TODAY_INDEX;
+export function TrajectoryChart({ oil, playback }: { oil: number; playback: { index: number } | null }) {
+  // Outside the replay the cursor travels from November to December as oil climbs, so the chart follows the ceremony.
+  const cursor = playback
+    ? playback.index
+    : TODAY_INDEX + Math.min(1, Math.max(0, (oil - TRAJECTORY[TODAY_INDEX].oil) / (TRAJECTORY[PLAYBACK_END_INDEX].oil - TRAJECTORY[TODAY_INDEX].oil)));
   const cx = xAt(cursor);
   const actualOil = poly('oil', 0, TODAY_INDEX);
   const forecastOil = poly('oil', TODAY_INDEX, TRAJECTORY.length - 1);
@@ -37,7 +41,7 @@ export function TrajectoryChart({ progress, playing }: { progress: number; playi
           <span>
             <b style={{ color: 'var(--ratawi-export)' }}>Export</b>
           </span>
-          <span>Budget 90  ·  Target 120</span>
+          <span>{WORDING.commitmentLabel} 90  ·  Target 120</span>
         </div>
       </div>
       <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Oil and export trajectory">
@@ -59,7 +63,7 @@ export function TrajectoryChart({ progress, playing }: { progress: number; playi
           </g>
         ))}
         <line x1={cx} y1={PAD.t} x2={cx} y2={H - PAD.b} stroke="rgba(232,238,242,0.45)" strokeWidth="1.2" />
-        <circle cx={cx} cy={yAt(playing ? lerpOil(cursor) : TRAJECTORY[TODAY_INDEX].oil)} r="4.5" fill="#2be7ff" stroke="#06111c" strokeWidth="1.5" />
+        <circle cx={cx} cy={yAt(lerpOil(cursor))} r="4.5" fill="#2be7ff" stroke="#06111c" strokeWidth="1.5" />
       </svg>
     </section>
   );

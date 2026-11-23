@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { HeaderBar } from '../components/HeaderBar';
-import { OPERATOR_PIN, REVEAL_TIMINGS } from '../config';
+import { OPERATOR_PIN } from '../config';
 import { BASELINE, STEP_1, STEP_2 } from '../data/defaults';
-import { OPEN_INPUTS, STEP1_AUTO_FOLLOWS_COUNTDOWN } from '../data/openInputs';
+import { BEATS, SCENARIO_CHAPTERS } from '../data/scenario';
 import { useCeremonyStore } from '../data/store';
 import { QUALITY_PROFILES } from '../scene/quality';
-import { sceneStateAt } from '../scene/ceremonyTimeline';
+import { useLiveScene } from '../scene/useLiveScene';
 import type { CueKind, Quality, Snapshot, ViewMode } from '../data/types';
 
 const UNLOCK_KEY = 'ratawi_operator_unlocked';
@@ -56,35 +56,29 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
 }
 
 const BEAT_JUMPS: Array<{ label: string; kind: CueKind; offsetS: number }> = [
-  { label: 'Before (idle)', kind: 'idle', offsetS: 0 },
+  { label: 'Establishing shot', kind: 'idle', offsetS: 0 },
+  { label: 'Step 1 · valves opening', kind: 'step1', offsetS: 0.8 },
+  { label: 'Step 1 · oil climbing to 110', kind: 'step1', offsetS: 2.4 },
+  { label: 'Step 1 · settled at 110', kind: 'step1', offsetS: 4.6 },
   { label: 'Countdown · 3', kind: 'countdown', offsetS: 0 },
-  { label: 'Countdown · valves open', kind: 'countdown', offsetS: 2.3 },
-  { label: 'Step 1 · climbing to 110', kind: 'step1', offsetS: 0.3 },
-  { label: 'Step 1 · settled at 110', kind: 'step1', offsetS: 1.6 },
-  { label: 'Step 2 · AGUP igniting', kind: 'step2', offsetS: 0.5 },
-  { label: 'Step 2 · flow + gas', kind: 'step2', offsetS: 2 },
-  { label: 'Step 2 · climbing to 120', kind: 'step2', offsetS: 2.2 },
-  { label: 'Milestone · gold', kind: 'step2', offsetS: 4 },
+  { label: 'Countdown · 1', kind: 'countdown', offsetS: 1.7 },
+  { label: 'Step 2 · AGUP wells online', kind: 'step2', offsetS: 0.8 },
+  { label: 'Step 2 · gas to AG-25', kind: 'step2', offsetS: 2.6 },
+  { label: 'Step 2 · 120 gold moment', kind: 'step2', offsetS: 3.9 },
+  { label: 'Replay · mid-way', kind: 'playback', offsetS: 4.5 },
 ];
 
 export function OperatorPage() {
   const gate = useUnlocked();
   const store = useCeremonyStore();
   const [draft, setDraft] = useState<Snapshot>(store.snapshot);
-  const [autoStep1, setAutoStep1] = useState(STEP1_AUTO_FOLLOWS_COUNTDOWN);
-  const [, forceTick] = useState(0);
+  const preview = useLiveScene(store.cue, store.prevSnapshot, store.snapshot, 150);
   const timers = useRef<number[]>([]);
 
   // Prefetch the 3D reveal chunk as soon as the operator opens the console, so
   // the audience's first "Reveal" switch doesn't wait on a cold import.
   useEffect(() => {
     void import('./RevealAudience');
-  }, []);
-
-  // Tick the "what the hall can see" preview at a light cadence.
-  useEffect(() => {
-    const id = window.setInterval(() => forceTick((n) => n + 1), 150);
-    return () => window.clearInterval(id);
   }, []);
 
   useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
@@ -122,48 +116,29 @@ export function OperatorPage() {
     timers.current = [];
   };
 
-  const runCountdown = () => {
-    clearTimers();
-    store.startCountdown();
-    if (autoStep1) {
-      const id = window.setTimeout(() => {
-        setDraft(STEP_1);
-        store.applySnapshot(STEP_1, 1, 'step1');
-      }, REVEAL_TIMINGS.countdownTotalS * 1000);
-      timers.current.push(id);
-    }
-  };
-
   const runStep1 = () => {
     clearTimers();
     setDraft(STEP_1);
-    store.applySnapshot(STEP_1, 1, 'step1');
+    store.runStep1();
+  };
+
+  const runCountdown = () => {
+    clearTimers();
+    setDraft(STEP_2);
+    store.runCountdown();
   };
 
   const runStep2 = () => {
     clearTimers();
     setDraft(STEP_2);
-    store.applySnapshot(STEP_2, 2, 'step2');
+    store.runStep2();
   };
 
-  const runFullReveal = () => {
-    clearTimers();
-    store.startCountdown();
-    const t1 = window.setTimeout(() => {
-      setDraft(STEP_1);
-      store.applySnapshot(STEP_1, 1, 'step1');
-    }, REVEAL_TIMINGS.countdownTotalS * 1000);
-    const t2 = window.setTimeout(
-      () => {
-        setDraft(STEP_2);
-        store.applySnapshot(STEP_2, 2, 'step2');
-      },
-      (REVEAL_TIMINGS.countdownTotalS + REVEAL_TIMINGS.step1ClimbS + 0.4) * 1000,
-    );
-    timers.current.push(t1, t2);
+  const runFullCeremony = () => {
+    runStep1();
+    const id = window.setTimeout(runCountdown, (BEATS.countdownStart - BEATS.step1Start) * 1000);
+    timers.current.push(id);
   };
-
-  const preview = sceneStateAt(store.cue, (Date.now() - store.cue.startedAt) / 1000, store.prevSnapshot, store.snapshot);
 
   return (
     <>
@@ -179,17 +154,24 @@ export function OperatorPage() {
 
           <div className="op-section-label">Ceremony sequence</div>
           <div className="op-actions">
-            <button className="btn primary" type="button" onClick={runCountdown}>
-              Countdown 3 · 2 · 1
+            <button className="btn primary" type="button" onClick={runStep1}>
+              1 · Step 1 · Valves open
             </button>
-            <button className="btn" type="button" onClick={runStep1}>
-              Step 1 · Valves open
+            <button className="btn primary" type="button" onClick={runCountdown}>
+              2 · Countdown 3 · 2 · 1
             </button>
             <button className="btn" type="button" onClick={runStep2}>
-              Step 2 · AGUP + gas
+              Step 2 now (skip countdown)
             </button>
-            <button className="btn" type="button" onClick={store.playStory}>
-              {store.playback.playing ? 'Playing June to December' : 'Play June to December'}
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                clearTimers();
+                store.playStory();
+              }}
+            >
+              3 · Replay June to December
             </button>
             <button
               className="btn"
@@ -203,15 +185,15 @@ export function OperatorPage() {
               Reset
             </button>
           </div>
-          <label className="op-check">
-            <input type="checkbox" checked={autoStep1} onChange={(e) => setAutoStep1(e.target.checked)} />
-            Step 1 auto-follows the countdown (open input #5 — default off until the narrator timing is confirmed)
-          </label>
+          <p className="note">
+            Click Step 1, then start the countdown on the narrator&apos;s &quot;three&quot;. Step 2 follows the countdown
+            by itself.
+          </p>
 
           <div className="op-section-label">Rehearsal</div>
           <div className="op-actions">
-            <button className="btn" type="button" onClick={runFullReveal}>
-              Run full reveal (countdown → step 1 → step 2)
+            <button className="btn" type="button" onClick={runFullCeremony}>
+              Run the whole ceremony
             </button>
             <select
               className="op-select"
@@ -289,24 +271,22 @@ export function OperatorPage() {
             {preview.gold > 0.5 ? ' · GOLD' : ''}
           </p>
           <p className="note">
-            Cue: <b>{store.cue.kind}</b> (t={preview.t.toFixed(2)}s) · Step {store.step} · View {store.view} · Quality{' '}
-            {store.quality}. Playback {store.playback.playing ? 'running' : 'idle'}. Data origin is mock, ready to
-            swap for PI Vision later.
+            Cue: <b>{store.cue.kind}</b> · Step {preview.step} · View {store.view} · Quality {store.quality}.
+            {preview.playback ? ` Replay ${Math.round(preview.playback.progress * 100)}%.` : ''} Values are entered
+            here today and can be fed from PI Vision later.
           </p>
           <p className="note">
             Open a second window at the site root for the audience view, then drive the ceremony from this page.
           </p>
 
           <div className="eyebrow" style={{ marginTop: 22 }}>
-            Open data inputs (integration-plan.md §10)
+            Run of show
           </div>
           <ul className="op-inputs">
-            {OPEN_INPUTS.map((input) => (
-              <li key={input.id} data-status={input.status}>
-                <b>
-                  #{input.id} {input.title}
-                </b>
-                <span>{input.note}</span>
+            {SCENARIO_CHAPTERS.map((c) => (
+              <li key={c.id} data-status={c.cue === store.cue.kind ? 'active' : 'idle'}>
+                <b>{c.label}</b>
+                <span>{c.summary}</span>
               </li>
             ))}
           </ul>

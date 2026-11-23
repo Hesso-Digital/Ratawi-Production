@@ -73,7 +73,7 @@ export function RevealAudience({
   const cue = presetCue ?? store.cue;
   const prevSnapshot = preset ? preset.from : store.prevSnapshot;
   const snapshot = preset ? preset.to : store.snapshot;
-  const showRibbon = preset ? !!preset.showRibbon : store.playback.playing || store.cue.kind === 'playback';
+  const showRibbon = cue.kind === 'playback';
 
   return (
     <SceneClockProvider cue={cue} prevSnapshot={prevSnapshot} snapshot={snapshot}>
@@ -90,7 +90,7 @@ export function RevealAudience({
           </div>
         </SceneErrorBoundary>
         <div className="reveal-vignette" />
-        <RevealHud playbackProgress={store.playback.playing && !preset ? store.progress : null} />
+        <RevealHud />
       </div>
     </SceneClockProvider>
   );

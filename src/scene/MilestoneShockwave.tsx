@@ -11,7 +11,6 @@ import { CPF_WORLD, heightAt } from './world';
 import { createPointsMaterial, createShockwaveMaterial, hdr } from './shaders/materials';
 import { createGlowSprite } from './textures';
 import { useSceneClockRef } from './useSceneClock';
-import { BEATS } from './ceremonyTimeline';
 import type { QualityProfile } from './quality';
 
 const GOLD = '#ffc247';
@@ -48,8 +47,7 @@ export function MilestoneShockwave({ quality }: { quality: QualityProfile }) {
   }, [emberCount]);
 
   useFrame(({ clock }) => {
-    const { t, gold, cueKind } = sceneClock.current;
-    const since = cueKind === 'step2' ? t - BEATS.milestone : gold > 0 ? 999 : -999;
+    const { gold, milestoneSince: since } = sceneClock.current;
     const wave = waveRef.current?.material as typeof waveMaterial | undefined;
     if (wave) {
       wave.uniforms.uR.value = Math.max(0, since) * 14;

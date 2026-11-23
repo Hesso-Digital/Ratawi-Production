@@ -10,10 +10,13 @@ import { HeroCard } from '../components/HeroCard';
 import { KpiTiles } from '../components/KpiTiles';
 import { TrajectoryChart } from '../components/TrajectoryChart';
 import { useCeremonyStore } from '../data/store';
+import { useLiveScene } from '../scene/useLiveScene';
 import { useTileEntrance } from '../hooks/useTileEntrance';
 
 export function ClassicAudience() {
-  const { display, playback, progress } = useCeremonyStore();
+  const store = useCeremonyStore();
+  const scene = useLiveScene(store.cue, store.prevSnapshot, store.snapshot);
+  const display = scene;
   const root = useTileEntrance<HTMLDivElement>();
 
   return (
@@ -25,7 +28,7 @@ export function ClassicAudience() {
           <HeroCard oil={display.oil} />
           <KpiTiles data={display} />
         </div>
-        <TrajectoryChart progress={progress} playing={playback.playing} />
+        <TrajectoryChart oil={scene.oil} playback={scene.playback} />
       </div>
     </div>
   );

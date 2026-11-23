@@ -113,7 +113,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
   }, [totalDots]);
 
   useFrame(({ gl, size }) => {
-    const { t, agupFlow, gasFlow, gold } = sceneClock.current;
+    const { t, agupFlow, gasFlow, gold, oilFlow } = sceneClock.current;
 
     for (const tube of tubes) {
       const mesh = tubeRefs.current.get(tube.id);
@@ -122,6 +122,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
       mat.uniforms.uTime.value = t;
       if (tube.kind === 'oil') {
         mat.uniforms.uProgress.value = 1;
+        mat.uniforms.uColor.value.copy(hdr(COL_OIL, 0.6 + 1.3 * oilFlow));
       } else if (tube.kind === 'agup') {
         mat.uniforms.uProgress.value = agupFlow;
         const flowColor = sceneClock.current.agupIgnite >= 2 ? COL_GOLD : COL_AGUP_IDLE;
@@ -159,7 +160,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
         pos[k * 3] = v.x;
         pos[k * 3 + 1] = v.y + 0.05;
         pos[k * 3 + 2] = v.z;
-        const b = visible ? 1.3 : 0;
+        const b = visible ? (f.kind === 'oil' ? 0.45 + 0.9 * oilFlow : 1.3) : 0;
         col[k * 3] = color.r * b;
         col[k * 3 + 1] = color.g * b;
         col[k * 3 + 2] = color.b * b;

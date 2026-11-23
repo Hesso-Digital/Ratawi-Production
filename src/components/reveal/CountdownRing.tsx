@@ -5,8 +5,8 @@ const CIRCUMFERENCE = 2 * Math.PI * 170;
 export function CountdownRing({ state }: { state: SceneState }) {
   if (!state.countdown) return null;
   const { n, prog } = state.countdown;
-  const offset = n > 0 ? CIRCUMFERENCE * (1 - prog) : 0;
-  const fade = n === 0 ? Math.max(0, 1 - Math.max(0, prog - 0.6) / 0.4) : 1;
+  const offset = CIRCUMFERENCE * (1 - prog);
+  const fade = 1;
 
   return (
     <div className="reveal-count" style={{ opacity: fade }}>
@@ -26,19 +26,11 @@ export function CountdownRing({ state }: { state: SceneState }) {
           style={{ filter: 'drop-shadow(0 0 8px #ffb347)' }}
         />
       </svg>
-      {n > 0 ? (
-        <div className="n">{n}</div>
-      ) : (
-        <div className="n word">
-          Valves
-          <br />
-          open
-        </div>
-      )}
-      <div className="cap">{n > 0 ? 'Opening the valves' : 'AGUP · Step 1'}</div>
+      <div className="n">{n}</div>
+      <div className="cap">AGUP · Step 2</div>
       <div className="chips">
         {[3, 2, 1].map((chip) => (
-          <b key={chip} className={n === 0 || chip >= n ? 'on' : ''}>
+          <b key={chip} className={chip >= n ? 'on' : ''}>
             {chip}
           </b>
         ))}

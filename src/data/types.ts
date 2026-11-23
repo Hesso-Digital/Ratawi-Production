@@ -1,6 +1,6 @@
 export type CeremonyStep = 0 | 1 | 2;
 
-export type DataOrigin = 'mock' | 'pi';
+export type DataOrigin = 'manual' | 'pi';
 
 export type Snapshot = {
   oil: number;
@@ -56,6 +56,4 @@ export type AppState = {
 
 export type ChannelMessage =
   | { type: 'state'; state: AppState }
-  | { type: 'playback-start'; startedAt: number; duration: number }
-  | { type: 'playback-stop' }
   | { type: 'cue'; cue: Cue };

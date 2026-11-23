@@ -7,6 +7,45 @@
 import { CPF_WORLD, heightAt } from '../world';
 import { FACILITY_MATERIALS as M } from './materials';
 import { Flare } from './Flare';
+import { useFrame } from '@react-three/fiber';
+import { useMemo } from 'react';
+import { Color, MeshBasicMaterial } from 'three';
+import { useSceneClockRef } from '../useSceneClock';
+import { hdr } from '../shaders/materials';
+
+const VALVE_CLOSED = new Color('#ff5a3c');
+const VALVE_OPEN = new Color('#3dffb0');
+
+/** Three inlet valves on the gathering header. They turn from red to green as Step 1 opens them. */
+function InletValves() {
+  const sceneClock = useSceneClockRef();
+  const materials = useMemo(
+    () => [0, 1, 2].map(() => new MeshBasicMaterial({ color: hdr(VALVE_CLOSED, 2), toneMapped: false })),
+    [],
+  );
+  useFrame(() => {
+    const { valves, t } = sceneClock.current;
+    materials.forEach((m, i) => {
+      const local = Math.min(1, Math.max(0, valves * 1.6 - i * 0.3));
+      const k = 1.6 + 2.4 * local + (valves > 0 && valves < 1 ? 0.8 * Math.sin(t * 12 + i) : 0);
+      m.color.copy(hdr(VALVE_CLOSED.clone().lerp(VALVE_OPEN, local), k));
+    });
+  });
+  return (
+    <>
+      {[1.6, 2.6, 3.6].map((z, i) => (
+        <group key={z} position={[-5.4, 1.15, z]}>
+          <mesh material={M.steelDark}>
+            <cylinderGeometry args={[0.05, 0.05, 0.5, 8]} />
+          </mesh>
+          <mesh position={[0, 0.34, 0]} material={materials[i]}>
+            <sphereGeometry args={[0.2, 16, 12]} />
+          </mesh>
+        </group>
+      ))}
+    </>
+  );
+}
 
 function Tank({ x, z, r = 1.05, h = 1.25 }: { x: number; z: number; r?: number; h?: number }) {
   return (
@@ -75,6 +114,7 @@ export function CPF1() {
           </mesh>
         </group>
       ))}
+      <InletValves />
       <ProcessModule x={0.3} z={-3.5} w={1.6} h={0.9} d={1.2} />
       <ProcessModule x={2.2} z={-3.5} w={1.6} h={1.1} d={1.2} />
       <ProcessModule x={0.3} z={-1.6} w={1.6} h={0.8} d={1.2} />

@@ -1,3 +1,4 @@
+import { WORDING } from '../../data/ceremonyConfig';
 import { BUDGET_KBOPD, TARGET_KBOPD } from '../../data/defaults';
 import type { SceneState } from '../../scene/ceremonyTimeline';
 
@@ -22,9 +23,13 @@ export function HeroNumber({ state }: { state: SceneState }) {
   const tickPct = (v: number) => (v / 140) * 100;
   const statusText = gold
     ? 'Above target · 120 kbopd reached'
-    : state.step >= 1
-      ? `AGUP coming online · +${(state.oil - BUDGET_KBOPD).toFixed(1)} vs commitment`
-      : `Above commitment · +${(state.oil - BUDGET_KBOPD).toFixed(1)}`;
+    : state.step >= 2
+      ? `AGUP coming online · +${(state.oil - BUDGET_KBOPD).toFixed(1)} vs ${WORDING.commitmentLabel.toLowerCase()}`
+      : state.step === 1
+        ? `Valves open · +${(state.oil - BUDGET_KBOPD).toFixed(1)} vs ${WORDING.commitmentLabel.toLowerCase()}`
+        : state.oil > BUDGET_KBOPD
+          ? `Above ${WORDING.commitmentLabel.toLowerCase()} · +${(state.oil - BUDGET_KBOPD).toFixed(1)}`
+          : `Ramping to ${WORDING.commitmentLabel.toLowerCase()} · ${state.oil.toFixed(1)} of ${BUDGET_KBOPD}`;
 
   return (
     <div className="reveal-hero">
@@ -43,10 +48,10 @@ export function HeroNumber({ state }: { state: SceneState }) {
           <span>0</span>
         </div>
         <div className="tick" style={{ left: `${tickPct(BUDGET_KBOPD)}%` }}>
-          <span>{BUDGET_KBOPD} · Commitment</span>
+          <span>{BUDGET_KBOPD} · {WORDING.commitmentLabel}</span>
         </div>
         <div className="tick target" style={{ left: `${tickPct(TARGET_KBOPD)}%` }}>
-          <span>{TARGET_KBOPD} · AGUP target</span>
+          <span>{TARGET_KBOPD} · {WORDING.targetLabel}</span>
         </div>
       </div>
       <div className="status">
