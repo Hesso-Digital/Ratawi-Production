@@ -72,9 +72,9 @@ describe('production ribbon', () => {
     expect(ribbonY(120)).toBeGreaterThan(ribbonY(90));
   });
 
-  it('shades cyan at the bottom and gold at the top', () => {
-    const lo = ribbonColor(0, 130);
-    const hi = ribbonColor(130, 130);
+  it('shades blue below the commitment and gold at the target', () => {
+    const lo = ribbonColor(0, 90, 120);
+    const hi = ribbonColor(120, 90, 120);
     expect(lo[2]).toBeGreaterThan(lo[0]);
     expect(hi[0]).toBeGreaterThan(hi[2]);
   });

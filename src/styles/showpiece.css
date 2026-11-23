@@ -183,3 +183,11 @@ html[data-time-of-day='day'] .xv-milestone.gold {
     display: none;
   }
 }
+
+/* reveal.css clips `.reveal-canvas-wrap > div > div` to keep labels out of the
+   dock, but drei <Html> wrappers match that selector too and their own boxes are
+   only a label tall, so the inset clipped every 3D label away. Keep the clip on
+   the canvas container only. */
+.reveal-canvas-wrap > div > div:not(:has(> canvas)) {
+  clip-path: none;
+}

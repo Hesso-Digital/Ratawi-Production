@@ -23,6 +23,7 @@ import {
   NormalBlending,
   RepeatWrapping,
   Shape,
+  ShapeGeometry,
   SRGBColorSpace,
   type Group,
 } from 'three';
@@ -162,6 +163,11 @@ export function ExplodedLayers({ quality }: { quality: QualityProfile }) {
       glass: slab(surfacePoly, 0.35),
       reservoir: slab(scalePolygon(CONCESSION_WORLD, 0.99), LAYERS.reservoir.thickness),
       surfaceLoop: loop(surfacePoly, 0),
+      cap: (() => {
+        const g = new ShapeGeometry(shapeOf(scalePolygon(CONCESSION_WORLD, 0.99)));
+        g.rotateX(-Math.PI / 2);
+        return g;
+      })(),
       prismBottom: scalePolygon(CONCESSION_WORLD, LAYERS.prismBottomScale),
       prismTop: scalePolygon(CONCESSION_WORLD, LAYERS.prismTopScale),
     };
@@ -191,6 +197,7 @@ export function ExplodedLayers({ quality }: { quality: QualityProfile }) {
         roughness: 0.35,
         metalness: 0.2,
       }),
+      veins: new MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
       walls: new MeshBasicMaterial({ color: RED, vertexColors: true, transparent: true, opacity: 0, side: DoubleSide, depthWrite: false, blending: AdditiveBlending, toneMapped: false }),
       threads: new MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false, blending: AdditiveBlending, toneMapped: false }),
       core: new MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, depthWrite: false, blending: AdditiveBlending, toneMapped: false }),
@@ -227,6 +234,7 @@ export function ExplodedLayers({ quality }: { quality: QualityProfile }) {
     mats.glassNet.opacity = a * (0.1 + day * 0.06);
     mats.glassTop.opacity = a * (0.13 + day * 0.07);
     mats.reservoir.opacity = a * 0.96;
+    mats.veins.opacity = a * (0.9 - day * 0.35);
     mats.walls.opacity = a * (simple ? 0 : 0.06 + day * 0.05);
     mats.walls.blending = day > 0.5 ? NormalBlending : AdditiveBlending;
     mats.walls.color.copy(RED).lerp(RED_DAY, day);
@@ -281,6 +289,7 @@ export function ExplodedLayers({ quality }: { quality: QualityProfile }) {
     <group ref={group} visible={false}>
       {/* Reservoir slab */}
       <mesh geometry={geo.reservoir} material={mats.reservoir} position={[0, LAYERS.reservoir.y, 0]} />
+      <mesh geometry={geo.cap} material={mats.veins} position={[0, RESERVOIR_TOP + 0.04, 0]} />
       <Line
         ref={(l) => {
           edgeRefs.current[0] = l as unknown as LineHandle;

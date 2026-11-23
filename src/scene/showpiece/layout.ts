@@ -172,16 +172,21 @@ export function ribbonMilestones(
     .map((p) => ({ index: p.index, month: months[p.index].label, value: values[p.index], tag: p.tag }));
 }
 
-/** Cyan (low) to gold (high) by value, for the ribbon's vertex colours. */
-const LOW = [0.22, 0.84, 1.0];
-const MID = [0.3, 0.62, 1.0];
-const HIGH = [1.0, 0.76, 0.28];
-export function ribbonColor(value: number, max: number): [number, number, number] {
-  const t = max <= 0 ? 0 : Math.max(0, Math.min(1, value / max));
-  if (t < 0.6) {
-    const k = t / 0.6;
-    return [LOW[0] + (MID[0] - LOW[0]) * k, LOW[1] + (MID[1] - LOW[1]) * k, LOW[2] + (MID[2] - LOW[2]) * k];
-  }
-  const k = (t - 0.6) / 0.4;
-  return [MID[0] + (HIGH[0] - MID[0]) * k, MID[1] + (HIGH[1] - MID[1]) * k, MID[2] + (HIGH[2] - MID[2]) * k];
+/**
+ * Ribbon shade by value against the plan lines: deep blue to cyan up to the
+ * commitment, cyan to gold between commitment and target, gold at or above it.
+ */
+const BLUE = [0.16, 0.46, 1.0];
+const CYAN = [0.22, 0.86, 1.0];
+const ICE = [0.82, 0.93, 1.0];
+const GOLD = [1.0, 0.74, 0.24];
+function mix(a: number[], b: number[], k: number): [number, number, number] {
+  const t = Math.max(0, Math.min(1, k));
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+export function ribbonColor(value: number, commitment: number, target: number): [number, number, number] {
+  if (value <= commitment) return mix(BLUE, CYAN, commitment > 0 ? value / commitment : 1);
+  if (value >= target) return [GOLD[0], GOLD[1], GOLD[2]];
+  const k = (value - commitment) / Math.max(1e-6, target - commitment);
+  return k < 0.5 ? mix(CYAN, ICE, k * 2) : mix(ICE, GOLD, (k - 0.5) * 2);
 }

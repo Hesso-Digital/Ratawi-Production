@@ -8,7 +8,7 @@
 import { Html, Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { BufferAttribute, BufferGeometry, DoubleSide, MeshBasicMaterial, type Group, type Mesh } from 'three';
+import { BufferAttribute, BufferGeometry, Color, DoubleSide, SRGBColorSpace, MeshBasicMaterial, type Group, type Mesh } from 'three';
 import { asOfStore, TIMELINE_LAST_INDEX, useAsOfState } from '../../data/asOfStore';
 import { WORDING } from '../../data/ceremonyConfig';
 import { PLAYBACK_END_INDEX, TRAJECTORY } from '../../data/defaults';
@@ -20,9 +20,15 @@ import type { QualityProfile } from '../quality';
 import { RIBBON, ribbonColor, ribbonMilestones, ribbonX, ribbonY, ribbonZ, sampleSeries } from './layout';
 
 type V3 = [number, number, number];
+const lin = new Color();
+/** Vertex colours are linear; the palette is authored in sRGB. */
+function toLinear([r, g, b]: [number, number, number]): [number, number, number] {
+  lin.setRGB(r, g, b, SRGBColorSpace);
+  return [lin.r, lin.g, lin.b];
+}
 const MONTHS = TRAJECTORY.length;
 
-function buildBand(samples: Array<{ i: number; v: number }>, max: number) {
+function buildBand(samples: Array<{ i: number; v: number }>, commitment: number, target: number) {
   const n = samples.length;
   const pos = new Float32Array(n * 2 * 3);
   const col = new Float32Array(n * 2 * 4);
@@ -32,14 +38,14 @@ function buildBand(samples: Array<{ i: number; v: number }>, max: number) {
     const z = ribbonZ(i, MONTHS);
     const x = ribbonX(i, MONTHS);
     const y = ribbonY(v);
-    const [r0, g0, b0] = ribbonColor(v, max);
+    const [r0, g0, b0] = toLinear(ribbonColor(v, commitment, target));
     const [r, g, b] = [r0 * 0.72, g0 * 0.72, b0 * 0.72];
     const half = RIBBON.width / 2;
     // Band: tilted toward the camera so it catches light like a sheet; brighter leading edge.
     pos.set([x - half * 0.3, y - RIBBON.height, z, x + half * 0.3, y, z], k * 6);
     col.set([r * 0.35, g * 0.35, b * 0.35, 0.35, r, g, b, 0.95], k * 8);
     curtainPos.set([x - half * 0.3, RIBBON.baseY - 1.5, z, x - half * 0.3, y - RIBBON.height, z], k * 6);
-    curtainCol.set([r, g, b, 0, r, g, b, 0.1], k * 8);
+    curtainCol.set([r, g, b, 0, r, g, b, 0.07], k * 8);
   });
   const index: number[] = [];
   for (let k = 0; k < n - 1; k++) {
@@ -71,12 +77,14 @@ export function ProductionRibbon3D({ quality }: { quality: QualityProfile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [presetsKey, online],
   );
-  const max = Math.max(...values, targetKbopd, 1);
   const spm = quality.id === 'low' ? RIBBON.samplesPerMonthLow : RIBBON.samplesPerMonth;
   const samples = useMemo(() => sampleSeries(values, spm), [values, spm]);
-  const geo = useMemo(() => buildBand(samples, max), [samples, max]);
+  const geo = useMemo(() => buildBand(samples, commitmentKbopd, targetKbopd), [samples, commitmentKbopd, targetKbopd]);
   const edge = useMemo(() => samples.map(({ i, v }) => [ribbonX(i, MONTHS) + RIBBON.width * 0.15, ribbonY(v), ribbonZ(i, MONTHS)] as V3), [samples]);
-  const edgeColors = useMemo(() => samples.map(({ v }) => ribbonColor(v, max).map((c) => c * 0.85) as [number, number, number]), [samples, max]);
+  const edgeColors = useMemo(
+    () => samples.map(({ v }) => ribbonColor(v, commitmentKbopd, targetKbopd).map((c) => c * 0.9) as [number, number, number]),
+    [samples, commitmentKbopd, targetKbopd],
+  );
   const milestones = useMemo(() => ribbonMilestones(TRAJECTORY, values, PLAYBACK_END_INDEX), [values]);
 
   const mats = useMemo(

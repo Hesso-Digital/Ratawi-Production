@@ -7,7 +7,7 @@ import { useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { sceneSettings, type ViewMode } from '../../state/sceneSettings';
 import { exploreStore } from '../explore/exploreStore';
-import { adaptView } from '../explore/fieldTour';
+import { adaptView, fieldTour } from '../explore/fieldTour';
 import { EXPLODED_CAMERA, RIBBON_CAMERA } from './layout';
 
 export function ViewModeDirector({ enabled }: { enabled: boolean }) {
@@ -23,7 +23,8 @@ export function ViewModeDirector({ enabled }: { enabled: boolean }) {
     const go = (mode: ViewMode, from: ViewMode) => {
       if (mode === 'exploded') exploreStore.flyToCamera(adaptView(EXPLODED_CAMERA, aspect()));
       else if (mode === 'ribbon') exploreStore.flyToCamera(adaptView(RIBBON_CAMERA, aspect()));
-      else if (from !== 'field') exploreStore.backToShow();
+      // Closing hands back to the show camera, unless the field tour has just taken the camera.
+      else if (from !== 'field' && !fieldTour.get().playing) exploreStore.backToShow();
     };
     // Deep link (?view=exploded): frame it once the rig is up.
     const initial = sceneSettings.get().viewMode;
@@ -36,9 +37,14 @@ export function ViewModeDirector({ enabled }: { enabled: boolean }) {
         go(next, from);
       }
     });
+    // Starting the field tour closes a showpiece view so the tour sees the whole field.
+    const unsubTour = fieldTour.subscribe(() => {
+      if (fieldTour.get().playing && sceneSettings.get().viewMode !== 'field') sceneSettings.setViewMode('field');
+    });
     return () => {
       window.clearTimeout(t);
       unsub();
+      unsubTour();
     };
   }, [enabled, gl]);
 
