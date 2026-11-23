@@ -76,10 +76,10 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
           vec3 night = diffuseColor.rgb * vec3(0.21, 0.195, 0.2);
           // Day (concept 04): warm off-white sand clay; the texture contrast is softened so the relief reads through light and shadow.
           float l = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-          vec3 clay = mix(vec3(0.80, 0.70, 0.56), vec3(0.88, 0.80, 0.67), smoothstep(0.55, 0.85, l)) * (0.86 + 0.22 * l);
+          vec3 clay = mix(vec3(0.50, 0.41, 0.29), vec3(0.60, 0.50, 0.37), smoothstep(0.55, 0.85, l)) * (0.86 + 0.22 * l);
           float field = smoothstep(14.0, 0.0, length(vWp.xz) - 34.0);
           clay *= mix(1.0, 1.04, field);
-          diffuseColor.rgb = mix(night, mix(diffuseColor.rgb, clay, 0.78), uDay);
+          diffuseColor.rgb = mix(night, mix(diffuseColor.rgb, clay, 0.9), uDay);
         }`,
         )
         .replace(

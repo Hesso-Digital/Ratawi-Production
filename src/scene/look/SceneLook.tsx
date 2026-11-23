@@ -18,7 +18,7 @@ export function SceneLook({ quality }: { quality: QualityProfile }) {
   useFrame(() => {
     const day = dayBlend.value;
     clayUniform.value = day;
-    scene.environmentIntensity = 0.95 + 0.25 * day;
+    scene.environmentIntensity = 0.95 - 0.2 * day;
   });
 
   return (
@@ -36,9 +36,9 @@ export function SceneLook({ quality }: { quality: QualityProfile }) {
           form="rect"
           intensity={0.9}
           color={i % 2 ? '#c9d4e6' : '#e8dccb'}
-          position={[Math.sin((i * Math.PI) / 2) * 7, -1.2, Math.cos((i * Math.PI) / 2) * 7]}
+          position={[Math.sin((i * Math.PI) / 2) * 7, 0.5, Math.cos((i * Math.PI) / 2) * 7]}
           rotation-y={(i * Math.PI) / 2 + Math.PI}
-          scale={[12, 6, 1]}
+          scale={[12, 11, 1]}
         />
       ))}
       {/* Dark ground bounce */}

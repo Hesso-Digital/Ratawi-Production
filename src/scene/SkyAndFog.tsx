@@ -39,7 +39,7 @@ export function SkyAndFog() {
       // Night: a thinner, darker murk so the ground stays deep (concepts 01-03). Day: light haze only.
       fog.density = 0.0042 - day * 0.0026;
     }
-    gl.toneMappingExposure = 1.05 - day * 0.12;
+    gl.toneMappingExposure = 1.05 - day * 0.22;
   });
 
   return (

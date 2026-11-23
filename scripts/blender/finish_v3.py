@@ -69,7 +69,7 @@ def emit(name, hexcol, strength):
 
 
 MATS = {
-    "steel": pbr("Steel_Polished", "#d9dde2", 1.0, 0.16),
+    "steel": pbr("Steel_Polished", "#d9dde2", 1.0, 0.24),
     "steel_dark": pbr("Steel_Dark", "#5d636b", 1.0, 0.32),
     "galv": pbr("Galvanised", "#a9afb5", 1.0, 0.38),
     "grating": pbr("Grating", "#4a4f55", 0.9, 0.55),

@@ -57,7 +57,7 @@ export function Lighting({ quality }: { quality: QualityProfile }) {
     const moon = moonRef.current;
     if (moon) {
       moon.color.copy(MOON_COL).lerp(SUN_COL, day);
-      moon.intensity = 2.2 + day * 1.4;
+      moon.intensity = 2.2 + day * 0.5;
       moon.position.copy(MOON_POS).lerp(SUN_POS, day);
       // The shadow map is frozen on lower tiers; refresh it while the light moves.
       if (day !== lastDay.current) {

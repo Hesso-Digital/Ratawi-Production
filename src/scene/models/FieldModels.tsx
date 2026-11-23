@@ -85,7 +85,7 @@ function CPF1Glb({ shadows }: { shadows: boolean }) {
     });
     flames.forEach((n, i) => flicker(n, t, 1, i));
     driveSodium(sodium, t);
-    if (lightRef.current) lightRef.current.intensity = 14 * (1 - 0.7 * dayBlend.value);
+    if (lightRef.current) lightRef.current.intensity = 14 * (1 - dayBlend.value);
   });
 
   return (
@@ -118,7 +118,7 @@ function AG25Glb({ shadows }: { shadows: boolean }) {
     const flameK = Math.max(0, gasFlow * 1.2 - 0.5) * 2;
     flames.forEach((n, i) => flicker(n, t, Math.min(1, flameK), i + 3));
     driveSodium(sodium, t);
-    if (lightRef.current) lightRef.current.intensity = 9 * (1 - 0.7 * dayBlend.value);
+    if (lightRef.current) lightRef.current.intensity = 9 * (1 - dayBlend.value);
   });
 
   return (

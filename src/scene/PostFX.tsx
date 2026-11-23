@@ -55,7 +55,7 @@ export const PostFX = memo(function PostFX({ quality }: { quality: QualityProfil
     const bloom = bloomRef.current;
     if (bloom) {
       const { gold, bloomPulse } = sceneClock.current;
-      bloom.intensity = (0.75 + gold * 0.5 + bloomPulse * 1.4) * (1 - 0.6 * day);
+      bloom.intensity = (0.75 + gold * 0.5 + bloomPulse * 1.4) * (1 - 0.75 * day);
     }
     const v = vignetteRef.current;
     if (v) {

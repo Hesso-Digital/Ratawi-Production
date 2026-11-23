@@ -12,7 +12,7 @@
 import { Color, type Material, type MeshStandardMaterial } from 'three';
 
 export const clayUniform = { value: 0 };
-export const clayColor = { value: new Color('#e9e2d6') };
+export const clayColor = { value: new Color('#d9d1c3') };
 
 const PATCHED = Symbol('ratawiClay');
 
