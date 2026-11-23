@@ -21,8 +21,10 @@ import { useSceneClockRef } from '../useSceneClock';
 import type { CameraState } from '../ceremonyTimeline';
 import { assetById, presetById } from './assets';
 import { flySecondsFor } from './areas';
+import { fitCameraOffset } from '../viewportFit';
 import { exploreStore, type ExploreMode } from './exploreStore';
 import { attachTourInterrupts, fieldTour } from './fieldTour';
+import { sceneSettings } from '../../state/sceneSettings';
 import { buildFieldTourTimeline } from './fieldTourShots';
 import { publishHeading } from './heading';
 
@@ -104,6 +106,17 @@ export function ExploreCameraRig({
     fov: camera.fov,
   });
 
+  const fitted = useRef<Cam>({ p: new Vector3(), t: new Vector3(), fov: 30 });
+
+  /** Pull a designed 16:9 camera back in tall/narrow viewports so the field still fits. */
+  const fitDesign = (c: Cam): Cam => {
+    const f = fitCameraOffset(c.p.x, c.p.y, c.p.z, c.t.x, c.t.y, c.t.z, c.fov, camera.aspect);
+    fitted.current.p.set(f.position[0], f.position[1], f.position[2]);
+    fitted.current.t.copy(c.t);
+    fitted.current.fov = f.fov;
+    return fitted.current;
+  };
+
   const apply = (c: Cam) => {
     camera.position.copy(c.p);
     controls.current?.target.copy(c.t);
@@ -120,6 +133,7 @@ export function ExploreCameraRig({
     tourTl.current?.kill();
     tourTl.current = null;
     flying.current = false;
+    sceneSettings.releaseHudDim('motion');
     if (controls.current) controls.current.enableDamping = true;
   };
 
@@ -186,11 +200,12 @@ export function ExploreCameraRig({
     setMode('explore');
     lastInput.current = performance.now();
     const a = current();
-    const b = fromState(dest);
+    const b = fitDesign(fromState(dest));
     const motion = flySecondsFor(kind, id);
     const lift = motion.arc ? arcLiftBetween(a, b) : 0;
     const o = { k: 0 };
     flying.current = true;
+    sceneSettings.requestHudDim('motion');
     if (controls.current) controls.current.enableDamping = false;
     tween.current = gsap.to(o, {
       k: 1,
@@ -199,6 +214,7 @@ export function ExploreCameraRig({
       onUpdate: () => apply(arcCam(a, b, o.k, lift, scratch.current)),
       onComplete: () => {
         flying.current = false;
+        sceneSettings.releaseHudDim('motion');
         tween.current = null;
         if (controls.current) controls.current.enableDamping = true;
         lastInput.current = performance.now();
@@ -223,6 +239,7 @@ export function ExploreCameraRig({
     while (delta < -Math.PI) delta += Math.PI * 2;
     const o = { k: 0 };
     flying.current = true;
+    sceneSettings.requestHudDim('motion');
     if (controls.current) controls.current.enableDamping = false;
     tween.current = gsap.to(o, {
       k: 1,
@@ -251,6 +268,7 @@ export function ExploreCameraRig({
     returnFrom.current = current();
     returnK.current = 0;
     setMode('returning');
+    sceneSettings.requestHudDim('motion');
     const o = { k: 0 };
     tween.current = gsap.to(o, {
       k: 1,
@@ -261,6 +279,7 @@ export function ExploreCameraRig({
       },
       onComplete: () => {
         tween.current = null;
+        sceneSettings.releaseHudDim('motion');
         setMode('show');
       },
     });
@@ -355,7 +374,7 @@ export function ExploreCameraRig({
 
   useFrame(() => {
     if (locked || (debugOrbit && mode.current === 'explore' && !flying.current)) {
-      if (locked) apply(showCam());
+      if (locked) apply(fitDesign(showCam()));
       writeHeading();
       return;
     }
@@ -366,12 +385,12 @@ export function ExploreCameraRig({
     }
     const m = mode.current;
     if (m === 'show') {
-      apply(showCam());
+      apply(fitDesign(showCam()));
       writeHeading();
       return;
     }
     if (m === 'returning') {
-      apply(lerpCam(returnFrom.current, showCam(), returnK.current, scratch.current));
+      apply(lerpCam(returnFrom.current, fitDesign(showCam()), returnK.current, scratch.current));
       writeHeading();
       return;
     }
@@ -412,13 +431,17 @@ export function ExploreCameraRig({
       panSpeed={0.9}
       screenSpacePanning={false}
       minDistance={4}
-      maxDistance={240}
+      maxDistance={480}
       minPolarAngle={0.12}
       maxPolarAngle={1.36}
       target={debugOrbit ? showCam().t : undefined}
-      onStart={() => enterExplore()}
+      onStart={() => {
+        enterExplore();
+        sceneSettings.requestHudDim('motion');
+      }}
       onEnd={() => {
         lastInput.current = performance.now();
+        sceneSettings.releaseHudDim('motion');
       }}
     />
   );

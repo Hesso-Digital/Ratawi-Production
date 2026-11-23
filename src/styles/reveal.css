@@ -9,6 +9,16 @@
   position: absolute;
   inset: 0;
   z-index: 1;
+  container-type: size;
+  container-name: hud;
+  --hud-gutter: clamp(12px, 2.92cqi, 64px);
+  --hud-gutter-y: clamp(10px, 3.6cqb, 48px);
+  --hero-size: clamp(2.6rem, 8.5cqi, 11rem);
+  --brand-size: clamp(1.35rem, 2cqi, 2.45rem);
+  --kpi-size: clamp(1.05rem, 1.6cqi, 1.95rem);
+  --touch-min: 44px;
+  --explore-stack-width: 11.75rem;
+  --scene-cluster-h: 52px;
 }
 
 .reveal-canvas-wrap {
@@ -130,8 +140,8 @@
 /* hero number */
 .reveal-hero {
   position: absolute;
-  left: 56px;
-  top: 220px;
+  left: var(--hud-gutter, 56px);
+  top: clamp(112px, 20cqb, 220px);
   width: 620px;
 }
 
@@ -154,7 +164,7 @@
 
 .reveal-hero .big .n {
   font-family: var(--ratawi-font-numeric);
-  font-size: 164px;
+  font-size: var(--hero-size, 164px);
   font-weight: 300;
   letter-spacing: -0.04em;
   line-height: 0.92;
@@ -325,7 +335,7 @@
 .reveal-kpi .v {
   margin-top: 8px;
   font-family: var(--ratawi-font-numeric);
-  font-size: 30px;
+  font-size: var(--kpi-size, 30px);
   font-weight: 400;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
@@ -489,8 +499,8 @@
 /* compass */
 .reveal-compass {
   position: absolute;
-  right: 76px;
-  bottom: 180px;
+  right: var(--hud-gutter, 76px);
+  bottom: calc(var(--reveal-dock-height, 170px) + 16px);
   width: 52px;
   height: 52px;
 }
@@ -559,8 +569,8 @@
 /* brand + caption (reveal header) */
 .reveal-brand {
   position: absolute;
-  left: 56px;
-  top: 48px;
+  left: var(--hud-gutter, 56px);
+  top: var(--hud-gutter-y, 48px);
 }
 
 .reveal-brand .eyebrow {
@@ -571,7 +581,7 @@
 }
 
 .reveal-brand h1 {
-  font-size: 38px;
+  font-size: var(--brand-size, 38px);
   font-weight: 500;
   letter-spacing: -0.01em;
   margin: 8px 0 0;
@@ -1390,6 +1400,7 @@ button.reveal-compass {
   cursor: pointer;
   color: inherit;
   z-index: 5;
+  pointer-events: auto;
 }
 
 button.reveal-compass:hover .lbl,
@@ -1414,17 +1425,97 @@ button.reveal-compass:focus-visible {
   font-feature-settings: "tnum" 1;
 }
 
-.reveal-hud .oil-timeline {
+/* Reserved bottom stack: oil timeline row, then the KPI rail. Never overlays
+   the rail, the compass, or projected area-marker labels above the dock. */
+.reveal-root {
+  --reveal-dock-height: 170px;
+}
+
+.reveal-bottom-dock {
   position: absolute;
-  left: 56px;
-  bottom: 28px;
-  width: min(720px, calc(100% - 420px));
+  left: var(--hud-gutter, 56px);
+  right: var(--hud-gutter, 56px);
+  bottom: clamp(10px, 2.2cqb, 24px);
   z-index: 4;
-  padding: 10px 14px 8px;
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.reveal-bottom-dock .oil-timeline,
+.reveal-bottom-dock .reveal-rail {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.reveal-hud .oil-timeline {
+  flex: none;
+  padding: 6px 12px 4px;
+  border-radius: 10px;
   background: rgba(8, 14, 22, 0.58);
   backdrop-filter: var(--ratawi-backdrop);
   pointer-events: auto;
+}
+
+.reveal-hud .oil-timeline.docked {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) 1fr auto;
+  grid-template-areas:
+    "title scrub actions";
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 0;
+}
+
+.reveal-hud .oil-timeline.docked .oil-timeline-head {
+  display: contents;
+}
+
+.reveal-hud .oil-timeline.docked .oil-timeline-title {
+  grid-area: title;
+  margin: 0;
+}
+
+.reveal-hud .oil-timeline.docked .oil-timeline-actions {
+  grid-area: actions;
+}
+
+.reveal-hud .oil-timeline.docked input[type='range'] {
+  grid-area: scrub;
+  margin: 0;
+  width: 100%;
+}
+
+.reveal-hud .oil-timeline.docked .oil-months {
+  grid-column: 1 / -1;
+}
+
+.reveal-hud .oil-timeline.docked:not(.collapsed) {
+  grid-template-areas:
+    "title scrub actions"
+    "months months months";
+  row-gap: 2px;
+  padding-bottom: 2px;
+}
+
+.reveal-hud .oil-timeline.docked:not(.collapsed) .oil-months {
+  grid-area: months;
+}
+
+.reveal-hud .oil-timeline.docked .oil-timeline-actions .chip {
+  height: 26px;
+  padding: 0 10px;
+}
+
+/* Keep 3D HTML labels (area markers, anchored tags) out of the reserved dock. */
+.reveal-canvas-wrap > div > div {
+  clip-path: inset(0 0 var(--reveal-dock-height, 170px) 0);
 }
 
 /* Corner admin menu */
@@ -1474,7 +1565,7 @@ button.reveal-compass:focus-visible {
   top: 44px;
   right: 0;
   width: 420px;
-  max-height: min(920px, calc(100vh - 80px));
+  max-height: calc(100cqb - 66px - var(--reveal-dock-height, 170px) - 72px);
   overflow: auto;
   padding: 16px 16px 20px;
   border-radius: 14px;
@@ -1578,4 +1669,78 @@ button.reveal-compass:focus-visible {
   border-radius: 4px;
   background: rgba(77, 208, 225, 0.14);
   color: #4dd0e1;
+}
+
+
+/* Day mode: keep HUD, markers and KPI text readable on bright sand. */
+:root[data-time-of-day='day'] .reveal-brand,
+:root[data-time-of-day='day'] .reveal-hero {
+  text-shadow: 0 1px 12px rgba(8, 14, 22, 0.85), 0 0 24px rgba(8, 14, 22, 0.45);
+}
+
+:root[data-time-of-day='day'] .reveal-hero {
+  padding: 8px 16px 14px 14px;
+  margin-left: -14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(8, 14, 22, 0.72), rgba(8, 14, 22, 0.48));
+  backdrop-filter: blur(12px);
+}
+
+:root[data-time-of-day='day'] .reveal-brand {
+  padding: 8px 14px 10px;
+  margin-left: -14px;
+  border-radius: 14px;
+  background: rgba(8, 14, 22, 0.62);
+  backdrop-filter: blur(12px);
+  width: max-content;
+}
+
+:root[data-time-of-day='day'] .reveal-hero .big .n,
+:root[data-time-of-day='day'] .reveal-kpi .v,
+:root[data-time-of-day='day'] .kpi-drawer .big {
+  color: #f4f9ff;
+  text-shadow: 0 2px 16px rgba(8, 14, 22, 0.8);
+}
+
+:root[data-time-of-day='day'] .reveal-hero .label,
+:root[data-time-of-day='day'] .reveal-hero .big .u,
+:root[data-time-of-day='day'] .reveal-kpi .k,
+:root[data-time-of-day='day'] .reveal-kpi .s,
+:root[data-time-of-day='day'] .reveal-clock,
+:root[data-time-of-day='day'] .oil-timeline-title,
+:root[data-time-of-day='day'] .oil-month {
+  color: rgba(236, 244, 252, 0.86);
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .oil-timeline,
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail,
+:root[data-time-of-day='day'] .admin-drawer,
+:root[data-time-of-day='day'] .explore-bar .chip,
+:root[data-time-of-day='day'] .kpi-drawer,
+:root[data-time-of-day='day'] .oil-timeline-actions .chip {
+  background: rgba(8, 14, 22, 0.86);
+  backdrop-filter: blur(12px);
+  color: #f4f9ff;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail {
+  border-top: 0;
+  border-radius: 10px;
+  padding-bottom: 8px;
+}
+
+:root[data-time-of-day='day'] .area-marker,
+:root[data-time-of-day='day'] .reveal-tag {
+  background: rgba(8, 14, 22, 0.9);
+  color: #f4f9ff;
+  text-shadow: none;
+  box-shadow: 0 6px 18px rgba(8, 14, 22, 0.45);
+}
+
+:root[data-time-of-day='day'] button.reveal-compass {
+  filter: drop-shadow(0 2px 8px rgba(8, 14, 22, 0.65));
+}
+
+:root[data-time-of-day='day'] button.reveal-compass svg circle {
+  fill: rgba(8, 14, 22, 0.72);
 }

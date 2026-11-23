@@ -4,10 +4,10 @@ import { AudiencePage } from './pages/AudiencePage';
 import { OperatorPage } from './pages/OperatorPage';
 
 export default function App() {
-  const scale = useStageScale();
+  useStageScale();
   return (
     <div className="shell">
-      <div className="stage" style={{ transform: `scale(${scale})` }}>
+      <div className="stage">
         <Routes>
           <Route path="/" element={<AudiencePage />} />
           {/* Forced routes for testing/rehearsal: always this view, regardless of the operator's choice. */}

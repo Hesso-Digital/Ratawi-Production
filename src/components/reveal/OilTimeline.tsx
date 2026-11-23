@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { asOfStore, TIMELINE_LAST_INDEX, useAsOfState } from '../../data/asOfStore';
 import { TODAY_INDEX, TRAJECTORY } from '../../data/defaults';
 import { CountText } from '../CountText';
@@ -45,14 +46,31 @@ export function OilCompare({
   );
 }
 
-export function OilTimeline({ compact = false }: { compact?: boolean }) {
+export function OilTimeline({
+  compact = false,
+  collapsible = false,
+}: {
+  compact?: boolean;
+  /** Hall HUD: start as a compact reserved strip; months expand on demand. */
+  collapsible?: boolean;
+}) {
   const { index, playing } = useAsOfState();
   const cursor = index ?? TODAY_INDEX;
   const month = TRAJECTORY[Math.round(Math.max(0, Math.min(TIMELINE_LAST_INDEX, cursor)))];
   const live = index == null;
+  const [expanded, setExpanded] = useState(!collapsible);
+  const showMonths = !collapsible || expanded;
+  const classes = [
+    'oil-timeline',
+    compact ? 'compact' : '',
+    collapsible ? 'docked' : '',
+    collapsible && !expanded ? 'collapsed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className={`oil-timeline${compact ? ' compact' : ''}`}>
+    <div className={classes}>
       <div className="oil-timeline-head">
         <div className="oil-timeline-title">
           {live ? 'Live' : `As of ${month.label} ${month.year}`}
@@ -70,6 +88,17 @@ export function OilTimeline({ compact = false }: { compact?: boolean }) {
           <button type="button" className={`chip${live ? ' on' : ''}`} onClick={() => asOfStore.live()}>
             Live
           </button>
+          {collapsible ? (
+            <button
+              type="button"
+              className="chip oil-timeline-toggle"
+              aria-expanded={expanded}
+              aria-label={expanded ? 'Hide month labels' : 'Show month labels'}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? 'Hide months' : 'Months'}
+            </button>
+          ) : null}
         </div>
       </div>
       <input
@@ -82,36 +111,38 @@ export function OilTimeline({ compact = false }: { compact?: boolean }) {
         onPointerDown={() => asOfStore.setIndex(cursor)}
         onChange={(e) => asOfStore.setIndex(Number(e.target.value))}
       />
-      <div
-        className="oil-months"
-        onPointerMove={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          if (r.width <= 0) return;
-          const x = (e.clientX - r.left) / r.width;
-          const i = x * TIMELINE_LAST_INDEX;
-          asOfStore.setIndex(i);
-        }}
-        onClick={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          if (r.width <= 0) return;
-          const x = (e.clientX - r.left) / r.width;
-          asOfStore.setIndex(x * TIMELINE_LAST_INDEX);
-        }}
-      >
-        {TRAJECTORY.map((m, i) => (
-          <button
-            key={m.key}
-            type="button"
-            className={`oil-month${Math.round(cursor) === i ? ' on' : ''}${m.kind === 'forecast' ? ' forecast' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              asOfStore.setIndex(i);
-            }}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      {showMonths ? (
+        <div
+          className="oil-months"
+          onPointerMove={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            if (r.width <= 0) return;
+            const x = (e.clientX - r.left) / r.width;
+            const i = x * TIMELINE_LAST_INDEX;
+            asOfStore.setIndex(i);
+          }}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            if (r.width <= 0) return;
+            const x = (e.clientX - r.left) / r.width;
+            asOfStore.setIndex(x * TIMELINE_LAST_INDEX);
+          }}
+        >
+          {TRAJECTORY.map((m, i) => (
+            <button
+              key={m.key}
+              type="button"
+              className={`oil-month${Math.round(cursor) === i ? ' on' : ''}${m.kind === 'forecast' ? ' forecast' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                asOfStore.setIndex(i);
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

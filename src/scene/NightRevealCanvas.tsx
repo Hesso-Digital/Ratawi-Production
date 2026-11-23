@@ -31,6 +31,8 @@ import { QUALITY_PROFILES } from './quality';
 import type { CameraState } from './ceremonyTimeline';
 import type { Quality } from '../data/types';
 import { SceneToggles } from '../components/scene/SceneToggles';
+import { AreaFocusHighlight } from './explore/AreaFocusHighlight';
+import { useAdaptiveDpr } from '../hooks/useAdaptiveDpr';
 
 export function NightRevealCanvas({
   quality,
@@ -52,6 +54,7 @@ export function NightRevealCanvas({
   onQualityDrop?: (next: Quality) => void;
 }) {
   const profile = QUALITY_PROFILES[quality];
+  const dpr = useAdaptiveDpr(profile.dpr);
   const [frameloop] = useState<'always'>('always');
 
   const handleCreated = useCallback(({ gl }: { gl: WebGLRenderer }) => {
@@ -67,7 +70,7 @@ export function NightRevealCanvas({
       className="reveal-canvas"
       frameloop={frameloop}
       resize={{ offsetSize: true }}
-      dpr={profile.dpr}
+      dpr={dpr}
       shadows={profile.shadows}
       gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       camera={{ fov: 30, near: 0.5, far: 2000, position: [-118, 94, 44] }}
@@ -89,6 +92,7 @@ export function NightRevealCanvas({
         {showRibbon ? <ProductionRibbon /> : <AnchoredTags />}
         {locked ? null : <InspectTargets />}
         {locked ? null : <AreaMarkers />}
+        {locked ? null : <AreaFocusHighlight />}
         {profile.bloom ? <PostFX /> : null}
         {onQualityDrop ? (
           <PerformanceMonitor

@@ -19,7 +19,7 @@ On the hall screen:
 2. Use the **Current / AGUP online** switch, or **Bring AGUP online**. Numbers count up and the wells connect in sequence.
 3. **Edit KPI numbers** opens the editor for both states (oil, wells, export, gas, BS&W, salt, plant efficiency, and the commitment and AGUP target lines). **Save** stores the values on this machine and updates the hall screen; **Reset to defaults** restores the original figures.
 4. **Playback** in this menu (and on `/operator`) replays June to December. The audience does not see that chrome.
-5. **Settings** cover quality, reduced motion, area markers, and the date/time display.
+5. **Settings** cover quality, Day / Night, Flows on or off, reduced motion, area markers, and the date/time display.
 6. **Open operator console** opens `/operator` in a new tab, where the same controls are laid out in full.
 
 From `/operator`, use **Bring AGUP online** / **Reset to current**. Two windows on the same machine stay in sync through `localStorage` and `BroadcastChannel`.

@@ -2,13 +2,15 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { STORAGE_KEY } from '../config';
 import { BASELINE, DEFAULT_PRESETS, STEP_1, STEP_2 } from './defaults';
-import { useCeremonyStore } from './store';
+import { hydrateCeremonyStore, useCeremonyStore } from './store';
 
 beforeEach(() => {
   localStorage.clear();
+  hydrateCeremonyStore();
 });
 afterEach(() => {
   localStorage.clear();
+  hydrateCeremonyStore();
 });
 
 describe('useCeremonyStore', () => {
@@ -64,6 +66,7 @@ describe('useCeremonyStore', () => {
 
   it('ignores malformed storage and falls back to the default state', () => {
     localStorage.setItem(STORAGE_KEY, '{not json');
+    hydrateCeremonyStore();
     const { result } = renderHook(() => useCeremonyStore());
     expect(result.current.cue.kind).toBe('idle');
     expect(result.current.snapshot.oil).toBe(BASELINE.oil);
@@ -140,5 +143,17 @@ describe('useCeremonyStore', () => {
       expect(result.current.savePresets(bad)).toBe(false);
     });
     expect(result.current.presets.current.oil).toBe(DEFAULT_PRESETS.current.oil);
+  });
+
+  it('shares a Bring AGUP online cue across every hook in the same tab', () => {
+    const a = renderHook(() => useCeremonyStore());
+    const b = renderHook(() => useCeremonyStore());
+    act(() => a.result.current.bringAgupOnline());
+    expect(a.result.current.cue.kind).toBe('step2');
+    expect(b.result.current.cue.kind).toBe('step2');
+    expect(b.result.current.snapshot.oil).toBe(DEFAULT_PRESETS.agup.oil);
+    expect(b.result.current.prevSnapshot.oil).toBe(DEFAULT_PRESETS.current.oil);
+    a.unmount();
+    b.unmount();
   });
 });

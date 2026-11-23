@@ -1,11 +1,15 @@
 /* Day / Night + Flows buttons, left of the compass (bottom-right of the stage). */
 .scene-toggles {
   position: absolute;
-  right: 142px;
-  bottom: 190px;
+  /* Right edge of this group sits left of the compass, with room for a
+     third Tour Play button (feat/field-tour) growing to the left. */
+  right: calc(var(--hud-gutter, 56px) + 52px + 14px);
+  bottom: calc(var(--reveal-dock-height, 170px) + 26px);
   z-index: 5;
   display: flex;
   gap: 8px;
+  pointer-events: auto;
+  min-width: calc(3 * 32px + 2 * 8px);
 }
 
 .scene-toggle {
@@ -43,6 +47,19 @@
 
 :root[data-time-of-day='day'] .reveal-vignette {
   opacity: 0.8;
+}
+
+
+:root[data-time-of-day='day'] .scene-toggle {
+  background: rgba(8, 14, 22, 0.78);
+  border-color: rgba(16, 24, 36, 0.55);
+  color: #f4f7fb;
+  opacity: 0.92;
+}
+
+:root[data-time-of-day='day'] .scene-toggle:hover,
+:root[data-time-of-day='day'] .scene-toggle:focus-visible {
+  background: rgba(8, 14, 22, 0.92);
 }
 
 /* Quiet section name at the lower-left edge while the tour runs. */
@@ -84,8 +101,10 @@
   }
 }
 
-/* Dim the hall HUD while the field tour has focus so the 3D can take the stage.
-   Compass and the Day/Night, Flows and Play/Stop cluster stay usable. */
+/* Dim the hall HUD while cinematic focus is on (tour, motion, exploded, idle).
+   Compass and the Day/Night, Flows and Play/Stop cluster stay usable.
+   Hover/interaction clears the dim via useHudFocus (pointer-events stay off
+   the faded panels so the 3D view remains clickable until the HUD returns). */
 :root[data-hud-dimmed='on'] .reveal-hud > *:not(.reveal-compass),
 :root[data-hud-dimmed='on'] .explore-overlay,
 :root[data-hud-dimmed='on'] .explore-panel,

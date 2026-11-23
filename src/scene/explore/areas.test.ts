@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AREA_MARKERS, focusGain, flySecondsFor } from './areas';
+import { AREA_MARKERS, areaFootprint, focusGain, flySecondsFor } from './areas';
 import { VIEW_PRESETS } from './assets';
 
 describe('areas', () => {
@@ -28,5 +28,17 @@ describe('areas', () => {
     expect(flySecondsFor('preset', 'cpf1').duration).toBe(1.5);
     expect(flySecondsFor('asset', 'well-RT-60').duration).toBe(1.5);
     expect(flySecondsFor('preset', 'aerial').arc).toBe(true);
+  });
+
+  it('returns a ground footprint for every viewpoint so the highlight can follow the fly-to', () => {
+    for (const p of VIEW_PRESETS) {
+      const foot = areaFootprint(p.id);
+      expect(foot, p.id).not.toBeNull();
+      expect(foot?.id).toBe(p.id);
+      expect(foot && 'y' in foot && foot.y).toBeGreaterThan(-5);
+    }
+    expect(areaFootprint(null)).toBeNull();
+    expect(areaFootprint('aerial')?.kind).toBe('polygon');
+    expect(areaFootprint('export')?.kind).toBe('path');
   });
 });

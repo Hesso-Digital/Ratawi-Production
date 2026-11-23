@@ -85,3 +85,64 @@ export const AREA_MARKERS: AreaMarker[] = [
   { id: 'north', key: '7', label: 'North wells', position: ground(northCentroid[0], northCentroid[1], 9) },
   { id: 'south', key: '8', label: 'South wells', position: ground(southCentroid[0], southCentroid[1], 9) },
 ];
+
+export type AreaFootprint =
+  | { kind: 'polygon'; id: string; points: Vec2[]; y: number }
+  | { kind: 'ellipse'; id: string; cx: number; cz: number; rx: number; rz: number; y: number }
+  | { kind: 'path'; id: string; points: Vec2[]; width: number; y: number };
+
+function averageY(points: readonly Vec2[], lift = 0.35): number {
+  if (!points.length) return lift;
+  const sum = points.reduce((s, p) => s + heightAt(p[0], p[1]), 0);
+  return sum / points.length + lift;
+}
+
+function ellipseAround(id: string, points: readonly Vec2[], pad: number): AreaFootprint {
+  const xs = points.map((p) => p[0]);
+  const zs = points.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minZ = Math.min(...zs);
+  const maxZ = Math.max(...zs);
+  return {
+    kind: 'ellipse',
+    id,
+    cx: (minX + maxX) / 2,
+    cz: (minZ + maxZ) / 2,
+    rx: Math.max((maxX - minX) / 2 + pad, pad),
+    rz: Math.max((maxZ - minZ) / 2 + pad, pad),
+    y: averageY(points),
+  };
+}
+
+/** Ground footprint used to lift / outline the active area on the 3D field. */
+export function areaFootprint(areaId: string | null | undefined): AreaFootprint | null {
+  if (!areaId) return null;
+  if (areaId === 'aerial') {
+    return { kind: 'polygon', id: areaId, points: CONCESSION_WORLD, y: averageY(CONCESSION_WORLD, 0.25) };
+  }
+  if (areaId === 'spp') {
+    return { kind: 'polygon', id: areaId, points: SPP_WORLD, y: averageY(SPP_WORLD) };
+  }
+  if (areaId === 'cpf1') {
+    const [x, z] = CPF_WORLD;
+    return { kind: 'ellipse', id: areaId, cx: x, cz: z, rx: 18, rz: 16, y: heightAt(x, z) + 0.4 };
+  }
+  if (areaId === 'ag25') {
+    const [x, z] = AG25_WORLD;
+    return { kind: 'ellipse', id: areaId, cx: x, cz: z, rx: 14, rz: 14, y: heightAt(x, z) + 0.4 };
+  }
+  if (areaId === 'agup') {
+    return ellipseAround('agup', AGUP_WELLS.map((w) => w.world), 12);
+  }
+  if (areaId === 'export') {
+    return { kind: 'path', id: areaId, points: EXPORT_LINE_WORLD, width: 6, y: averageY(EXPORT_LINE_WORLD) };
+  }
+  if (areaId === 'north') {
+    return ellipseAround('north', WORLD_WELLS.filter((w) => NORTH.has(w.name)).map((w) => w.world), 10);
+  }
+  if (areaId === 'south') {
+    return ellipseAround('south', WORLD_WELLS.filter((w) => SOUTH.has(w.name)).map((w) => w.world), 10);
+  }
+  return null;
+}

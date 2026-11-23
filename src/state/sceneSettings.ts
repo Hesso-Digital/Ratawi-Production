@@ -51,10 +51,18 @@ let state: SceneSettings = fromUrl(read());
 const listeners = new Set<() => void>();
 
 /**
- * Ephemeral HUD dim for a cinematic focus (the field tour). Not persisted
- * and not mirrored across tabs, so a refresh always restores the full HUD.
+ * Ephemeral HUD dim for cinematic focus (tour, exploded view, camera motion,
+ * idle). Not persisted and not mirrored across tabs, so a refresh always
+ * restores the full HUD. `setHudDimmed` stays the simple on/off used by the
+ * field tour; other features should prefer requestHudDim / releaseHudDim.
  */
-let hudDimmed = false;
+export type HudDimReason = 'tour' | 'exploded' | 'motion' | 'idle';
+const hudReasons = new Set<HudDimReason>();
+let hudHold = false;
+
+function hudDimmedEffective() {
+  return hudReasons.size > 0 && !hudHold;
+}
 
 /** Mutable crossfade value read by the scene in useFrame (0 night, 1 day). */
 export const dayBlend = { value: state.mode === 'day' ? 1 : 0 };
@@ -73,7 +81,7 @@ function syncDom() {
   if (typeof document === 'undefined') return;
   document.documentElement.dataset.timeOfDay = state.mode;
   document.documentElement.dataset.flows = state.flows ? 'on' : 'off';
-  document.documentElement.dataset.hudDimmed = hudDimmed ? 'on' : 'off';
+  document.documentElement.dataset.hudDimmed = hudDimmedEffective() ? 'on' : 'off';
 }
 
 function apply(next: SceneSettings, broadcast: boolean) {
@@ -106,10 +114,36 @@ export const sceneSettings = {
   toggle: () => apply({ ...state, mode: state.mode === 'day' ? 'night' : 'day' }, true),
   setFlows: (flows: boolean) => apply({ ...state, flows }, true),
   toggleFlows: () => apply({ ...state, flows: !state.flows }, true),
-  getHudDimmed: () => hudDimmed,
+  getHudDimmed: () => hudDimmedEffective(),
   setHudDimmed(next: boolean) {
-    if (hudDimmed === next) return;
-    hudDimmed = next;
+    // Field tour uses this as a simple lock. Map it to the 'tour' reason so
+    // idle / motion / exploded can stack without clobbering each other.
+    if (next) hudReasons.add('tour');
+    else hudReasons.delete('tour');
+    syncDom();
+    listeners.forEach((l) => l());
+  },
+  requestHudDim(reason: HudDimReason) {
+    if (hudReasons.has(reason)) return;
+    hudReasons.add(reason);
+    syncDom();
+    listeners.forEach((l) => l());
+  },
+  releaseHudDim(reason: HudDimReason) {
+    if (!hudReasons.has(reason)) return;
+    hudReasons.delete(reason);
+    syncDom();
+    listeners.forEach((l) => l());
+  },
+  holdHud() {
+    if (hudHold) return;
+    hudHold = true;
+    syncDom();
+    listeners.forEach((l) => l());
+  },
+  releaseHold() {
+    if (!hudHold) return;
+    hudHold = false;
     syncDom();
     listeners.forEach((l) => l());
   },
@@ -131,5 +165,12 @@ export function useFlows() {
 
 export function useHudFocus() {
   const hudDimmed = useSyncExternalStore(sceneSettings.subscribe, sceneSettings.getHudDimmed, () => false);
-  return { hudDimmed, setHudDimmed: sceneSettings.setHudDimmed };
+  return {
+    hudDimmed,
+    setHudDimmed: sceneSettings.setHudDimmed,
+    requestHudDim: sceneSettings.requestHudDim,
+    releaseHudDim: sceneSettings.releaseHudDim,
+    holdHud: sceneSettings.holdHud,
+    releaseHold: sceneSettings.releaseHold,
+  };
 }

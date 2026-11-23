@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { WORDING } from '../../data/ceremonyConfig';
 import { useCeremonyStore } from '../../data/store';
 import { useDisplayedKpis } from '../../hooks/useDisplayedKpis';
@@ -9,6 +9,8 @@ import { HeroNumber } from './HeroNumber';
 import { KpiRail } from './KpiRail';
 import { OilTimeline } from './OilTimeline';
 import { exploreStore } from '../../scene/explore/exploreStore';
+import { useTimeOfDay } from '../../state/sceneSettings';
+import { useHudAutoDim } from '../../hooks/useHudAutoDim';
 
 function formatNow(d: Date) {
   const time = d.toLocaleTimeString('en-GB', {
@@ -27,16 +29,39 @@ export function RevealHud({ interactive = false }: { interactive?: boolean }) {
   const live = useSceneSnapshot();
   const state = useDisplayedKpis(live);
   const showDateTime = useCeremonyStore().settings.showDateTime;
+  const { mode } = useTimeOfDay();
+  useHudAutoDim();
   const gold = state.gold > 0.5;
   const [clock, setClock] = useState(() => formatNow(new Date()));
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const dockRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const id = window.setInterval(() => setClock(formatNow(new Date())), 1000);
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const el = dockRef.current;
+    if (!el) return;
+    const root = el.closest('.reveal-root') as HTMLElement | null;
+    const apply = () => {
+      const parent = (el.offsetParent as HTMLElement | null) ?? el.parentElement;
+      const fromBottom = (parent?.clientHeight ?? 1080) - el.offsetTop;
+      root?.style.setProperty('--reveal-dock-height', `${Math.max(0, fromBottom)}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root?.style.removeProperty('--reveal-dock-height');
+    };
+  }, []);
+
   return (
-    <div className={`reveal-hud ${gold ? 'gold' : ''} ${interactive ? 'interactive' : ''}`}>
+    <div className={`reveal-hud ${gold ? 'gold' : ''} ${interactive ? 'interactive' : ''} ${mode === 'day' ? 'day' : ''}`}>
       <div className="reveal-brand">
         <div className="eyebrow">{WORDING.eyebrow}</div>
         <div className="brand-title-row">
@@ -56,9 +81,24 @@ export function RevealHud({ interactive = false }: { interactive?: boolean }) {
       ) : (
         <HeroNumber state={state} />
       )}
-      <OilTimeline />
       <Compass />
-      <KpiRail state={state} interactive={interactive} />
+      <div className={`reveal-bottom-dock${sheetOpen ? ' sheet-open' : ''}`} ref={dockRef}>
+        <div className="reveal-compact-bar">
+          <OilTimeline collapsible />
+          <button
+            type="button"
+            className="reveal-kpi-toggle"
+            aria-expanded={sheetOpen}
+            aria-controls="reveal-kpi-sheet"
+            onClick={() => setSheetOpen((v) => !v)}
+          >
+            {sheetOpen ? 'Close KPIs' : 'KPIs'}
+          </button>
+        </div>
+        <div id="reveal-kpi-sheet" className="reveal-kpi-sheet">
+          <KpiRail state={state} interactive={interactive} />
+        </div>
+      </div>
     </div>
   );
 }

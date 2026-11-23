@@ -66,3 +66,17 @@ export function resolveQuality(fromUrl: string | null, fromOperator: Quality): Q
   if (fromUrl === 'low' || fromUrl === 'medium' || fromUrl === 'high') return fromUrl;
   return fromOperator;
 }
+
+/**
+ * Cap device pixel ratio at 2, then lower it on large 2K/4K frames so the
+ * hall machine is not filling 8K-worth of pixels.
+ */
+export function adaptiveDpr(
+  range: [number, number],
+  pixelCount = typeof window === 'undefined' ? 1920 * 1080 : window.innerWidth * window.innerHeight,
+): [number, number] {
+  let max = Math.min(range[1], 2);
+  if (pixelCount >= 3840 * 2000) max = Math.min(max, 1.15);
+  else if (pixelCount >= 2560 * 1400) max = Math.min(max, 1.35);
+  return [range[0], max];
+}

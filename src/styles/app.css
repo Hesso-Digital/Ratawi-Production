@@ -10,15 +10,21 @@
 }
 
 .stage {
-  width: 1920px;
-  height: 1080px;
+  width: 100%;
+  height: 100%;
   position: relative;
   flex: none;
   overflow: hidden;
   background:
     var(--ratawi-bg-vignette);
   color: var(--ratawi-text);
-  transform-origin: center center;
+  container-type: size;
+  container-name: stage;
+}
+.stage:has(.operator),
+.stage:has(.audience),
+.stage:has(.fallback-stage) {
+  overflow: auto;
 }
 
 .stage::after {
@@ -809,6 +815,21 @@
   gap: 10px;
   margin-top: 8px;
 }
+
+.settings-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-switch-row > span {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
 
 .op-rehearsal {
   margin-top: 26px;

@@ -1,0 +1,316 @@
+/**
+ * Fluid hall HUD: the stage fills the viewport (no 1920×1080 letterbox).
+ * Type and gutters use clamp() / container query units. Area pills stack
+ * vertically on the right when height allows; short or narrow frames get a
+ * compact horizontal scroller. Small screens collapse KPIs into a sheet.
+ */
+
+/* —— Area pills: vertical right stack when the stage is tall and wide enough —— */
+.explore-bar {
+  position: absolute;
+  right: var(--hud-gutter, 56px);
+  top: clamp(88px, 12cqb, 128px);
+  bottom: auto;
+  height: fit-content;
+  left: auto;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 6px;
+  width: var(--explore-stack-width, 11.75rem);
+  max-width: 13.5rem;
+  max-height: calc(100cqb - var(--reveal-dock-height, 170px) - var(--scene-cluster-h, 52px) - 140px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  pointer-events: auto;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(8, 14, 22, 0.38);
+  backdrop-filter: var(--ratawi-backdrop);
+  scrollbar-width: thin;
+}
+
+.explore-bar .chip {
+  width: 100%;
+  justify-content: flex-start;
+  flex: 0 0 auto;
+  height: 30px;
+  white-space: nowrap;
+}
+
+.explore-panel {
+  right: calc(var(--hud-gutter, 56px) + var(--explore-stack-width, 11.75rem) + 16px);
+  max-height: calc(100cqb - var(--reveal-dock-height, 170px) - 140px);
+  overflow: auto;
+}
+
+.explore-hint {
+  bottom: calc(var(--reveal-dock-height, 170px) + 10px);
+}
+
+/* Short or narrow: compact horizontal scroller, clear of the dock and buttons. */
+@container stage (max-width: 719px) or (max-height: 639px) {
+  .explore-bar {
+    left: var(--hud-gutter, 12px);
+    right: var(--hud-gutter, 12px);
+    top: auto;
+    /* Full-width scroller sits above the Day/Night / Flows / Tour / compass cluster. */
+    bottom: calc(var(--reveal-dock-height, 140px) + var(--scene-cluster-h, 52px) + 36px);
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px 8px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .explore-bar .chip {
+    width: auto;
+    min-height: var(--touch-min, 44px);
+    height: var(--touch-min, 44px);
+    padding: 0 12px;
+  }
+
+  .explore-panel {
+    right: var(--hud-gutter, 12px);
+    left: var(--hud-gutter, 12px);
+    width: auto;
+    top: auto;
+    bottom: calc(var(--reveal-dock-height, 140px) + 60px);
+    max-height: 45cqb;
+  }
+
+  .explore-hint {
+    display: none;
+  }
+}
+
+/* —— Compact / drawer KPI + timeline on small or short frames —— */
+.reveal-kpi-toggle {
+  display: none;
+  pointer-events: auto;
+  flex: none;
+  min-width: var(--touch-min, 44px);
+  min-height: var(--touch-min, 44px);
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 208, 225, 0.35);
+  background: rgba(8, 14, 22, 0.78);
+  color: var(--ratawi-text-strong);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.reveal-compact-bar {
+  display: contents;
+}
+
+.reveal-kpi-sheet {
+  display: block;
+  min-width: 0;
+}
+
+@container stage (max-width: 700px) or (max-height: 520px) {
+  .reveal-compact-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+
+  .reveal-compact-bar .oil-timeline,
+  .reveal-bottom-dock .oil-timeline {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  .reveal-hud .oil-timeline.docked {
+    grid-template-columns: minmax(0, auto) 1fr auto;
+    column-gap: 8px;
+  }
+
+  .reveal-kpi-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .reveal-kpi-sheet {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 8px;
+    max-height: min(52cqb, 420px);
+    overflow: auto;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(8, 14, 22, 0.92);
+    backdrop-filter: var(--ratawi-backdrop);
+    pointer-events: auto;
+  }
+
+  .reveal-bottom-dock.sheet-open .reveal-kpi-sheet {
+    display: block;
+  }
+
+  .reveal-bottom-dock.sheet-open .reveal-rail {
+    display: grid;
+    grid-template-columns: 1fr;
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+
+  .oil-timeline-actions .chip,
+  .explore-bar .chip,
+  .scene-toggle,
+  button.reveal-compass,
+  .admin-menu-btn,
+  .admin-toggle .chip {
+    min-height: var(--touch-min, 44px);
+    min-width: var(--touch-min, 44px);
+  }
+
+  .scene-toggle,
+  button.reveal-compass {
+    width: var(--touch-min, 44px);
+    height: var(--touch-min, 44px);
+  }
+
+  .scene-toggles {
+    min-width: calc(3 * var(--touch-min, 44px) + 2 * 8px);
+    bottom: calc(var(--reveal-dock-height, 140px) + 20px);
+  }
+
+  .reveal-hero .scale {
+    display: none;
+  }
+
+  .reveal-hero {
+    width: min(100% - 2 * var(--hud-gutter, 12px), 620px);
+  }
+
+  .admin-drawer {
+    width: min(420px, calc(100cqi - 16px));
+  }
+
+  .area-marker {
+    transform: scale(0.92);
+  }
+}
+
+/* Phone portrait: keep the hero from colliding with area chrome. */
+@container stage (max-width: 480px) {
+  .reveal-hero {
+    top: clamp(92px, 22cqb, 140px);
+  }
+
+  .reveal-hero .big .n {
+    font-size: clamp(2.4rem, 18cqi, 3.4rem);
+  }
+
+  .oil-compare {
+    grid-template-columns: 1fr;
+  }
+
+  .reveal-brand h1 {
+    font-size: clamp(1.15rem, 6cqi, 1.6rem);
+  }
+}
+
+/* Ultra-wide: keep the field full-width; don't stretch HUD text endlessly. */
+@container stage (min-aspect-ratio: 2.3 / 1) {
+  .reveal-hero {
+    width: min(640px, 36cqi);
+  }
+
+  .explore-bar {
+    width: 12rem;
+  }
+}
+
+/* 4K / big hall: slightly roomier cluster, still capped. */
+@container stage (min-width: 3000px) {
+  .explore-bar .chip {
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+:root[data-time-of-day='day'] .explore-bar {
+  background: rgba(8, 14, 22, 0.78);
+}
+
+.reveal-canvas-wrap,
+.reveal-canvas-wrap canvas,
+.reveal-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+
+/* Slim, edge-hugging, more translucent panels so the 3D field stays primary.
+   Aim for well under a quarter of the desktop viewport covered by HUD. */
+.reveal-bottom-dock .oil-timeline,
+.reveal-bottom-dock .reveal-rail {
+  background: rgba(8, 14, 22, 0.42);
+}
+
+.reveal-kpi .v {
+  font-size: var(--kpi-size, 1.35rem);
+}
+
+.reveal-kpi {
+  padding-top: 10px;
+}
+
+.explore-bar {
+  background: rgba(8, 14, 22, 0.38);
+}
+
+.field-tour-caption {
+  left: var(--hud-gutter, 22px);
+  bottom: calc(var(--reveal-dock-height, 170px) + 10px);
+}
+
+@media (min-width: 1100px) {
+  .reveal-hero {
+    width: min(520px, 34cqi);
+  }
+}
+
+/* Short landscape: shrink the hero and keep pills off it. */
+@container stage (max-height: 639px) and (min-width: 720px) {
+  .explore-bar {
+    left: 340px;
+    right: var(--hud-gutter, 12px);
+  }
+
+  .reveal-hero {
+    width: 310px;
+    max-width: 310px;
+    transform: none;
+  }
+
+  .reveal-hero .scale,
+  .reveal-hero .oil-compare,
+  .reveal-clock {
+    display: none;
+  }
+}
