@@ -19,8 +19,10 @@ import {
 } from 'three';
 import type { ShaderMaterial } from 'three';
 import { CONCESSION_WORLD, heightAt, type Vec2 } from './world';
-import { sceneSettings } from '../state/sceneSettings';
+import { dayBlend, sceneSettings } from '../state/sceneSettings';
+import { AdditiveBlending, Color } from 'three';
 import { createBoundaryWallMaterial, hdr } from './shaders/materials';
+import { createGlowSprite } from './textures';
 
 const RED = '#ff2a36';
 const WALL_HEIGHT = 2.4;
@@ -115,9 +117,28 @@ export function ConcessionPentagon() {
     return mat;
   }, []);
 
+  // Night: glowing red wall (concept 01). Day: a thin crisp red line on the sand (concept 04).
+  const glowColor = useMemo(() => hdr(RED, 1.4), []);
+  const groundNight = useMemo(() => hdr(RED, 2.2), []);
+  const groundDay = useMemo(() => new Color('#c8202c'), []);
+  const postGlow = useMemo(
+    () =>
+      new MeshBasicMaterial({ map: createGlowSprite(), color: hdr(RED, 0.9), transparent: true, opacity: 0.55, depthWrite: false, blending: AdditiveBlending, toneMapped: false }),
+    [],
+  );
+  const capMaterial = useMemo(() => new MeshBasicMaterial({ color: hdr(RED, 4), toneMapped: false }), []);
   useFrame((_, delta) => {
     // Flows off freezes the boundary shimmer; the red wall stays.
     if (sceneSettings.get().flows) wallMaterial.uniforms.uTime.value += delta;
+    const day = dayBlend.value;
+    (wallMaterial.uniforms.uColor.value as Color).copy(glowColor).multiplyScalar(1 - 0.92 * day);
+    const top = topTube.material as MeshBasicMaterial;
+    top.opacity = 0.55 * (1 - day);
+    top.visible = day < 0.98;
+    (groundTube.material as MeshBasicMaterial).color.copy(groundNight).lerp(groundDay, day);
+    coreTube.visible = day < 0.5;
+    postGlow.opacity = 0.55 * (1 - day);
+    capMaterial.color.set(RED).multiplyScalar(4 - 3 * day);
   });
 
   return (
@@ -129,10 +150,16 @@ export function ConcessionPentagon() {
       {posts.map((p, i) => (
         <group key={i} position={[p.x, p.y, p.z]}>
           <mesh position={[0, (WALL_HEIGHT * 1.25) / 2, 0]}>
-            <cylinderGeometry args={[0.1, 0.1, WALL_HEIGHT * 1.25, 8]} />
+            <cylinderGeometry args={[0.07, 0.07, WALL_HEIGHT * 1.25, 8]} />
             <meshBasicMaterial color="#c41022" />
           </mesh>
-          <pointLight color={RED} intensity={6} distance={10} position={[0, WALL_HEIGHT * 1.27, 0]} />
+          {/* Emissive cap + ground glow instead of eight real point lights (each one cost every lit pixel). */}
+          <mesh position={[0, WALL_HEIGHT * 1.27, 0]} material={capMaterial}>
+            <sphereGeometry args={[0.13, 12, 8]} />
+          </mesh>
+          <mesh position={[0, 0.06, 0]} rotation-x={-Math.PI / 2} material={postGlow} renderOrder={2}>
+            <circleGeometry args={[2.2, 24]} />
+          </mesh>
         </group>
       ))}
     </group>

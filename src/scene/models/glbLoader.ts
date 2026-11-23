@@ -13,6 +13,7 @@ import type { WebGLRenderer } from 'three';
 import { Color, Mesh, MeshBasicMaterial, type Material, type MeshStandardMaterial, type Object3D } from 'three';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import files from 'virtual:field-models';
+import { applyClay } from '../look/clay';
 
 export type FieldModelName =
   | 'cpf1'
@@ -82,8 +83,10 @@ function isEmissive(m: MeshStandardMaterial): boolean {
 export function toHoloMaterial(src: Material): Material {
   const m = src as MeshStandardMaterial;
   if (!('emissive' in m) || !isEmissive(m)) {
-    if ('envMapIntensity' in m) m.envMapIntensity = 0.8;
-    return m;
+    // v3 dressing (polished steel, galvanised rails) carries the reflections; baked v2 paint stays softer.
+    if ('envMapIntensity' in m) m.envMapIntensity = /^(Steel|Galvanised)/i.test(m.name) ? 1.25 : 0.8;
+    // Day mode turns every lit part into the warm white "sand model" clay (look/clay.ts).
+    return applyClay(m);
   }
   const strength = Math.max(1, m.emissiveIntensity ?? 1);
   const color = (m.emissive && m.emissive.getHex() !== 0 ? m.emissive.clone() : new Color(m.color)).multiplyScalar(

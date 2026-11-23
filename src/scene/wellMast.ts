@@ -37,3 +37,8 @@ export function beamOpacityForDistance(distance: number, base = 0.28, near = 8, 
   const t = Math.min(1, Math.max(0, (distance - near) / Math.max(1e-6, far - near)));
   return base * t;
 }
+
+/** Pin marker size vs camera distance: small and elegant close up, still legible from the aerial view. */
+export function pinScaleForDistance(d: number): number {
+  return Math.min(2.3, Math.max(0.75, d / 52));
+}

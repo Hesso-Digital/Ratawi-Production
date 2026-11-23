@@ -69,6 +69,20 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
       shader.fragmentShader = shader.fragmentShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vWp;\nuniform float uDay;')
         .replace(
+          '#include <color_fragment>',
+          `#include <color_fragment>
+        {
+          // Night (concepts 01-03): deep, slightly cool umber ground so the light carries the scene.
+          vec3 night = diffuseColor.rgb * vec3(0.21, 0.195, 0.2);
+          // Day (concept 04): warm off-white sand clay; the texture contrast is softened so the relief reads through light and shadow.
+          float l = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+          vec3 clay = mix(vec3(0.80, 0.70, 0.56), vec3(0.88, 0.80, 0.67), smoothstep(0.55, 0.85, l)) * (0.86 + 0.22 * l);
+          float field = smoothstep(14.0, 0.0, length(vWp.xz) - 34.0);
+          clay *= mix(1.0, 1.04, field);
+          diffuseColor.rgb = mix(night, mix(diffuseColor.rgb, clay, 0.78), uDay);
+        }`,
+        )
+        .replace(
           '#include <emissivemap_fragment>',
           `#include <emissivemap_fragment>
         {
@@ -77,7 +91,7 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
           vec2 g = abs(fract(vWp.xz / 10.0) - 0.5) * 2.0;
           vec2 gw = fwidth(vWp.xz / 10.0) * 2.0;
           float grid = max(1.0 - smoothstep(0.0, gw.x * 1.2, 1.0 - g.x), 1.0 - smoothstep(0.0, gw.y * 1.2, 1.0 - g.y));
-          totalEmissiveRadiance += vec3(0.12, 0.2, 0.3) * grid * 0.05 * fade * (1.0 - uDay);
+          totalEmissiveRadiance += vec3(0.12, 0.2, 0.3) * grid * 0.035 * fade * (1.0 - uDay);
         }`,
         );
     };
@@ -88,8 +102,6 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
 
   useFrame(() => {
     uDay.value = dayBlend.value;
-    // Day: lift the sand albedo so the desert reads bright in sunlight.
-    material.color.setScalar(1 + 0.55 * dayBlend.value);
   });
 
   return <mesh geometry={geometry} material={material} receiveShadow />;

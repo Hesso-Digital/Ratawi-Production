@@ -14,13 +14,15 @@
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { Color, CylinderGeometry, DoubleSide, InstancedMesh, MeshBasicMaterial, Object3D, RingGeometry } from 'three';
+import { Color, CylinderGeometry, InstancedBufferAttribute, InstancedMesh, MeshBasicMaterial, Object3D, PlaneGeometry } from 'three';
+import { dayBlend } from '../state/sceneSettings';
+import { createGroundRingMaterial, createPinGeometry, createPinMaterial } from './shaders/markers';
 import { heightAt, WORLD_WELLS } from './world';
 import { sceneSettings } from '../state/sceneSettings';
 import { hdr } from './shaders/materials';
 import { useSceneClockRef } from './useSceneClock';
 import type { QualityProfile } from './quality';
-import { beamOpacityForDistance, mastWorldPosition } from './wellMast';
+import { beamOpacityForDistance, mastWorldPosition, pinScaleForDistance } from './wellMast';
 
 const COL_OIL = new Color('#38d6ff');
 const COL_AGUP_IDLE = new Color('#ff9a2e');
@@ -32,6 +34,7 @@ const AGUP_ORDER = WORLD_WELLS.filter((w) => w.kind === 'agup').map((w) => w.nam
 /** GLB-mode beam: about one third the procedural height, thinner, softer. */
 const GLB_BEAM_HEIGHT = 1.2;
 const GLB_BEAM_OPACITY = 0.28;
+
 
 export function Wells({
   quality,
@@ -58,6 +61,8 @@ export function Wells({
   const beamRef = useRef<InstancedMesh>(null);
   const ringRef = useRef<InstancedMesh>(null);
   const beamMatRef = useRef<MeshBasicMaterial>(null);
+  const pinMaterial = useMemo(() => createPinMaterial(), []);
+  const ringMaterial = useMemo(() => createGroundRingMaterial(), []);
 
   const count = WORLD_WELLS.length;
   const wellY = useMemo(() => WORLD_WELLS.map((w) => heightAt(w.world[0], w.world[1])), []);
@@ -73,9 +78,13 @@ export function Wells({
     return {
       padGeo: new CylinderGeometry(0.62, 0.62, 0.08, 8),
       bodyGeo: new CylinderGeometry(0.1, 0.12, 0.7, 10),
-      beaconGeo: new CylinderGeometry(0.12, 0.12, 0.2, 10),
+      beaconGeo: (() => {
+        const g = createPinGeometry();
+        g.setAttribute('aAgup', new InstancedBufferAttribute(new Float32Array(WORLD_WELLS.map((w) => (w.kind === 'agup' ? 1 : 0))), 1));
+        return g;
+      })(),
       beamGeo: beam,
-      ringGeo: new RingGeometry(0.72, 0.82, 32),
+      ringGeo: new PlaneGeometry(2.8, 2.8),
     };
   }, [mastAligned]);
 
@@ -106,8 +115,13 @@ export function Wells({
     const { t, agupIgnite, agupWave } = sceneClock.current;
     // Flows off: keep the lit beacons steady, drop the beams and ground rings for clean model inspection.
     const flowsOn = sceneSettings.get().flows;
-    beam.visible = flowsOn;
+    const day = dayBlend.value;
+    beam.visible = flowsOn && day < 0.98;
     ring.visible = flowsOn;
+    pinMaterial.uniforms.uDay.value = day;
+    ringMaterial.uniforms.uDay.value = day;
+    ringMaterial.uniforms.uTime.value = t;
+    ringMaterial.uniforms.uRipple.value = quality.microAnimations ? 1 : 0;
 
     if (mastAligned && beamMatRef.current) {
       let nearest = Infinity;
@@ -159,10 +173,13 @@ export function Wells({
       const beaconZ = mastAligned ? mast.z : w.world[1];
       const beamY = mastAligned ? mast.y + GLB_BEAM_HEIGHT / 2 : y + 0.08 + 0.95 + 1.8 + beaconLift;
 
-      const beaconColor = hdr(col, k * (flowsOn ? pulse : 1));
+      // Pin colour is kept moderate (it has its own rim glow); k is tuned for the old flat beacon.
+      const beaconColor = hdr(col, k * 0.32 * (flowsOn ? pulse : 1));
+      const tipY = mastAligned ? beamY + GLB_BEAM_HEIGHT / 2 + 0.05 : beaconY + 0.15;
+      const dist = Math.hypot(camera.position.x - beaconX, camera.position.y - tipY, camera.position.z - beaconZ);
       dummy.rotation.set(0, 0, 0);
-      dummy.position.set(beaconX, beaconY, beaconZ);
-      dummy.scale.setScalar(1);
+      dummy.position.set(beaconX, tipY, beaconZ);
+      dummy.scale.setScalar(pinScaleForDistance(dist) * (w.kind === 'agup' ? 1.08 : 1));
       dummy.updateMatrix();
       beacon.setMatrixAt(i, dummy.matrix);
       beacon.setColorAt(i, beaconColor);
@@ -176,10 +193,10 @@ export function Wells({
 
       dummy.position.set(w.world[0], y + 0.1, w.world[1]);
       dummy.rotation.set(-Math.PI / 2, 0, 0);
-      dummy.scale.setScalar(1);
+      dummy.scale.setScalar(1.25);
       dummy.updateMatrix();
       ring.setMatrixAt(i, dummy.matrix);
-      ring.setColorAt(i, hdr(col, 1.1 * ringK * (w.kind === 'agup' && agupIgnite < 1 ? 0.6 : 1)));
+      ring.setColorAt(i, hdr(col, 1.4 * ringK * (w.kind === 'agup' && agupIgnite < 1 ? 0.6 : 1)));
     });
 
     beacon.instanceMatrix.needsUpdate = true;
@@ -198,15 +215,11 @@ export function Wells({
       <instancedMesh ref={bodyRef} args={[bodyGeo, undefined, count]} castShadow visible={!hideStatic}>
         <meshStandardMaterial color="#9aa1a8" metalness={0.5} roughness={0.5} />
       </instancedMesh>
-      <instancedMesh ref={beaconRef} args={[beaconGeo, undefined, count]}>
-        <meshBasicMaterial toneMapped={false} />
-      </instancedMesh>
+      <instancedMesh ref={beaconRef} args={[beaconGeo, pinMaterial, count]} frustumCulled={false} />
       <instancedMesh ref={beamRef} args={[beamGeo, undefined, count]}>
         <meshBasicMaterial ref={beamMatRef} toneMapped={false} transparent opacity={mastAligned ? GLB_BEAM_OPACITY : 0.55} depthWrite={false} />
       </instancedMesh>
-      <instancedMesh ref={ringRef} args={[ringGeo, undefined, count]}>
-        <meshBasicMaterial toneMapped={false} transparent opacity={0.8} depthWrite={false} side={DoubleSide} />
-      </instancedMesh>
+      <instancedMesh ref={ringRef} args={[ringGeo, ringMaterial, count]} frustumCulled={false} renderOrder={2} />
     </group>
   );
 }

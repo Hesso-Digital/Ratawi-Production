@@ -1,15 +1,19 @@
 /**
  * Data tags anchored to scene assets (CPF-1, AG-25, AGUP wells, export line,
- * SPP, the concession), ported from design-3d/src/main.js `fieldTags`. Uses
- * drei's <Html> for 3D→screen projection instead of the prototype's manual
- * collision-avoidance algorithm (a deliberate simplification — see
- * docs/venue-rehearsal-checklist.md).
+ * the concession). Small chips with a hairline stem (styles/scene-tags.css)
+ * so they never cover the models: each frame the tag scales with camera
+ * distance (full size close up, about 60% from the aerial view) and the
+ * secondary tags fade out with distance, so only the plant tags stay when the
+ * whole field is on screen.
  */
 import { Html } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { useRef, type ReactNode } from 'react';
+import { Vector3 } from 'three';
 import { AG25_WORLD, AGUP_WELLS, CONCESSION_WORLD, CPF_WORLD, EXPORT_LINE_WORLD, heightAt } from './world';
-import { GAS_MIN_TO_OPERATE_MMSCFD } from '../data/defaults';
 import { useSceneSnapshot } from './useSceneClock';
-import { useExploreState } from './explore/exploreStore';
+import { tagStyleForDistance } from './look/tagStyle';
+import '../styles/scene-tags.css';
 
 function at(x: number, z: number, lift: number): [number, number, number] {
   return [x, heightAt(x, z) + lift, z];
@@ -28,76 +32,68 @@ function centroidOf(points: ReadonlyArray<{ world: readonly [number, number] }>)
 
 const agupCentroid = centroidOf(AGUP_WELLS);
 
+function SceneTag({ position, primary = false, tone, children }: { position: [number, number, number]; primary?: boolean; tone?: 'amber' | 'red'; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useRef(new Vector3(...position));
+  p.current.set(...position);
+  useFrame(({ camera }) => {
+    const el = ref.current;
+    if (!el) return;
+    const { scale, opacity } = tagStyleForDistance(camera.position.distanceTo(p.current), primary);
+    el.style.transform = `scale(${scale.toFixed(3)})`;
+    el.style.opacity = opacity.toFixed(2);
+    el.style.visibility = opacity < 0.03 ? 'hidden' : 'visible';
+  });
+  return (
+    <Html zIndexRange={[3, 0]} position={position} center={false} occlude={false} pointerEvents="none">
+      <div ref={ref} className="scene-tag-anchor">
+        <div className={`scene-tag${tone ? ` ${tone}` : ''}`}>{children}</div>
+      </div>
+    </Html>
+  );
+}
+
 export function AnchoredTags() {
   const state = useSceneSnapshot();
-  // In free roam the camera can get close; keep the tags at a fixed screen size
-  // instead of scaling with distance, so they never fill the screen.
-  const exploring = useExploreState().mode !== 'show';
-  const df = exploring ? undefined : 42;
-  const gold = state.gold > 0.5;
   const agupLabel =
-    state.agupIgnite === 0 ? 'Ready · 7 wells' : state.agupIgnite === 1 ? 'Armed · 7 wells' : `Online · ${Math.max(0, Math.round(state.wells) - 25)} / 7 wells`;
+    state.agupIgnite === 0 ? 'Ready' : state.agupIgnite === 1 ? 'Armed' : `${Math.max(0, Math.round(state.wells) - 25)} / 7 online`;
 
   return (
     <>
-      <Html zIndexRange={[3, 0]} position={at(CPF_WORLD[0] - 1, CPF_WORLD[1] - 2.5, 4.5)} center={false} occlude={false} distanceFactor={df}>
-        <div className="reveal-tag big">
-          <div className="t" style={{ color: gold ? '#ffc65a' : '#9fe9ff' }}>
-            CPF-1 · Central processing
-          </div>
-          <div className="d">
-            {state.oil.toFixed(1)}
-            <small>{state.valves > 0.5 ? 'kbopd in · valves open' : 'kbopd in'}</small>
-          </div>
-        </div>
-      </Html>
-      <Html zIndexRange={[3, 0]} position={at(AG25_WORLD[0] - 1, AG25_WORLD[1], 4.5)} center={false} occlude={false} distanceFactor={df}>
-        <div className="reveal-tag">
-          <div className="t">AG-25 · Gas plant</div>
-          <div className="d" style={{ color: state.gas > 0 ? '#cdb6ff' : undefined }}>
-            {state.gas > 0 ? (
-              <>
-                {state.gas.toFixed(0)}
-                <small>MMscfd</small>
-              </>
-            ) : (
-              <>
-                Standby
-                <small>needs ≥ {GAS_MIN_TO_OPERATE_MMSCFD} MMscfd</small>
-              </>
-            )}
-          </div>
-        </div>
-      </Html>
-      <Html zIndexRange={[3, 0]} position={at(agupCentroid[0], agupCentroid[1], 3)} center={false} occlude={false} distanceFactor={df}>
-        <div className="reveal-tag">
-          <div className="t" style={{ color: state.agupIgnite >= 2 ? '#ffd59a' : '#ff9a2e' }}>
-            AGUP wells
-          </div>
-          <div className="d">{agupLabel}</div>
-        </div>
-      </Html>
-      <Html
-        position={at(EXPORT_LINE_WORLD[3][0], EXPORT_LINE_WORLD[3][1], 0.6)}
-        center={false}
-        occlude={false}
-        distanceFactor={df}
-      >
-        <div className="reveal-tag sm">
-          <div className="t">Export line</div>
-          <div className="d">
-            {state.exportKbopd.toFixed(0)}
-            <small>kbopd</small>
-          </div>
-        </div>
-      </Html>
-      <Html zIndexRange={[3, 0]} position={at(CONCESSION_WORLD[4][0], CONCESSION_WORLD[4][1], 2.6)} center={false} occlude={false} distanceFactor={df}>
-        <div className="reveal-tag sm">
-          <div className="t" style={{ color: '#ff6b74' }}>
-            Ratawi concession
-          </div>
-        </div>
-      </Html>
+      <SceneTag position={at(CPF_WORLD[0] - 1, CPF_WORLD[1] - 2.5, 4.2)} primary>
+        <span className="k">CPF-1</span>
+        <span className="v">
+          {state.oil.toFixed(1)}
+          <small>kbopd</small>
+        </span>
+      </SceneTag>
+      <SceneTag position={at(AG25_WORLD[0] - 1, AG25_WORLD[1], 3.8)} primary tone={state.gas > 0 ? 'amber' : undefined}>
+        <span className="k">AG-25</span>
+        <span className="v">
+          {state.gas > 0 ? (
+            <>
+              {state.gas.toFixed(0)}
+              <small>MMscfd</small>
+            </>
+          ) : (
+            'Standby'
+          )}
+        </span>
+      </SceneTag>
+      <SceneTag position={at(agupCentroid[0], agupCentroid[1], 2.6)} tone="amber">
+        <span className="k">AGUP wells</span>
+        <span className="v">{agupLabel}</span>
+      </SceneTag>
+      <SceneTag position={at(EXPORT_LINE_WORLD[3][0], EXPORT_LINE_WORLD[3][1], 1.2)}>
+        <span className="k">Export</span>
+        <span className="v">
+          {state.exportKbopd.toFixed(0)}
+          <small>kbopd</small>
+        </span>
+      </SceneTag>
+      <SceneTag position={at(CONCESSION_WORLD[4][0], CONCESSION_WORLD[4][1], 2.6)} tone="red">
+        <span className="k">Ratawi concession</span>
+      </SceneTag>
     </>
   );
 }

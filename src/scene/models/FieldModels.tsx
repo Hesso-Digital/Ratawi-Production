@@ -6,9 +6,10 @@
  */
 import { useFrame } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { Color, InstancedMesh, Matrix4, Mesh, Object3D, type Material } from 'three';
+import { Color, InstancedMesh, Matrix4, Mesh, Object3D, type Material, type PointLight } from 'three';
 import { AG25_WORLD, CPF_WORLD, EXPORT_LINE_WORLD, WORLD_WELLS, heightAt } from '../world';
 import { useSceneClockRef } from '../useSceneClock';
+import { dayBlend } from '../../state/sceneSettings';
 import { hdr } from '../shaders/materials';
 import { CPF1 } from '../facilities/CPF1';
 import { AG25 } from '../facilities/AG25';
@@ -18,6 +19,19 @@ import { ModelBoundary } from './ModelBoundary';
 import { cloneForScene, emissiveUnder, hasFieldModel, nodeNamed, preloadFieldModels, useFieldGLTF, type FieldModelName } from './glbLoader';
 
 preloadFieldModels(['cpf1', 'ag25', 'wellhead', 'wellhead_agup', 'export_marker']);
+
+/** Warm sodium plant lighting (v3 SodiumLights lamp heads + one real light per plant). */
+const SODIUM = '#ffae52';
+
+/** Lamp heads glow at night and fall back to a faint warm tint by day. */
+function driveSodium(mats: Array<{ color: Color; userData: Record<string, unknown> }>, t: number) {
+  const day = dayBlend.value;
+  for (const m of mats) {
+    const base = m.userData.base as Color | undefined;
+    if (!base) continue;
+    m.color.copy(base).multiplyScalar((1.15 + 0.04 * Math.sin(t * 1.3)) * (1 - 0.85 * day));
+  }
+}
 
 const VALVE_CLOSED = new Color('#ff5a3c');
 const VALVE_OPEN = new Color('#3dffb0');
@@ -52,12 +66,14 @@ function CPF1Glb({ shadows }: { shadows: boolean }) {
   const sceneClock = useSceneClockRef();
   const [cx, cz] = CPF_WORLD;
   const y = heightAt(cx, cz) + 0.02;
-  const { root, valves, flames } = useMemo(() => {
+  const { root, valves, flames, sodium } = useMemo(() => {
     const root = cloneForScene(gltf.scene, { shadows });
     const valves = [1, 2, 3].map((i) => emissiveUnder(root, `InletValve_${i}`));
     const flames = [nodeNamed(root, 'Flame_Core'), nodeNamed(root, 'Flame_Tip')];
-    return { root, valves, flames };
+    const sodium = emissiveUnder(root, 'SodiumLights');
+    return { root, valves, flames, sodium };
   }, [gltf, shadows]);
+  const lightRef = useRef<PointLight>(null);
 
   useFrame(() => {
     const { valves: v, t } = sceneClock.current;
@@ -68,12 +84,14 @@ function CPF1Glb({ shadows }: { shadows: boolean }) {
       for (const m of mats) m.color.copy(c);
     });
     flames.forEach((n, i) => flicker(n, t, 1, i));
+    driveSodium(sodium, t);
+    if (lightRef.current) lightRef.current.intensity = 14 * (1 - 0.7 * dayBlend.value);
   });
 
   return (
     <group position={[cx, y, cz]}>
       <primitive object={root} />
-      <pointLight color="#ffd6a0" intensity={10} distance={16} decay={1.5} position={[0, 4, 0]} />
+      <pointLight ref={lightRef} color={SODIUM} intensity={14} distance={18} decay={1.4} position={[-1.5, 3.2, 0.5]} />
     </group>
   );
 }
@@ -84,12 +102,14 @@ function AG25Glb({ shadows }: { shadows: boolean }) {
   const sceneClock = useSceneClockRef();
   const [ax, az] = AG25_WORLD;
   const y = heightAt(ax, az) + 0.02;
-  const { root, lights, flames } = useMemo(() => {
+  const { root, lights, flames, sodium } = useMemo(() => {
     const root = cloneForScene(gltf.scene, { shadows });
     const lights = [...emissiveUnder(root, 'GasLights'), ...emissiveUnder(root, 'MastLights')];
     const flames = [nodeNamed(root, 'Flame_Core'), nodeNamed(root, 'Flame_Tip')];
-    return { root, lights, flames };
+    const sodium = emissiveUnder(root, 'SodiumLights');
+    return { root, lights, flames, sodium };
   }, [gltf, shadows]);
+  const lightRef = useRef<PointLight>(null);
 
   useFrame(() => {
     const { gasFlow, t } = sceneClock.current;
@@ -97,11 +117,14 @@ function AG25Glb({ shadows }: { shadows: boolean }) {
     for (const m of lights) m.color.copy(m.userData.base as Color).multiplyScalar(0.25 + 1.4 * live);
     const flameK = Math.max(0, gasFlow * 1.2 - 0.5) * 2;
     flames.forEach((n, i) => flicker(n, t, Math.min(1, flameK), i + 3));
+    driveSodium(sodium, t);
+    if (lightRef.current) lightRef.current.intensity = 9 * (1 - 0.7 * dayBlend.value);
   });
 
   return (
     <group position={[ax, y, az]}>
       <primitive object={root} />
+      <pointLight ref={lightRef} color={SODIUM} intensity={9} distance={13} decay={1.4} position={[0, 2.8, 0]} />
     </group>
   );
 }

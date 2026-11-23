@@ -27,6 +27,7 @@ import { MilestoneShockwave } from './MilestoneShockwave';
 import { ProductionRibbon } from './ProductionRibbon';
 import { AnchoredTags } from './AnchoredTags';
 import { PostFX } from './PostFX';
+import { SceneLook } from './look/SceneLook';
 import { QUALITY_PROFILES } from './quality';
 import type { CameraState } from './ceremonyTimeline';
 import type { Quality } from '../data/types';
@@ -89,6 +90,7 @@ export function NightRevealCanvas({
       <Suspense fallback={null}>
         <ExploreCameraRig debugOrbit={debugOrbit} override={cameraOverride} cueKey={cueKey} locked={locked} />
         <SkyAndFog />
+        <SceneLook quality={profile} />
         <Lighting quality={profile} />
         <FieldTerrain quality={profile} />
         <ConcessionPentagon />
@@ -107,7 +109,7 @@ export function NightRevealCanvas({
         {locked || showpiece ? null : <InspectTargets />}
         {locked || showpiece ? null : <AreaMarkers />}
         {locked || showpiece ? null : <AreaFocusHighlight />}
-        {profile.bloom ? <PostFX /> : null}
+        {profile.bloom ? <PostFX quality={profile} /> : null}
         {onQualityDrop ? (
           <PerformanceMonitor
             onDecline={() => {

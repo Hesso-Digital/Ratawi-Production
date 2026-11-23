@@ -8,8 +8,8 @@ import { Color, type FogExp2, type Mesh, type ShaderMaterial } from 'three';
 import { useThree } from '@react-three/fiber';
 import { dayBlend } from '../state/sceneSettings';
 
-const FOG_NIGHT = new Color('#142238');
-const FOG_DAY = new Color('#d4cbb8');
+const FOG_NIGHT = new Color('#0c1424');
+const FOG_DAY = new Color('#e9e1d2');
 import { BackSide } from 'three';
 import { createSkyMaterial } from './shaders/materials';
 import { useSceneClockRef } from './useSceneClock';
@@ -36,9 +36,10 @@ export function SkyAndFog() {
     if (fog) {
       fog.color.copy(FOG_NIGHT).lerp(FOG_DAY, day);
       // Desert haze: a little thinner than the night murk so the horizon swell reads.
-      fog.density = 0.0058 - day * 0.003;
+      // Night: a thinner, darker murk so the ground stays deep (concepts 01-03). Day: light haze only.
+      fog.density = 0.0042 - day * 0.0026;
     }
-    gl.toneMappingExposure = 1.05 + day * 0.1;
+    gl.toneMappingExposure = 1.05 - day * 0.12;
   });
 
   return (

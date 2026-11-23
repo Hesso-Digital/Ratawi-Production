@@ -5,6 +5,9 @@
  * area stays clearly blue in both night and day lighting.
  */
 import { useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Color } from 'three';
+import { dayBlend } from '../state/sceneSettings';
 import {
   BoxGeometry,
   BufferAttribute,
@@ -21,6 +24,9 @@ import { SPP_WORLD, heightAt, inPolygon, polygonBounds } from './world';
 
 const SPP_BLUE = '#3f8cff';
 const SPP_BLUE_FILL = '#1a5fd4';
+/** Day (concept 04): navy dashes on the sand. */
+const SPP_NAVY = new Color('#1f2f6e');
+const SPP_BLUE_C = new Color(SPP_BLUE);
 const dummy = new Object3D();
 
 function outlineDots() {
@@ -76,7 +82,7 @@ export function SppSolar() {
 
   const fillMesh = useMemo(
     () => (
-      <mesh geometry={fillGeo} renderOrder={1}>
+      <mesh geometry={fillGeo} renderOrder={1} name="spp-fill">
         <meshBasicMaterial
           color={SPP_BLUE_FILL}
           transparent
@@ -110,34 +116,56 @@ export function SppSolar() {
     return mesh;
   }, [dots]);
 
-  const panelMesh = useMemo(() => {
-    const mesh = new InstancedMesh(
-      new BoxGeometry(1.85, 0.04, 0.9),
-      new MeshStandardMaterial({
-        color: '#0f2346',
-        metalness: 0.6,
-        roughness: 0.22,
-        emissive: '#06122a',
-        emissiveIntensity: 0.6,
-      }),
-      Math.max(1, rows.length),
+  // Glass modules in brushed aluminium frames on two legs (concept 01/05 panel tables).
+  const { panelMesh, frameMesh, legMesh } = useMemo(() => {
+    const n = Math.max(1, rows.length);
+    const panelMesh = new InstancedMesh(
+      new BoxGeometry(1.78, 0.03, 0.84),
+      new MeshStandardMaterial({ color: '#0c1d3d', metalness: 0.35, roughness: 0.12, emissive: '#06122a', emissiveIntensity: 0.5, envMapIntensity: 1.4 }),
+      n,
     );
-    mesh.castShadow = mesh.receiveShadow = true;
+    const frameMesh = new InstancedMesh(
+      new BoxGeometry(1.86, 0.045, 0.92),
+      new MeshStandardMaterial({ color: '#b9c0c8', metalness: 0.9, roughness: 0.3 }),
+      n,
+    );
+    const legMesh = new InstancedMesh(new BoxGeometry(0.05, 0.42, 0.05), new MeshStandardMaterial({ color: '#8a9199', metalness: 0.8, roughness: 0.4 }), n * 2);
+    panelMesh.castShadow = panelMesh.receiveShadow = true;
+    frameMesh.castShadow = true;
     rows.forEach(([x, z], i) => {
-      dummy.position.set(x, heightAt(x, z) + 0.35, z);
+      const y = heightAt(x, z);
+      dummy.position.set(x, y + 0.38, z);
       dummy.rotation.set(-0.45, 0, 0);
+      dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
+      frameMesh.setMatrixAt(i, dummy.matrix);
+      dummy.translateY(0.012);
+      dummy.updateMatrix();
+      panelMesh.setMatrixAt(i, dummy.matrix);
+      for (const [k, dx] of [[0, -0.7], [1, 0.7]] as const) {
+        dummy.position.set(x + dx, y + 0.21, z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        legMesh.setMatrixAt(i * 2 + k, dummy.matrix);
+      }
     });
-    mesh.count = rows.length;
-    return mesh;
+    panelMesh.count = frameMesh.count = rows.length;
+    legMesh.count = rows.length * 2;
+    return { panelMesh, frameMesh, legMesh };
   }, [rows]);
+
+  useFrame(() => {
+    const day = dayBlend.value;
+    (dotMesh.material as MeshBasicMaterial).color.copy(SPP_BLUE_C).lerp(SPP_NAVY, day);
+  });
 
   return (
     <group>
       {fillMesh}
       <primitive object={dotMesh} />
+      <primitive object={frameMesh} />
       <primitive object={panelMesh} />
+      <primitive object={legMesh} />
     </group>
   );
 }
