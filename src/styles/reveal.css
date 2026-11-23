@@ -1,0 +1,660 @@
+/**
+ * Night Reveal HUD, ported from design-3d/src/hud.css and mapped onto the
+ * existing --ratawi-* token set so the reveal and classic screens share one
+ * palette. This overlay sits on top of <NightRevealCanvas> inside the same
+ * 1920x1080 .stage, so it scales with useStageScale automatically.
+ */
+
+.reveal-root {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.reveal-canvas-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.reveal-canvas-wrap canvas {
+  display: block;
+}
+
+.reveal-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 75% 70% at 55% 48%, transparent 55%, rgba(3, 6, 12, 0.5) 100%),
+    linear-gradient(90deg, rgba(4, 8, 16, 0.7) 0%, rgba(4, 8, 16, 0.32) 24%, transparent 40%),
+    linear-gradient(0deg, rgba(3, 6, 12, 0.85) 0%, rgba(3, 6, 12, 0.5) 11%, transparent 22%),
+    linear-gradient(180deg, rgba(3, 6, 12, 0.55) 0%, transparent 14%);
+}
+
+.reveal-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  font-family: var(--ratawi-font-sans);
+  color: var(--ratawi-text-strong);
+}
+
+/* step tracker, top right */
+.reveal-steps {
+  position: absolute;
+  right: 56px;
+  top: 40px;
+  display: flex;
+}
+
+.reveal-step {
+  width: 170px;
+  position: relative;
+  padding-top: 20px;
+}
+
+.reveal-step::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--ratawi-border-subtle);
+}
+
+.reveal-step .dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(220, 235, 250, 0.5);
+  background: #0a1220;
+}
+
+.reveal-step .k {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
+.reveal-step .v {
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 6px;
+  font-family: var(--ratawi-font-numeric);
+}
+
+.reveal-step .v small {
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.reveal-step.done::before {
+  background: linear-gradient(90deg, var(--ratawi-cyan), rgba(43, 231, 255, 0.4));
+}
+
+.reveal-step.done .dot {
+  background: var(--ratawi-cyan);
+  border-color: var(--ratawi-cyan);
+}
+
+.reveal-step.on .dot {
+  background: var(--ratawi-cyan);
+  border-color: #fff;
+  box-shadow:
+    0 0 0 5px rgba(43, 231, 255, 0.18),
+    0 0 18px var(--ratawi-cyan);
+}
+
+.reveal-hud.gold .reveal-step.done::before {
+  background: linear-gradient(90deg, var(--ratawi-gold), rgba(245, 208, 122, 0.4));
+}
+
+.reveal-hud.gold .reveal-step.done .dot,
+.reveal-hud.gold .reveal-step.on .dot {
+  background: var(--ratawi-gold);
+  border-color: var(--ratawi-gold);
+  box-shadow:
+    0 0 0 5px rgba(245, 208, 122, 0.2),
+    0 0 18px var(--ratawi-gold);
+}
+
+/* hero number */
+.reveal-hero {
+  position: absolute;
+  left: 56px;
+  top: 220px;
+  width: 620px;
+}
+
+.reveal-hero .label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
+.reveal-hero .big {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.reveal-hero .big .n {
+  font-family: var(--ratawi-font-numeric);
+  font-size: 164px;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  color: #f4f9ff;
+  text-shadow: 0 0 40px rgba(43, 231, 255, 0.25);
+  font-variant-numeric: tabular-nums;
+}
+
+.reveal-hero .big .u {
+  font-size: 26px;
+  color: var(--ratawi-muted);
+}
+
+.reveal-hud.gold .reveal-hero .big .n {
+  background: linear-gradient(180deg, #fff3cf 0%, #ffd27a 45%, #e9a53a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 28px rgba(255, 190, 80, 0.45));
+}
+
+.reveal-hero .scale {
+  position: relative;
+  margin-top: 36px;
+  width: 540px;
+  height: 40px;
+}
+
+.reveal-hero .scale .track {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(200, 220, 240, 0.14);
+  border-radius: 2px;
+}
+
+.reveal-hero .scale .fill {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(43, 231, 255, 0.2), var(--ratawi-cyan));
+  box-shadow: 0 0 14px var(--ratawi-cyan);
+}
+
+.reveal-hud.gold .reveal-hero .scale .fill {
+  background: linear-gradient(90deg, rgba(245, 208, 122, 0.2), var(--ratawi-gold));
+  box-shadow: 0 0 16px var(--ratawi-gold);
+}
+
+.reveal-hero .scale .tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 21px;
+  background: rgba(230, 240, 250, 0.55);
+}
+
+.reveal-hero .scale .tick span {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--ratawi-muted);
+}
+
+.reveal-hero .scale .tick.target {
+  background: var(--ratawi-gold);
+}
+
+.reveal-hero .scale .tick.target span {
+  color: var(--ratawi-gold);
+  top: -18px;
+}
+
+.reveal-hero .status {
+  margin-top: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(43, 231, 255, 0.35);
+  background: rgba(43, 231, 255, 0.08);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reveal-hero .status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ratawi-cyan);
+  box-shadow: 0 0 10px var(--ratawi-cyan);
+}
+
+.reveal-hud.gold .reveal-hero .status {
+  border-color: rgba(245, 208, 122, 0.6);
+  background: rgba(245, 208, 122, 0.12);
+  color: var(--ratawi-gold);
+}
+
+.reveal-hud.gold .reveal-hero .status i {
+  background: var(--ratawi-gold);
+  box-shadow: 0 0 12px var(--ratawi-gold);
+}
+
+/* KPI rail, bottom */
+.reveal-rail {
+  position: absolute;
+  left: 56px;
+  right: 56px;
+  bottom: 42px;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr 1.15fr 1fr 1fr 1fr;
+  border-top: 1px solid var(--ratawi-border-subtle);
+}
+
+.reveal-kpi {
+  padding: 16px 20px 0 20px;
+  border-left: 1px solid var(--ratawi-border-subtle);
+  position: relative;
+}
+
+.reveal-kpi:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.reveal-kpi .bar {
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  height: 2px;
+  width: 40%;
+  background: var(--ratawi-cyan);
+  box-shadow: 0 0 8px var(--ratawi-cyan);
+}
+
+.reveal-kpi:first-child .bar {
+  left: 0;
+}
+
+.reveal-hud.gold .reveal-kpi .bar {
+  background: var(--ratawi-gold);
+  box-shadow: 0 0 8px var(--ratawi-gold);
+}
+
+.reveal-kpi.gas .bar {
+  background: var(--ratawi-gas);
+  box-shadow: 0 0 8px var(--ratawi-gas);
+}
+
+.reveal-kpi .k {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
+.reveal-kpi .v {
+  margin-top: 8px;
+  font-family: var(--ratawi-font-numeric);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reveal-kpi .v small {
+  font-size: 12px;
+  color: var(--ratawi-muted);
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.reveal-kpi .s {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.reveal-kpi .s i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ratawi-success);
+}
+
+.reveal-kpi.hot .v {
+  color: var(--ratawi-cyan);
+}
+
+.reveal-hud.gold .reveal-kpi.hot .v {
+  color: var(--ratawi-gold);
+}
+
+.reveal-kpi.gas .v {
+  color: var(--ratawi-gas);
+}
+
+.reveal-kpi.alert .v,
+.reveal-kpi.alert .s {
+  color: var(--ratawi-critical);
+}
+
+/* countdown ring */
+.reveal-count {
+  position: absolute;
+  left: 1400px;
+  top: 260px;
+  width: 360px;
+  height: 360px;
+}
+
+.reveal-count::before {
+  content: '';
+  position: absolute;
+  inset: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 10, 20, 0.78) 35%, rgba(6, 10, 20, 0) 70%);
+}
+
+.reveal-count .n {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ratawi-font-numeric);
+  font-size: 196px;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  text-shadow: 0 0 40px rgba(255, 170, 70, 0.55);
+  color: #fff3df;
+}
+
+.reveal-count .n.word {
+  font-size: 42px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.15;
+  font-family: var(--ratawi-font-sans);
+}
+
+.reveal-count .cap {
+  position: absolute;
+  top: 378px;
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ratawi-gold);
+}
+
+.reveal-count .chips {
+  position: absolute;
+  top: 408px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.reveal-count .chips b {
+  font-weight: 400;
+  font-size: 13px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(245, 208, 122, 0.4);
+  color: var(--ratawi-muted);
+  font-family: var(--ratawi-font-numeric);
+}
+
+.reveal-count .chips b.on {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: var(--ratawi-gold);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+}
+
+/* anchored field tags */
+.reveal-tags {
+  position: absolute;
+  inset: 0;
+}
+
+.reveal-tag {
+  position: relative;
+  white-space: nowrap;
+  padding: 5px 11px 6px 11px;
+  background: linear-gradient(90deg, rgba(5, 10, 20, 0.6), rgba(5, 10, 20, 0.22) 80%, rgba(5, 10, 20, 0));
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.reveal-tag .t {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(220, 232, 245, 0.75);
+}
+
+.reveal-tag .d {
+  font-size: 17px;
+  font-weight: 500;
+  margin-top: 3px;
+  font-family: var(--ratawi-font-numeric);
+}
+
+.reveal-tag .d small {
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* compass */
+.reveal-compass {
+  position: absolute;
+  right: 76px;
+  bottom: 180px;
+  width: 52px;
+  height: 52px;
+}
+
+.reveal-compass .lbl {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--ratawi-muted);
+}
+
+/* playback bar */
+.reveal-playback {
+  position: absolute;
+  right: 56px;
+  top: 56px;
+  width: 600px;
+}
+
+.reveal-playback .k {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-gold);
+  text-align: right;
+}
+
+.reveal-playback .scrub {
+  position: relative;
+  height: 3px;
+  margin-top: 20px;
+  background: var(--ratawi-border-subtle);
+}
+
+.reveal-playback .scrub .f {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ratawi-cyan), var(--ratawi-gold));
+}
+
+.reveal-playback .scrub .h {
+  position: absolute;
+  top: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ratawi-gold);
+  box-shadow:
+    0 0 0 6px rgba(245, 208, 122, 0.2),
+    0 0 16px var(--ratawi-gold);
+  transform: translateX(-50%);
+}
+
+.reveal-playback .months {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  font-size: 10px;
+  color: var(--ratawi-muted);
+}
+
+/* brand + caption (reveal header) */
+.reveal-brand {
+  position: absolute;
+  left: 56px;
+  top: 48px;
+}
+
+.reveal-brand .eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
+.reveal-brand h1 {
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 8px 0 0;
+  color: var(--ratawi-text-strong);
+}
+
+.reveal-brand .live {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--ratawi-muted);
+}
+
+.reveal-brand .live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ratawi-success);
+  box-shadow: 0 0 12px var(--ratawi-success);
+}
+
+.reveal-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 170px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 300;
+  color: #fff6e2;
+  letter-spacing: -0.005em;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+}
+
+.reveal-caption small {
+  display: block;
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  margin-top: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ribbon labels (3D Html overlays, see ProductionRibbon.tsx) */
+.ribbon-month {
+  font-size: 11px;
+  color: rgba(225, 235, 245, 0.8);
+  text-shadow: 0 1px 6px #000;
+  white-space: nowrap;
+}
+
+.ribbon-callout {
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+}
+
+.ribbon-callout .m {
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  margin-bottom: 3px;
+}
+
+.ribbon-callout .v {
+  font-size: 22px;
+  font-weight: 500;
+  font-family: var(--ratawi-font-numeric);
+}
+
+.ribbon-callout.gold .v {
+  color: var(--ratawi-gold);
+}
+
+/* quality pill, bottom-left debug readout (operator-visible only) */
+.reveal-quality-pill {
+  position: absolute;
+  left: 56px;
+  bottom: 170px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+  opacity: 0.6;
+}

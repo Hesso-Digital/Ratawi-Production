@@ -7,8 +7,8 @@ export interface ProductionFeed {
   readSnapshot(): Promise<Snapshot>;
 }
 
-export const mockFeed: ProductionFeed = {
-  origin: 'mock',
+export const manualFeed: ProductionFeed = {
+  origin: 'manual',
   async readSnapshot() {
     return { ...BASELINE };
   },

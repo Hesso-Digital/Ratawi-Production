@@ -1,6 +1,6 @@
 export type CeremonyStep = 0 | 1 | 2;
 
-export type DataOrigin = 'mock' | 'pi';
+export type DataOrigin = 'manual' | 'pi';
 
 export type Snapshot = {
   oil: number;
@@ -25,13 +25,35 @@ export type MonthPoint = {
   kind: 'actual' | 'forecast';
 };
 
+/** Ceremony view shown on the audience display. */
+export type ViewMode = 'reveal' | 'classic' | 'fallback';
+
+/** 3D render quality profile, see src/scene/quality.ts. */
+export type Quality = 'low' | 'medium' | 'high';
+
+/**
+ * A cue is the single thing the operator broadcasts to start a choreographed
+ * beat. `startedAt` is wall-clock (Date.now()), so a late-joining or refreshed
+ * audience window can resume mid-sequence: elapsed = now - startedAt.
+ */
+export type CueKind = 'idle' | 'countdown' | 'step1' | 'step2' | 'playback';
+
+export type Cue = {
+  kind: CueKind;
+  startedAt: number;
+};
+
 export type AppState = {
   snapshot: Snapshot;
+  /** The snapshot the current cue animates FROM. Equal to snapshot outside a cue. */
+  prevSnapshot: Snapshot;
   step: CeremonyStep;
   origin: DataOrigin;
+  cue: Cue;
+  view: ViewMode;
+  quality: Quality;
 };
 
 export type ChannelMessage =
   | { type: 'state'; state: AppState }
-  | { type: 'playback-start'; startedAt: number; duration: number }
-  | { type: 'playback-stop' };
+  | { type: 'cue'; cue: Cue };
