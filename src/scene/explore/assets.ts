@@ -1,6 +1,6 @@
 /**
  * Everything on the hall screen a viewer can click to inspect, plus the named
- * camera viewpoints (keys 1 to 5). Positions come from world.ts, so they always
+ * camera viewpoints (keys 1 to 8). Positions come from world.ts, so they always
  * line up with the procedural geometry and the GLB models placed on top of it.
  * Live values are read from the same SceneState the HUD shows.
  */
@@ -17,10 +17,12 @@ import {
   polygonBounds,
   type Vec2,
 } from '../world';
+import { NORTH_WELL_NAMES, SOUTH_WELL_NAMES } from '../../data/field';
 import { cameraAt, type CameraState, type SceneState } from '../ceremonyTimeline';
 import { GAS_MIN_TO_OPERATE_MMSCFD, TARGET_KBOPD } from '../../data/defaults';
 import { WELLS as WELL_CONFIG } from '../../data/ceremonyConfig';
 import type { KpiId } from '../../data/kpis';
+import { frameFrom, wellInspectView } from './wellCamera';
 
 export type V3 = [number, number, number];
 
@@ -55,23 +57,7 @@ function ground([x, z]: Vec2, lift = 0): V3 {
   return [x, heightAt(x, z) + lift, z];
 }
 
-/**
- * A camera looking at `target` from `dist` away. `azDeg` 0 looks from the
- * west (the show camera's side), 90 from the south; `elDeg` is the height angle.
- */
-export function frameFrom(target: V3, dist: number, elDeg: number, azDeg: number, fov = 32): CameraState {
-  const el = (elDeg * Math.PI) / 180;
-  const az = (azDeg * Math.PI) / 180;
-  return {
-    position: [
-      target[0] - Math.cos(az) * Math.cos(el) * dist,
-      target[1] + Math.sin(el) * dist,
-      target[2] + Math.sin(az) * Math.cos(el) * dist,
-    ],
-    target,
-    fov,
-  };
-}
+export { frameFrom } from './wellCamera';
 
 const agupOnline = (s: SceneState) => s.wells > WELL_CONFIG.online + 0.5;
 const gasOperating = (s: SceneState) => s.gas >= GAS_MIN_TO_OPERATE_MMSCFD;
@@ -87,7 +73,7 @@ function wellAsset(w: (typeof WORLD_WELLS)[number]): InspectAsset {
     center,
     radius: 1.2,
     hit: { type: 'cylinder', radius: 1.1, height: 2.4 },
-    view: frameFrom([center[0], center[1] + 0.6, center[2]], 9, 28, 30, 34),
+    view: wellInspectView(center),
     status: (s) => {
       if (!isAgup) return { label: 'Online', tone: 'ok' };
       if (s.agupIgnite >= 2 && agupOnline(s)) return { label: 'Online', tone: 'gold' };
@@ -207,7 +193,7 @@ export const FACILITY_ASSETS: InspectAsset[] = [
     center: exportMid,
     radius: 12,
     hit: { type: 'tubes', paths: [exportPath], radius: 0.8 },
-    view: frameFrom(exportMid, 44, 32, 70),
+    view: frameFrom(exportMid, 48, 34, 40),
     status: () => ({ label: 'Exporting · metered', tone: 'ok' }),
     rows: (s) => [
       { k: 'Oil export', v: f1(s.exportKbopd), unit: 'kbopd' },
@@ -251,7 +237,7 @@ export const FACILITY_ASSETS: InspectAsset[] = [
     center: sppCenter,
     radius: Math.max(sppBounds.maxX - sppBounds.minX, sppBounds.maxZ - sppBounds.minZ) / 2,
     hit: { type: 'box', size: [sppBounds.maxX - sppBounds.minX, 1.2, sppBounds.maxZ - sppBounds.minZ] },
-    view: frameFrom(sppCenter, 40, 45, 20, 32),
+    view: frameFrom(sppCenter, 48, 44, 15, 32),
     status: () => ({ label: 'In service', tone: 'info' }),
     rows: () => [{ k: 'Footprint', v: 'North of CPF-1' }],
   },
@@ -266,14 +252,35 @@ export function assetById(id: string | null | undefined): InspectAsset | undefin
   return id ? BY_ID.get(id) : undefined;
 }
 
-export type ViewPreset = { id: string; key: string; label: string; camera: CameraState };
+const northWells = WORLD_WELLS.filter((w) => (NORTH_WELL_NAMES as readonly string[]).includes(w.name));
+const southWells = WORLD_WELLS.filter((w) => (SOUTH_WELL_NAMES as readonly string[]).includes(w.name));
+const northCenter = ground(centroid(northWells.map((w) => w.world)));
+const southCenter = ground(centroid(southWells.map((w) => w.world)));
+
+/** Wide aerial used for Whole field; pulled a little higher and more north for the elongated outline. */
+const WHOLE_FIELD_CAMERA: CameraState = { position: [-110, 90, 40], target: [0, 0, -6], fov: 30 };
+
+/** AGUP is a field-wide highlight, not a fly-to of the (scattered) well centroid. */
+const AGUP_HIGHLIGHT_CAMERA: CameraState = { position: [-96, 94, 52], target: [2, 0, 4], fov: 30 };
+
+export type ViewPreset = {
+  id: string;
+  key: string;
+  label: string;
+  camera: CameraState;
+  /** Fly duration in seconds; Whole field and AGUP stay at the long end of 1.4–1.6. */
+  flySeconds: number;
+};
 
 export const VIEW_PRESETS: ViewPreset[] = [
-  { id: 'aerial', key: '1', label: 'Aerial', camera: cameraAt(0) },
-  { id: 'cpf1', key: '2', label: 'CPF-1', camera: FACILITY_ASSETS[0].view },
-  { id: 'ag25', key: '3', label: 'AG-25 gas plant', camera: FACILITY_ASSETS[1].view },
-  { id: 'agup', key: '4', label: 'AGUP wells', camera: frameFrom(agupCentroid, 70, 48, 20, 30) },
-  { id: 'export', key: '5', label: 'Export line', camera: frameFrom(ground(exportEnd, 0), 46, 30, 120, 32) },
+  { id: 'aerial', key: '1', label: 'Whole field', camera: WHOLE_FIELD_CAMERA, flySeconds: 1.6 },
+  { id: 'cpf1', key: '2', label: 'CPF-1', camera: FACILITY_ASSETS[0].view, flySeconds: 1.5 },
+  { id: 'ag25', key: '3', label: 'AG-25', camera: FACILITY_ASSETS[1].view, flySeconds: 1.5 },
+  { id: 'agup', key: '4', label: 'AGUP wells', camera: AGUP_HIGHLIGHT_CAMERA, flySeconds: 1.6 },
+  { id: 'export', key: '5', label: 'Export', camera: frameFrom(ground(exportEnd, 0), 52, 32, 40, 32), flySeconds: 1.5 },
+  { id: 'spp', key: '6', label: 'SPP', camera: FACILITY_ASSETS.find((a) => a.id === 'spp')!.view, flySeconds: 1.5 },
+  { id: 'north', key: '7', label: 'North wells', camera: frameFrom([northCenter[0], northCenter[1] + 1, northCenter[2]], 56, 42, 10, 32), flySeconds: 1.5 },
+  { id: 'south', key: '8', label: 'South wells', camera: frameFrom([southCenter[0], southCenter[1] + 1, southCenter[2]], 56, 42, 30, 32), flySeconds: 1.5 },
 ];
 
 export function presetById(id: string): ViewPreset | undefined {
@@ -288,6 +295,7 @@ export function relatedKpis(id: string | null | undefined): KpiId[] {
   if (id === 'export-line') return ['export', 'bsw', 'salt'];
   if (id === 'gathering') return ['oil', 'wells'];
   if (id === 'agup-lines') return ['wells', 'oil'];
+  if (id === 'spp') return [];
   if (id.startsWith('well-')) return ['wells', 'oil'];
   return [];
 }

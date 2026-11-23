@@ -12,6 +12,7 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { Suspense, useCallback, useState } from 'react';
 import { ACESFilmicToneMapping, SRGBColorSpace, type WebGLRenderer } from 'three';
 import { ExploreCameraRig } from './explore/ExploreCameraRig';
+import { AreaMarkers } from './explore/AreaMarkers';
 import { InspectTargets } from './explore/InspectTargets';
 import { exploreStore } from './explore/exploreStore';
 import { FieldFacilities } from './models/FieldModels';
@@ -85,6 +86,7 @@ export function NightRevealCanvas({
         <MilestoneShockwave quality={profile} />
         {showRibbon ? <ProductionRibbon /> : <AnchoredTags />}
         {locked ? null : <InspectTargets />}
+        {locked ? null : <AreaMarkers />}
         {profile.bloom ? <PostFX /> : null}
         {onQualityDrop ? (
           <PerformanceMonitor

@@ -86,3 +86,25 @@ export const WORDING = {
 export const BRAND = {
   showClientLogos: false,
 } as const;
+
+/**
+ * Isolated client questions. Swap an answer here (and, where noted, the
+ * matching array in field.ts) without hunting through the scene.
+ * None of these strings are shown on the hall screen.
+ */
+export const OPEN_QUESTIONS = {
+  /** Brief said "elongated pentagon"; Mohammad's official red-line photo is an 8-vertex chamfered outline (aspect ≈ 1.72). */
+  concessionShape: 'photo-8-vertex-unless-client-insists-on-pentagon',
+  /** Working AGUP set; all seven appear on the 16 Nov wells photo, scattered rather than clustered. */
+  agupNames: WELLS.agupNames,
+  /** In the live well list but not labelled on the wells photo (far-west candidate was RT-06). Kept at the previous grid [4.5, 3.6]. */
+  rt10: 'kept-at-previous-grid-not-on-wells-photo',
+  /** "Beside the CPF", not labelled on the refs. Live SW grid [4.5, 8.7] is unchanged until confirmed. */
+  ag25Position: 'kept-live-southwest-until-confirmed',
+  /** Brief: visual only, not exact. Prototype ran ESE; the satellite corridor is more SE. Adopted SE. */
+  exportHeading: 'southeast-indicative',
+  /** Scale assumed the north highway on the wells photo is the road south of SPP. Bearings hold if this is wrong; distances scale uniformly. */
+  wellsPhotoHighwayScale: 'assumed-road-south-of-spp',
+  /** Official KML/SHP outline, if it arrives, replaces CONCESSION/SPP in field.ts. */
+  officialVector: 'pending',
+} as const;

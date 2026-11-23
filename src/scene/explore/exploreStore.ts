@@ -29,6 +29,8 @@ export type ExploreState = {
   exploreSeq: number;
   /** KPI whose detail drawer is open (explore mode only). */
   kpiId: KpiId | null;
+  /** Focused area (keys 1–8). Null in show mode and before a viewpoint is chosen. */
+  areaId: string | null;
 };
 
 type Listener = () => void;
@@ -41,6 +43,7 @@ let state: ExploreState = {
   returnSeq: 0,
   exploreSeq: 0,
   kpiId: null,
+  areaId: null,
 };
 const listeners = new Set<Listener>();
 let seq = 0;
@@ -59,6 +62,10 @@ export const exploreStore = {
     };
   },
   setMode(mode: ExploreMode) {
+    if (mode === 'show') {
+      if (state.mode !== mode || state.areaId !== null) set({ mode, areaId: null });
+      return;
+    }
     if (state.mode !== mode) set({ mode });
   },
   hover(id: string | null) {
@@ -72,13 +79,13 @@ export const exploreStore = {
     set({ selectedId: id, fly: { kind: 'asset', id, seq: ++seq } });
   },
   flyToPreset(id: string) {
-    set({ fly: { kind: 'preset', id, seq: ++seq } });
+    set({ fly: { kind: 'preset', id, seq: ++seq }, areaId: id, selectedId: null, kpiId: null });
   },
   startExplore() {
     set({ exploreSeq: state.exploreSeq + 1 });
   },
   backToShow() {
-    set({ selectedId: null, hoveredId: null, kpiId: null, returnSeq: state.returnSeq + 1 });
+    set({ selectedId: null, hoveredId: null, kpiId: null, areaId: null, returnSeq: state.returnSeq + 1 });
   },
   /** Open a KPI's detail drawer; this also starts free roam (panels only expand in explore). */
   openKpi(id: KpiId | null) {
@@ -91,7 +98,7 @@ export const exploreStore = {
   },
   /** Test/reset hook: back to a clean show state. */
   reset() {
-    set({ mode: 'show', hoveredId: null, selectedId: null, fly: null, kpiId: null });
+    set({ mode: 'show', hoveredId: null, selectedId: null, fly: null, kpiId: null, areaId: null });
   },
 };
 

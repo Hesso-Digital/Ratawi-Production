@@ -6,7 +6,7 @@
  * explore    starts on the first drag / wheel / pinch, the E key or the Explore
  *            chip: drei OrbitControls with damping, pan on the ground plane,
  *            distance and polar limits, and the orbit target clamped to the field.
- *            Clicking an asset or a viewpoint (keys 1 to 5) flies there with GSAP.
+ *            Clicking an asset or a viewpoint (keys 1 to 8) flies there with GSAP.
  * returning  R, "Back to show", a new /operator cue, or about 20 s without input
  *            eases from wherever the viewer is back onto the live show camera.
  */
@@ -20,6 +20,7 @@ import { heightAt } from '../world';
 import { useSceneClockRef } from '../useSceneClock';
 import type { CameraState } from '../ceremonyTimeline';
 import { assetById, presetById } from './assets';
+import { flySecondsFor } from './areas';
 import { exploreStore, type ExploreMode } from './exploreStore';
 
 /** Fall back to the show's slow drift after this long without input. */
@@ -28,7 +29,6 @@ export const EXPLORE_IDLE_MS = 20_000;
 const EXPLORE_IDLE_PANEL_MS = 40_000;
 
 const TARGET_BOUNDS = { minX: -78, maxX: 78, minZ: -70, maxZ: 70, minY: -2, maxY: 24 };
-const FLY_S = 1.7;
 const RETURN_S = 1.6;
 
 const tmpTarget = new Vector3();
@@ -44,6 +44,17 @@ function lerpCam(a: Cam, b: Cam, k: number, out: Cam): Cam {
   out.t.lerpVectors(a.t, b.t, k);
   out.fov = a.fov + (b.fov - a.fov) * k;
   return out;
+}
+
+/** Linear lerp plus a mid-move height arc so area-to-area moves feel like a dolly, not a slide. */
+function arcCam(a: Cam, b: Cam, k: number, lift: number, out: Cam): Cam {
+  lerpCam(a, b, k, out);
+  out.p.y += Math.sin(Math.PI * k) * lift;
+  return out;
+}
+
+function arcLiftBetween(a: Cam, b: Cam): number {
+  return MathUtils.clamp(a.p.distanceTo(b.p) * 0.18, 4, 16);
 }
 
 export function ExploreCameraRig({
@@ -111,20 +122,22 @@ export function ExploreCameraRig({
     setMode('explore');
   };
 
-  const flyTo = (dest: CameraState) => {
+  const flyTo = (dest: CameraState, kind: 'preset' | 'asset' = 'asset', id?: string) => {
     killTween();
     setMode('explore');
     lastInput.current = performance.now();
     const a = current();
     const b = fromState(dest);
+    const motion = flySecondsFor(kind, id);
+    const lift = motion.arc ? arcLiftBetween(a, b) : 0;
     const o = { k: 0 };
     flying.current = true;
     if (controls.current) controls.current.enableDamping = false;
     tween.current = gsap.to(o, {
       k: 1,
-      duration: FLY_S,
+      duration: motion.duration,
       ease: 'power2.inOut',
-      onUpdate: () => apply(lerpCam(a, b, o.k, scratch.current)),
+      onUpdate: () => apply(arcCam(a, b, o.k, lift, scratch.current)),
       onComplete: () => {
         flying.current = false;
         tween.current = null;
@@ -165,7 +178,7 @@ export function ExploreCameraRig({
       if (s.returnSeq !== prev.returnSeq) startReturn();
       if (s.fly && s.fly !== prev.fly) {
         const dest = s.fly.kind === 'preset' ? presetById(s.fly.id)?.camera : assetById(s.fly.id)?.view;
-        if (dest) flyTo(dest);
+        if (dest) flyTo(dest, s.fly.kind, s.fly.id);
       }
       // Any panel / chart interaction keeps free roam alive.
       lastInput.current = performance.now();

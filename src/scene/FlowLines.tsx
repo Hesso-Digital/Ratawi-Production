@@ -12,6 +12,8 @@ import { AG25_WORLD, CPF_WORLD, EXPORT_LINE_WORLD, WORLD_WELLS, pathPoints } fro
 import { createFlowMaterial, createPointsMaterial, hdr } from './shaders/materials';
 import { createGlowSprite } from './textures';
 import { useSceneClockRef } from './useSceneClock';
+import { focusGain } from './explore/areas';
+import { exploreStore } from './explore/exploreStore';
 import type { QualityProfile } from './quality';
 
 const COL_OIL = new Color('#38d6ff');
@@ -34,6 +36,7 @@ type Flow = {
   speed: number;
   size: number;
   offset: number;
+  wellName?: string;
 };
 
 function curveFrom(points: Array<[number, number, number]>) {
@@ -54,7 +57,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
     const scale = quality.particleScale;
     const dotsFor = (base: number) => Math.max(2, Math.round(base * scale));
     const flows: Flow[] = [];
-    const tubes: Array<{ id: string; geometry: TubeGeometry; material: ReturnType<typeof createFlowMaterial>; kind: FlowKind }> = [];
+    const tubes: Array<{ id: string; geometry: TubeGeometry; material: ReturnType<typeof createFlowMaterial>; kind: FlowKind; wellName?: string }> = [];
 
     let seed = 0;
     const nextOffset = () => {
@@ -70,8 +73,8 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
       const material = createFlowMaterial(hdr(isAgup ? COL_AGUP_IDLE : COL_OIL, 1.5), isAgup ? IDLE_GOLD_DIM : IDLE_DIM, len);
       const geometry = new TubeGeometry(curve, Math.max(8, Math.ceil(len * 2)), 0.05, 8, false);
       const id = `well-${w.name}`;
-      tubes.push({ id, geometry, material, kind: isAgup ? 'agup' : 'oil' });
-      flows.push({ kind: isAgup ? 'agup' : 'oil', curve, len, dots: dotsFor(isAgup ? 10 : 6), speed: 2.6, size: 0.55, offset: nextOffset() });
+      tubes.push({ id, geometry, material, kind: isAgup ? 'agup' : 'oil', wellName: w.name });
+      flows.push({ kind: isAgup ? 'agup' : 'oil', curve, len, dots: dotsFor(isAgup ? 10 : 6), speed: 2.6, size: 0.55, offset: nextOffset(), wellName: w.name });
     });
 
     const gasPoints = pathPoints(
@@ -114,24 +117,27 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
 
   useFrame(({ gl, size }) => {
     const { t, agupFlow, gasFlow, gold, oilFlow } = sceneClock.current;
+    const areaId = exploreStore.get().areaId;
 
     for (const tube of tubes) {
       const mesh = tubeRefs.current.get(tube.id);
       if (!mesh) continue;
       const mat = mesh.material as ReturnType<typeof createFlowMaterial>;
+      const gain = focusGain(areaId, tube.kind, tube.wellName);
       mat.uniforms.uTime.value = t;
       if (tube.kind === 'oil') {
         mat.uniforms.uProgress.value = 1;
-        mat.uniforms.uColor.value.copy(hdr(COL_OIL, 0.6 + 1.3 * oilFlow));
+        mat.uniforms.uColor.value.copy(hdr(COL_OIL, 0.6 + 1.3 * oilFlow)).multiplyScalar(gain);
       } else if (tube.kind === 'agup') {
         mat.uniforms.uProgress.value = agupFlow;
         const flowColor = sceneClock.current.agupIgnite >= 2 ? COL_GOLD : COL_AGUP_IDLE;
-        mat.uniforms.uColor.value.copy(hdr(flowColor, 2.2));
+        mat.uniforms.uColor.value.copy(hdr(flowColor, 2.2)).multiplyScalar(gain);
       } else if (tube.kind === 'gas') {
         mat.uniforms.uProgress.value = gasFlow;
+        mat.uniforms.uColor.value.copy(hdr(COL_GAS, 3.4)).multiplyScalar(gain);
       } else if (tube.kind === 'export') {
         mat.uniforms.uProgress.value = 1;
-        mat.uniforms.uColor.value.copy(hdr(COL_EXPORT.clone().lerp(COL_GOLD, gold), 1.3 + gold * 0.7));
+        mat.uniforms.uColor.value.copy(hdr(COL_EXPORT.clone().lerp(COL_GOLD, gold), 1.3 + gold * 0.7)).multiplyScalar(gain);
       }
     }
 
@@ -141,6 +147,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
     let k = 0;
     const v = new Vector3();
     for (const f of flows) {
+      const gain = focusGain(areaId, f.kind, f.wellName);
       const active = f.kind === 'oil' ? 1 : f.kind === 'agup' ? (agupFlow > 0 ? 1 : 0) : f.kind === 'gas' ? (gasFlow > 0 ? 1 : 0) : 1;
       const progress = f.kind === 'oil' ? 1 : f.kind === 'agup' ? agupFlow : f.kind === 'gas' ? gasFlow : 1;
       const color =
@@ -160,7 +167,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
         pos[k * 3] = v.x;
         pos[k * 3 + 1] = v.y + 0.05;
         pos[k * 3 + 2] = v.z;
-        const b = visible ? (f.kind === 'oil' ? 0.45 + 0.9 * oilFlow : 1.3) : 0;
+        const b = visible ? (f.kind === 'oil' ? 0.45 + 0.9 * oilFlow : 1.3) * gain : 0;
         col[k * 3] = color.r * b;
         col[k * 3 + 1] = color.g * b;
         col[k * 3 + 2] = color.b * b;

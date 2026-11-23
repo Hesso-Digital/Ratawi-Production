@@ -4,10 +4,10 @@
  * height function from the approved design-3d prototype (design-3d/src/scene.js
  * heightAt), recalibrated to this field's extent.
  *
- * Open input #1 (integration-plan.md section 10): the concession vertices here
- * are field.ts's 8-vertex chamfered shape, not yet confirmed against an
- * official vector. Swapping field.ts's CONCESSION/SPP arrays is enough to pick
- * up a surveyed shape later; nothing else in this file needs to change.
+ * The concession vertices are the 8-vertex chamfered outline traced from the
+ * official red-line photograph (aspect N/E ≈ 1.72). An official KML/SHP, if
+ * it arrives, is swapped in field.ts; nothing else in this file needs to change.
+ * See ceremonyConfig.ts OPEN_QUESTIONS.concessionShape / officialVector.
  */
 import {
   AG25,

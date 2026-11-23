@@ -1,7 +1,7 @@
 /**
  * Free-roam controls and the inspect panel on the hall screen (HTML over the
  * canvas). Unobtrusive in show mode; keys: E explore, R back to show,
- * 1 to 5 viewpoints, Esc closes the panel.
+ * 1 to 8 viewpoints, Esc closes the panel.
  */
 import { useEffect } from 'react';
 import { useSceneSnapshot } from '../../scene/useSceneClock';
@@ -104,7 +104,7 @@ function Drawer({ id, selectedId }: { id: KpiId; selectedId: string | null }) {
 }
 
 export function ExploreOverlay() {
-  const { mode, selectedId, kpiId } = useExploreState();
+  const { mode, selectedId, kpiId, areaId } = useExploreState();
   useExploreKeys(true);
   const exploring = mode !== 'show';
 
@@ -121,7 +121,13 @@ export function ExploreOverlay() {
           </button>
         )}
         {VIEW_PRESETS.map((p) => (
-          <button key={p.id} type="button" className="chip" data-view={p.id} onClick={() => exploreStore.flyToPreset(p.id)}>
+          <button
+            key={p.id}
+            type="button"
+            className={`chip${areaId === p.id ? ' on' : ''}`}
+            data-view={p.id}
+            onClick={() => exploreStore.flyToPreset(p.id)}
+          >
             <kbd>{p.key}</kbd>
             {p.label}
           </button>

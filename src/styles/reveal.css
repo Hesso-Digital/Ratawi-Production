@@ -678,7 +678,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
-  max-width: 760px;
+  max-width: 920px;
   pointer-events: auto;
   opacity: 0.38;
   transition: opacity 0.4s ease;
@@ -721,6 +721,12 @@
   color: #bff4fb;
 }
 
+.explore-bar .chip.on {
+  border-color: #4dd0e1;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(77, 208, 225, 0.35);
+}
+
 .explore-bar kbd {
   font-family: var(--ratawi-font-numeric);
   font-size: 10px;
@@ -749,7 +755,7 @@
 .explore-panel {
   position: absolute;
   right: 56px;
-  top: 184px;
+  top: 220px;
   width: 360px;
   padding: 18px 20px 14px;
   border-radius: var(--ratawi-radius);
@@ -1299,4 +1305,57 @@
   white-space: nowrap;
   z-index: 2;
   pointer-events: none;
+}
+
+/* Zirku-style numbered area markers (HTML over the 3D field). Hidden in show mode. */
+.area-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 0;
+  height: 28px;
+  border: 1px solid rgba(77, 208, 225, 0.45);
+  border-radius: 999px;
+  background: rgba(6, 12, 20, 0.78);
+  color: #d8f6fb;
+  font-family: var(--ratawi-font-sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  pointer-events: auto;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.area-marker .n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 2px;
+  border-radius: 50%;
+  background: rgba(77, 208, 225, 0.2);
+  color: #4dd0e1;
+  font-family: var(--ratawi-font-numeric);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.area-marker .l {
+  padding-right: 4px;
+}
+
+.area-marker:hover,
+.area-marker.on {
+  border-color: #ffc65a;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(255, 198, 90, 0.35);
+}
+
+.area-marker.on .n,
+.area-marker:hover .n {
+  background: rgba(255, 198, 90, 0.25);
+  color: #ffc65a;
 }

@@ -49,4 +49,28 @@ describe('world.ts', () => {
     expect(inPolygon(5, 5, square)).toBe(true);
     expect(inPolygon(50, 50, square)).toBe(false);
   });
+
+  it('keeps the traced concession aspect close to 1.72 (N/E)', () => {
+    const xs = CONCESSION_WORLD.map((p) => p[0]);
+    const zs = CONCESSION_WORLD.map((p) => p[1]);
+    const east = Math.max(...xs) - Math.min(...xs);
+    const north = Math.max(...zs) - Math.min(...zs);
+    expect(north / east).toBeCloseTo(1.72, 2);
+  });
+
+  it('keeps RT-10 at its previous grid (not labelled on the wells photo)', () => {
+    const rt10 = WELLS.find((w) => w.name === 'RT-10');
+    expect(rt10).toBeTruthy();
+    expect(rt10!.x).toBe(4.5);
+    expect(rt10!.y).toBe(3.6);
+  });
+
+  it('places RT-60 north of CPF-1, not east of it', () => {
+    const w = WORLD_WELLS.find((well) => well.name === 'RT-60');
+    expect(w).toBeTruthy();
+    // +z is south, so north of origin is a negative z, and a modest positive x (slightly east).
+    expect(w!.world[1]).toBeLessThan(-6);
+    expect(w!.world[0]).toBeGreaterThan(0);
+    expect(Math.abs(w!.world[0])).toBeLessThan(Math.abs(w!.world[1]));
+  });
 });
