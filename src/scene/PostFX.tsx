@@ -5,15 +5,28 @@
  * Disabled entirely on the "low" quality profile (plan section 8).
  */
 import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing';
-import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { memo, useEffect, useRef } from 'react';
 import type { BloomEffect } from 'postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import { useSceneClockRef } from './useSceneClock';
 
-export function PostFX() {
+export const PostFX = memo(function PostFX() {
   const sceneClock = useSceneClockRef();
-  const bloomRef = useRef<BloomEffect>(null);
+  const bloomRef = useRef<BloomEffect | null>(null);
+  // A callback ref: the composer wrapper serialises its props, and a populated object ref would not serialise.
+  const setBloom = (effect: BloomEffect | null) => {
+    bloomRef.current = effect;
+  };
+  const gl = useThree((state) => state.gl);
+
+  // The composer turns autoClear off; without restoring it, dropping to the low profile would smear frames together.
+  useEffect(
+    () => () => {
+      gl.autoClear = true;
+    },
+    [gl],
+  );
 
   useFrame(() => {
     const bloom = bloomRef.current;
@@ -24,8 +37,8 @@ export function PostFX() {
 
   return (
     <EffectComposer multisampling={0}>
-      <Bloom ref={bloomRef} luminanceThreshold={1} mipmapBlur intensity={0.7} radius={0.5} />
+      <Bloom ref={setBloom} luminanceThreshold={1} mipmapBlur intensity={0.7} radius={0.5} />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
     </EffectComposer>
   );
-}
+});

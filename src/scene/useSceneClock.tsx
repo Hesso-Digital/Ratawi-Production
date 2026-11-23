@@ -21,20 +21,23 @@ export type SceneClock = {
   getSnapshot: () => SceneState;
 };
 
-function makeInitialState(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot): SceneState {
-  return sceneStateAt(cue, (Date.now() - cue.startedAt) / 1000, prevSnapshot, snapshot);
+function elapsedOf(cue: Cue, frozenAtS?: number) {
+  return frozenAtS ?? (Date.now() - cue.startedAt) / 1000;
 }
 
-function useCreateSceneClock(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot): SceneClock {
-  const ref = useRef<SceneState>(makeInitialState(cue, prevSnapshot, snapshot));
+function makeInitialState(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot, frozenAtS?: number): SceneState {
+  return sceneStateAt(cue, elapsedOf(cue, frozenAtS), prevSnapshot, snapshot);
+}
+
+function useCreateSceneClock(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot, frozenAtS?: number): SceneClock {
+  const ref = useRef<SceneState>(makeInitialState(cue, prevSnapshot, snapshot, frozenAtS));
   const listeners = useRef(new Set<Listener>());
   const lastHudUpdate = useRef(0);
 
   useEffect(() => {
     let raf = 0;
     const loop = () => {
-      const elapsedS = (Date.now() - cue.startedAt) / 1000;
-      ref.current = sceneStateAt(cue, elapsedS, prevSnapshot, snapshot);
+      ref.current = sceneStateAt(cue, elapsedOf(cue, frozenAtS), prevSnapshot, snapshot);
       const now = performance.now();
       if (now - lastHudUpdate.current >= HUD_UPDATE_INTERVAL_MS) {
         lastHudUpdate.current = now;
@@ -44,7 +47,7 @@ function useCreateSceneClock(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapsho
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [cue, prevSnapshot, snapshot]);
+  }, [cue, prevSnapshot, snapshot, frozenAtS]);
 
   return useMemo(
     () => ({
@@ -67,14 +70,17 @@ export function SceneClockProvider({
   cue,
   prevSnapshot,
   snapshot,
+  frozenAtS,
   children,
 }: {
   cue: Cue;
   prevSnapshot: Snapshot;
   snapshot: Snapshot;
+  /** Pin the scene at this many seconds into the cue (rehearsal deep links and stills). */
+  frozenAtS?: number;
   children: ReactNode;
 }) {
-  const clock = useCreateSceneClock(cue, prevSnapshot, snapshot);
+  const clock = useCreateSceneClock(cue, prevSnapshot, snapshot, frozenAtS);
   return <SceneClockContext.Provider value={clock}>{children}</SceneClockContext.Provider>;
 }
 

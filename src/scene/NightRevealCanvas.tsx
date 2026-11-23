@@ -52,6 +52,7 @@ export function NightRevealCanvas({
     <Canvas
       className="reveal-canvas"
       frameloop={frameloop}
+      resize={{ offsetSize: true }}
       dpr={profile.dpr}
       shadows={profile.shadows}
       gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}

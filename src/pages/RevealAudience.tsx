@@ -10,7 +10,7 @@ import { SceneErrorBoundary } from '../scene/SceneErrorBoundary';
 import { RevealHud } from '../components/reveal/RevealHud';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { resolveQuality } from '../scene/quality';
-import { FRAME_PRESETS, presetForGlobalTime } from '../scene/framePresets';
+import { FRAME_PRESETS, presetForGlobalTime, presetForReplay } from '../scene/framePresets';
 import { useCeremonyStore } from '../data/store';
 import type { Cue, Quality } from '../data/types';
 
@@ -46,6 +46,8 @@ export function RevealAudience({
   const preset = useMemo(() => {
     const frameParam = params.get('frame');
     if (frameParam && FRAME_PRESETS[frameParam]) return FRAME_PRESETS[frameParam];
+    const replayParam = params.get('replay');
+    if (replayParam !== null && Number.isFinite(Number(replayParam))) return presetForReplay(Number(replayParam));
     const tParam = params.get('t');
     if (tParam !== null) {
       const t = Number(tParam);
@@ -76,7 +78,7 @@ export function RevealAudience({
   const showRibbon = cue.kind === 'playback';
 
   return (
-    <SceneClockProvider cue={cue} prevSnapshot={prevSnapshot} snapshot={snapshot}>
+    <SceneClockProvider cue={cue} prevSnapshot={prevSnapshot} snapshot={snapshot} frozenAtS={preset?.elapsedS}>
       <div className="reveal-root">
         <SceneErrorBoundary onFatal={() => setFatal('scene-crash')}>
           <div className="reveal-canvas-wrap">
@@ -85,7 +87,7 @@ export function RevealAudience({
               debugOrbit={debugOrbit}
               showRibbon={showRibbon}
               cameraOverride={preset?.cameraOverride}
-              onQualityDrop={autoDowngradeQuality ? (q: Quality) => store.setQuality(q) : undefined}
+              onQualityDrop={autoDowngradeQuality && !params.get('quality') && !preset ? (q: Quality) => store.setQuality(q) : undefined}
             />
           </div>
         </SceneErrorBoundary>

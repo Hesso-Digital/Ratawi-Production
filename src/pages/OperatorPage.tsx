@@ -275,10 +275,6 @@ export function OperatorPage() {
             {preview.playback ? ` Replay ${Math.round(preview.playback.progress * 100)}%.` : ''} Values are entered
             here today and can be fed from PI Vision later.
           </p>
-          <p className="note">
-            Open a second window at the site root for the audience view, then drive the ceremony from this page.
-          </p>
-
           <div className="eyebrow" style={{ marginTop: 22 }}>
             Run of show
           </div>

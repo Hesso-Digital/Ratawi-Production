@@ -8,22 +8,17 @@ import { Html, Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import type { Mesh } from 'three';
-import { CPF_WORLD, heightAt } from './world';
+import { RIBBON_LAYOUT } from './ceremonyTimeline';
 import { BUDGET_KBOPD, PLAYBACK_END_INDEX, TARGET_KBOPD, TRAJECTORY } from '../data/defaults';
 import { WORDING } from '../data/ceremonyConfig';
 import { useSceneClockRef, useSceneSnapshot } from './useSceneClock';
 
-const ORIGIN_OFFSET: [number, number, number] = [-6, 9, -26];
-const WIDTH = 60;
-const Y_SCALE = 0.16;
 const SAMPLES_PER_MONTH = 16;
 const MONTHS = TRAJECTORY.slice(0, PLAYBACK_END_INDEX + 1);
 
 function point(index: number, value: number): [number, number, number] {
-  const [cx, cz] = CPF_WORLD;
-  const baseY = heightAt(cx, cz);
-  const u = (index / PLAYBACK_END_INDEX - 0.5) * WIDTH;
-  return [cx + ORIGIN_OFFSET[0] + u, baseY + ORIGIN_OFFSET[1] + value * Y_SCALE, cz + ORIGIN_OFFSET[2]];
+  const u = (index / PLAYBACK_END_INDEX - 0.5) * RIBBON_LAYOUT.width;
+  return [RIBBON_LAYOUT.x, RIBBON_LAYOUT.baseY + value * RIBBON_LAYOUT.yPerKbopd, RIBBON_LAYOUT.zCenter + u];
 }
 
 const CALLOUTS = [

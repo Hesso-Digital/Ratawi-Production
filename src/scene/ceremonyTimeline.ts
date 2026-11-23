@@ -27,14 +27,14 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 type CameraKey = { t: number; pos: [number, number, number]; target: [number, number, number]; fov: number };
 
 const CAMERA_KEYS: CameraKey[] = [
-  { t: 0.0, pos: [-118, 94, 44], target: [2, 0, 2], fov: 30 },
-  { t: 4.5, pos: [-110, 88, 36], target: [1, 0, 3], fov: 30 },
+  { t: 0.0, pos: [-100, 80, 38], target: [2, 0, 2], fov: 30 },
+  { t: 4.5, pos: [-94, 75, 31], target: [1, 0, 3], fov: 30 },
   { t: 8.4, pos: [-58, 40, 40], target: [-4, 0, 9], fov: 31 },
   { t: 10.0, pos: [-56, 39, 39], target: [-4, 0, 8.5], fov: 31 },
   { t: 12.4, pos: [-70, 52, 38], target: [-2, 0, 4], fov: 31 },
   { t: 16.2, pos: [-66, 48, 34], target: [-1, 0, 3], fov: 31 },
-  { t: 21.0, pos: [-104, 82, 22], target: [2, 0, 2], fov: 30 },
-  { t: 26.0, pos: [-110, 88, 10], target: [3, 0, 1], fov: 30 },
+  { t: 21.0, pos: [-90, 70, 19], target: [2, 0, 2], fov: 30 },
+  { t: 26.0, pos: [-94, 75, 9], target: [3, 0, 1], fov: 30 },
 ];
 const CAMERA_END = CAMERA_KEYS[CAMERA_KEYS.length - 1].t;
 
@@ -127,7 +127,10 @@ function stepOf(s: Snapshot): SceneState['step'] {
 }
 
 /** Framing for the June to December replay: the ribbon fills the upper field. */
-export const RIBBON_CAMERA: CameraState = { position: [-92, 26, 8], target: [0, 9, 4], fov: 34 };
+export const RIBBON_CAMERA: CameraState = { position: [-100, 36, 8], target: [-30, 12.5, 8], fov: 34 };
+
+/** Where the replay ribbon stands, in world units: a vertical plane facing RIBBON_CAMERA. */
+export const RIBBON_LAYOUT = { x: -30, zCenter: 18, width: 44, baseY: 6, yPerKbopd: 0.14 } as const;
 
 function lerp3(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
   return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];

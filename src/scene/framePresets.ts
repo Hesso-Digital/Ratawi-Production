@@ -49,3 +49,9 @@ export function presetForGlobalTime(t: number): FramePreset {
   }
   return step2At(t);
 }
+
+/** `?replay=<0..1>` pins the June to December replay at that fraction. */
+export function presetForReplay(fraction: number): FramePreset {
+  const f = Math.min(1, Math.max(0, fraction));
+  return { cueKind: 'playback', elapsedS: (f * PLAYBACK_MS) / 1000, from: STEP_2, to: STEP_2 };
+}
