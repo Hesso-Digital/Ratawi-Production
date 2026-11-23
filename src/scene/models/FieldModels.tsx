@@ -172,7 +172,7 @@ function WellsGlb({ quality }: { quality: QualityProfile }) {
     <>
       <WellSet name="wellhead" wells={ONLINE} shadows={quality.shadows} />
       <WellSet name="wellhead_agup" wells={AGUP} shadows={quality.shadows} />
-      <Wells quality={quality} hideStatic beaconLift={0.42} />
+      <Wells quality={quality} hideStatic mastAligned />
     </>
   );
 }

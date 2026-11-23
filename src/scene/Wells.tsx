@@ -5,14 +5,21 @@
  * a per-frame colour update; pad/tree are painted once at mount.
  * Ported from design-3d/src/scene.js `buildWell` + the per-frame well block in
  * `RatawiScene.apply`.
+ *
+ * In GLB mode (`mastAligned`), the procedural pad/tree are hidden and the
+ * beacon + beam sit on the v2 wellhead's Beacon mast (same yaw as WellSet).
+ * The beam is shorter, thinner and fades as the camera gets close. The
+ * low-quality procedural wells (`?quality=low`) keep the original tall beam
+ * at the well centre.
  */
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { Color, CylinderGeometry, DoubleSide, InstancedMesh, Object3D, RingGeometry } from 'three';
+import { Color, CylinderGeometry, DoubleSide, InstancedMesh, MeshBasicMaterial, Object3D, RingGeometry } from 'three';
 import { heightAt, WORLD_WELLS } from './world';
 import { hdr } from './shaders/materials';
 import { useSceneClockRef } from './useSceneClock';
 import type { QualityProfile } from './quality';
+import { beamOpacityForDistance, mastWorldPosition } from './wellMast';
 
 const COL_OIL = new Color('#38d6ff');
 const COL_AGUP_IDLE = new Color('#ff9a2e');
@@ -21,37 +28,55 @@ const COL_GOLD = new Color('#ffc247');
 const dummy = new Object3D();
 const AGUP_ORDER = WORLD_WELLS.filter((w) => w.kind === 'agup').map((w) => w.name);
 
+/** GLB-mode beam: about one third the procedural height, thinner, softer. */
+const GLB_BEAM_HEIGHT = 1.2;
+const GLB_BEAM_OPACITY = 0.28;
+
 export function Wells({
   quality,
   hideStatic = false,
   beaconLift = 0,
+  mastAligned = false,
 }: {
   quality: QualityProfile;
   /** Skip the procedural pad + tree when the GLB wellheads are drawn instead (models/FieldModels.tsx). */
   hideStatic?: boolean;
-  /** Raise beacon and beam to sit on the taller GLB beacon mast. */
+  /** Raise beacon and beam to sit on the taller GLB beacon mast. Unused when `mastAligned`. */
   beaconLift?: number;
+  /**
+   * Place the procedural beacon and beam at the v2 GLB Beacon mast top, with
+   * the same per-well yaw as WellSet, and use the shorter close-fading beam.
+   */
+  mastAligned?: boolean;
 }) {
   const sceneClock = useSceneClockRef();
+  const camera = useThree((s) => s.camera);
   const padRef = useRef<InstancedMesh>(null);
   const bodyRef = useRef<InstancedMesh>(null);
   const beaconRef = useRef<InstancedMesh>(null);
   const beamRef = useRef<InstancedMesh>(null);
   const ringRef = useRef<InstancedMesh>(null);
+  const beamMatRef = useRef<MeshBasicMaterial>(null);
 
   const count = WORLD_WELLS.length;
   const wellY = useMemo(() => WORLD_WELLS.map((w) => heightAt(w.world[0], w.world[1])), []);
+  const masts = useMemo(
+    () => WORLD_WELLS.map((w, i) => mastWorldPosition(w.world, w.parentWorld, wellY[i])),
+    [wellY],
+  );
 
-  const { padGeo, bodyGeo, beaconGeo, beamGeo, ringGeo } = useMemo(
-    () => ({
+  const { padGeo, bodyGeo, beaconGeo, beamGeo, ringGeo } = useMemo(() => {
+    const beam = mastAligned
+      ? new CylinderGeometry(0.012, 0.036, GLB_BEAM_HEIGHT, 8, 1, true)
+      : new CylinderGeometry(0.03, 0.09, 3.6, 8, 1, true);
+    return {
       padGeo: new CylinderGeometry(0.62, 0.62, 0.08, 8),
       bodyGeo: new CylinderGeometry(0.1, 0.12, 0.7, 10),
       beaconGeo: new CylinderGeometry(0.12, 0.12, 0.2, 10),
-      beamGeo: new CylinderGeometry(0.03, 0.09, 3.6, 8, 1, true),
+      beamGeo: beam,
       ringGeo: new RingGeometry(0.72, 0.82, 32),
-    }),
-    [],
-  );
+    };
+  }, [mastAligned]);
 
   // Static parts: positioned once the instanced meshes exist (after mount).
   useEffect(() => {
@@ -78,6 +103,18 @@ export function Wells({
     const ring = ringRef.current;
     if (!beacon || !beam || !ring) return;
     const { t, agupIgnite, agupWave } = sceneClock.current;
+
+    if (mastAligned && beamMatRef.current) {
+      let nearest = Infinity;
+      for (const m of masts) {
+        const dx = camera.position.x - m.x;
+        const dy = camera.position.y - m.y;
+        const dz = camera.position.z - m.z;
+        const d = Math.hypot(dx, dy, dz);
+        if (d < nearest) nearest = d;
+      }
+      beamMatRef.current.opacity = beamOpacityForDistance(nearest, GLB_BEAM_OPACITY);
+    }
 
     WORLD_WELLS.forEach((w, i) => {
       const y = wellY[i];
@@ -111,15 +148,22 @@ export function Wells({
         }
       }
 
+      const mast = masts[i];
+      const beaconX = mastAligned ? mast.x : w.world[0];
+      const beaconY = mastAligned ? mast.y : y + 0.08 + 0.72 + beaconLift;
+      const beaconZ = mastAligned ? mast.z : w.world[1];
+      const beamY = mastAligned ? mast.y + GLB_BEAM_HEIGHT / 2 : y + 0.08 + 0.95 + 1.8 + beaconLift;
+
       const beaconColor = hdr(col, k * pulse);
-      dummy.position.set(w.world[0], y + 0.08 + 0.72 + beaconLift, w.world[1]);
+      dummy.rotation.set(0, 0, 0);
+      dummy.position.set(beaconX, beaconY, beaconZ);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
       beacon.setMatrixAt(i, dummy.matrix);
       beacon.setColorAt(i, beaconColor);
 
       const beamVisible = beamK > 0.02;
-      dummy.position.set(w.world[0], y + 0.08 + 0.95 + 1.8 + beaconLift, w.world[1]);
+      dummy.position.set(beaconX, beamY, beaconZ);
       dummy.scale.set(1, beamVisible ? 1 : 0.0001, 1);
       dummy.updateMatrix();
       beam.setMatrixAt(i, dummy.matrix);
@@ -153,7 +197,7 @@ export function Wells({
         <meshBasicMaterial toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={beamRef} args={[beamGeo, undefined, count]}>
-        <meshBasicMaterial toneMapped={false} transparent opacity={0.55} depthWrite={false} />
+        <meshBasicMaterial ref={beamMatRef} toneMapped={false} transparent opacity={mastAligned ? GLB_BEAM_OPACITY : 0.55} depthWrite={false} />
       </instancedMesh>
       <instancedMesh ref={ringRef} args={[ringGeo, undefined, count]}>
         <meshBasicMaterial toneMapped={false} transparent opacity={0.8} depthWrite={false} side={DoubleSide} />
