@@ -3,7 +3,7 @@
  * canvas). Unobtrusive in show mode; keys: E explore, R back to show,
  * 1 to 8 viewpoints, Esc closes the panel.
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSceneSnapshot } from '../../scene/useSceneClock';
 import { VIEW_PRESETS, assetById } from '../../scene/explore/assets';
 import { exploreStore, useExploreState } from '../../scene/explore/exploreStore';
@@ -107,6 +107,22 @@ export function ExploreOverlay() {
   const { mode, selectedId, kpiId, areaId } = useExploreState();
   useExploreKeys(true);
   const exploring = mode !== 'show';
+  const [hintOn, setHintOn] = useState(true);
+  const [hintFading, setHintFading] = useState(false);
+
+  useEffect(() => {
+    if (!exploring || !hintOn) return;
+    const dismiss = () => {
+      setHintFading(true);
+      window.setTimeout(() => setHintOn(false), 450);
+    };
+    window.addEventListener('pointerdown', dismiss, { once: true });
+    window.addEventListener('wheel', dismiss, { once: true, passive: true });
+    return () => {
+      window.removeEventListener('pointerdown', dismiss);
+      window.removeEventListener('wheel', dismiss);
+    };
+  }, [exploring, hintOn]);
 
   return (
     <div className={`explore-overlay ${exploring ? 'on' : ''}`}>
@@ -139,8 +155,10 @@ export function ExploreOverlay() {
           </button>
         ))}
       </div>
-      {exploring && !kpiId ? (
-        <div className="explore-hint">Drag to orbit · right drag or two fingers to pan · scroll or pinch to zoom · click an asset</div>
+      {exploring && !kpiId && hintOn ? (
+        <div className={`explore-hint${hintFading ? ' off' : ''}`}>
+          Drag to orbit · right drag or two fingers to pan · scroll or pinch to zoom · click an asset
+        </div>
       ) : null}
       {selectedId ? <InspectPanel id={selectedId} /> : null}
       {/* Data panels stay collapsed in show mode and expand in explore. */}

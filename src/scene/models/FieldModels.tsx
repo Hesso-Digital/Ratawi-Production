@@ -1,7 +1,7 @@
 /**
  * GLB versions of the field assets, placed exactly where the procedural ones
  * stand (origin at base centre, scale 1, see public/models/README.md), with the
- * procedural components as the Suspense / error fallback. Timeline-driven parts
+ * procedural components only when a GLB is not shipped. Timeline-driven parts
  * (inlet valves, gas lights, flames, well beacons) keep reacting to the cues.
  */
 import { useFrame } from '@react-three/fiber';
@@ -38,9 +38,11 @@ const VALVE_OPEN = new Color('#3dffb0');
 
 function Slot({ name, fallback, children }: { name: FieldModelName; fallback: ReactNode; children: ReactNode }) {
   if (!hasFieldModel(name)) return <>{fallback}</>;
+  // Never flash the procedural stand-ins while a GLB is in flight — the hall
+  // boot cover hides the empty slot, and the finished model fades in with it.
   return (
-    <ModelBoundary fallback={fallback}>
-      <Suspense fallback={fallback}>{children}</Suspense>
+    <ModelBoundary fallback={null}>
+      <Suspense fallback={null}>{children}</Suspense>
     </ModelBoundary>
   );
 }

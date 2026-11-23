@@ -1,15 +1,17 @@
 /**
- * The Night Reveal 3D audience screen: canvas + HUD. Falls back to the classic
- * grid automatically with no WebGL2, after the error boundary gives up, or
- * with prefers-reduced-motion (plan section 8).
+ * The Night Reveal 3D audience screen: canvas + HUD. WebGL or scene failures
+ * stay on a neutral boot cover — they do not swap in the classic grid.
+ * Prefers-reduced-motion no longer unmounts the hall design; tours already
+ * honour it internally.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { useProgress } from '@react-three/drei';
 import { NightRevealCanvas } from '../scene/NightRevealCanvas';
 import { SceneClockProvider } from '../scene/useSceneClock';
 import { SceneErrorBoundary } from '../scene/SceneErrorBoundary';
 import { RevealHud } from '../components/reveal/RevealHud';
 import { ExploreOverlay } from '../components/reveal/ExploreOverlay';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { HallBoot } from '../components/reveal/HallBoot';
 import { resolveQuality } from '../scene/quality';
 import { FRAME_PRESETS, presetForGlobalTime, presetForReplay } from '../scene/framePresets';
 import { useCeremonyStore } from '../data/store';
@@ -24,15 +26,48 @@ function hasWebGL2(): boolean {
   }
 }
 
+function HallLoadGate() {
+  const { active, progress, total } = useProgress();
+  const [canvasOn, setCanvasOn] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.querySelector('.reveal-canvas canvas')) setCanvasOn(true);
+    }, 50);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!canvasOn || ready) return;
+    const done = !active && (total === 0 || progress >= 100);
+    if (!done) return;
+    const t = window.setTimeout(() => setFading(true), 160);
+    return () => window.clearTimeout(t);
+  }, [canvasOn, active, progress, total, ready]);
+
+  useEffect(() => {
+    if (!fading) return;
+    const t = window.setTimeout(() => setReady(true), 420);
+    return () => window.clearTimeout(t);
+  }, [fading]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setFading(true), 8000);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  if (ready) return null;
+  return <HallBoot fading={fading} />;
+}
+
 export function RevealAudience({
-  onFallback,
   autoDowngradeQuality = true,
 }: {
-  onFallback: (reason: string) => void;
   autoDowngradeQuality?: boolean;
 }) {
   const store = useCeremonyStore();
-  const reducedMotion = usePrefersReducedMotion();
   const [fatal, setFatal] = useState<string | null>(null);
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const debugOrbit = params.get('debug') === 'orbit';
@@ -64,16 +99,9 @@ export function RevealAudience({
     [preset],
   );
 
-  useEffect(() => {
-    if (!webgl2) onFallback('no-webgl2');
-    else if (reducedMotion) onFallback('reduced-motion');
-  }, [webgl2, reducedMotion, onFallback]);
-
-  useEffect(() => {
-    if (fatal) onFallback(fatal);
-  }, [fatal, onFallback]);
-
-  if (!webgl2 || reducedMotion || fatal) return null;
+  if (!webgl2 || fatal) {
+    return <HallBoot message="This display needs WebGL 2" />;
+  }
 
   const cue = presetCue ?? store.cue;
   const prevSnapshot = preset ? preset.from : store.prevSnapshot;
@@ -99,6 +127,7 @@ export function RevealAudience({
         <div className="reveal-vignette" />
         <RevealHud interactive={!locked} />
         {locked ? null : <ExploreOverlay />}
+        <HallLoadGate />
       </div>
     </SceneClockProvider>
   );

@@ -701,18 +701,18 @@
   opacity: 1;
 }
 
-/* Text-only area nav: no panel, no pill chrome. */
+/* Text-only area nav: labels share one right edge; numbers share a
+   fixed column on the right so a short label cannot pull its digit left. */
 .explore-nav-item {
   pointer-events: auto;
   position: relative;
   display: grid;
-  grid-template-columns: auto auto;
-  grid-template-areas: "num label";
-  justify-content: end;
+  grid-template-columns: minmax(0, 1fr) 12px 2.4rem;
+  grid-template-areas: "label mark num";
+  justify-content: stretch;
   align-items: center;
-  column-gap: 5px;
+  column-gap: 6px;
   width: 100%;
-  padding-right: 16px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -725,8 +725,7 @@
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  transition: color 0.28s ease, transform 0.28s ease, opacity 0.28s ease,
-    padding 0.28s ease;
+  transition: color 0.28s ease, opacity 0.28s ease;
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.85),
     0 0 14px rgba(0, 0, 0, 0.7),
@@ -734,26 +733,29 @@
 }
 
 .explore-nav-item.mode {
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "label key";
+  grid-template-columns: minmax(0, 1fr) 12px 2.4rem;
+  grid-template-areas: "label mark key";
 }
 
 .explore-nav-num {
   grid-area: num;
+  justify-self: stretch;
+  text-align: right;
   font-family: var(--ratawi-font-numeric);
   font-variant-numeric: tabular-nums;
   font-weight: 300;
   font-size: clamp(1.125rem, 1.5cqi, 1.65rem);
-  line-height: 1;
+  line-height: 2.15rem;
   letter-spacing: -0.04em;
   color: rgba(232, 240, 248, 0.42);
   transition: color 0.28s ease, font-size 0.28s ease, font-weight 0.28s ease,
-    text-shadow 0.28s ease, transform 0.28s ease;
+    text-shadow 0.28s ease;
 }
 
 .explore-nav-label {
   grid-area: label;
   justify-self: end;
+  text-align: right;
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.08em;
@@ -769,10 +771,13 @@
 
 .explore-nav-item kbd {
   grid-area: key;
+  justify-self: end;
+  text-align: right;
   font-family: var(--ratawi-font-numeric);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.08em;
+  line-height: 2.15rem;
   padding: 0;
   border: 0;
   background: none;
@@ -781,26 +786,23 @@
 }
 
 .explore-nav-mark {
-  /* Inactive items (and Back to show) have no trailing mark. */
-  position: absolute;
-  right: 0;
-  top: 50%;
-  width: 0;
-  height: 0;
+  /* Reserved column; only the active item draws the short accent. */
+  grid-area: mark;
+  justify-self: center;
+  align-self: center;
+  width: 10px;
+  height: 2px;
   opacity: 0;
   border-radius: 1px;
   background: transparent;
   box-shadow: none;
   pointer-events: none;
-  transform: translateY(-50%);
-  transition: width 0.28s ease, height 0.28s ease, opacity 0.28s ease,
-    background 0.28s ease, box-shadow 0.28s ease;
+  transition: opacity 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
 }
 
 .explore-nav-item:hover,
 .explore-nav-item:focus-visible {
   color: #f4fbff;
-  transform: translateY(-2px);
   outline: none;
 }
 
@@ -841,10 +843,7 @@
 }
 
 .explore-nav-item.on .explore-nav-mark {
-  width: 14px;
-  height: 2px;
   opacity: 1;
-  border-radius: 1px;
   background: var(--ratawi-cyan);
   box-shadow: 0 0 10px rgba(43, 231, 255, 0.7);
 }
@@ -856,10 +855,17 @@
   transform: translateX(-50%);
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(8, 14, 22, 0.55);
-  color: var(--ratawi-muted);
-  font-size: 12px;
+  background: rgba(8, 14, 22, 0.62);
+  color: rgba(244, 250, 255, 0.92);
+  font-size: 13px;
   letter-spacing: 0.03em;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  transition: opacity 0.45s ease;
+}
+
+.explore-hint.off {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .explore-panel {
@@ -1528,7 +1534,7 @@ button.reveal-compass:focus-visible {
 /* Reserved bottom stack: oil timeline row, then the KPI rail. Never overlays
    the rail, the compass, or projected area-marker labels above the dock. */
 .reveal-root {
-  --reveal-dock-height: 170px;
+  --reveal-dock-height: clamp(88px, 13cqb, 120px);
 }
 
 .reveal-bottom-dock {
@@ -1623,19 +1629,19 @@ button.reveal-compass:focus-visible {
   padding: 0 10px;
 }
 
-/* Translucent, compact KPI rail so the field stays visible behind it. */
+/* Translucent glass KPI rail: field stays visible, type stays readable. */
 .reveal-bottom-dock .reveal-rail {
-  background: rgba(8, 14, 22, 0.14);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(8, 14, 22, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 0;
-  border-radius: 10px;
-  padding: 0 4px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .reveal-bottom-dock .reveal-kpi {
-  padding: 5px 10px 6px;
+  padding: clamp(8px, 1.4cqb, 14px) clamp(10px, 1cqi, 16px) clamp(8px, 1.6cqb, 16px);
 }
 
 .reveal-bottom-dock .reveal-kpi .bar {
@@ -1643,24 +1649,28 @@ button.reveal-compass:focus-visible {
 }
 
 .reveal-bottom-dock .reveal-kpi .k {
-  font-size: 9px;
+  font-size: clamp(11px, 0.85cqi, 12px);
   letter-spacing: 0.08em;
+  color: rgba(244, 250, 255, 0.76);
 }
 
 .reveal-bottom-dock .reveal-kpi .v {
-  margin-top: 1px;
-  font-size: clamp(0.95rem, 1.15cqi, 1.2rem);
-  line-height: 1.1;
+  margin-top: 2px;
+  font-size: clamp(1.375rem, 0.85rem + 0.85cqi, 2.25rem);
+  line-height: 1.15;
+  color: #f7fbff;
 }
 
 .reveal-bottom-dock .reveal-kpi .v small {
-  font-size: 9px;
+  font-size: 11px;
   margin-left: 4px;
+  color: rgba(244, 250, 255, 0.72);
 }
 
 .reveal-bottom-dock .reveal-kpi .s {
-  margin-top: 1px;
-  font-size: 9px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(244, 250, 255, 0.82);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1943,18 +1953,30 @@ button.reveal-compass:focus-visible {
 
 /* Keep the lower field bright so the glass rail is not a pre-darkened band. */
 :root[data-time-of-day='day'] .stage::after {
-  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 96px);
-  mask-image: linear-gradient(to top, transparent 0, #000 96px);
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 120px);
+  mask-image: linear-gradient(to top, transparent 0, #000 120px);
 }
 
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail {
-  background: rgba(8, 14, 22, 0.08);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(8, 14, 22, 0.32);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   color: #f4f9ff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .k {
+  color: rgba(244, 250, 255, 0.78);
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v {
+  color: #f7fbff;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .s {
+  color: rgba(244, 250, 255, 0.86);
 }
 
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v,
@@ -1982,4 +2004,59 @@ button.reveal-compass:focus-visible {
 
 :root[data-time-of-day='day'] button.reveal-compass svg circle {
   fill: rgba(8, 14, 22, 0.72);
+}
+
+/* Neutral boot cover: never flash the classic grid or an unstyled field. */
+.hall-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: #0a1018;
+  color: rgba(244, 250, 255, 0.82);
+  font-family: var(--ratawi-font-sans);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+
+.hall-boot.fade {
+  opacity: 0;
+}
+
+.hall-boot-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.hall-boot-bar {
+  width: 128px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: rgba(43, 231, 255, 0.2);
+}
+
+.hall-boot-bar::after {
+  content: "";
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: #2be7ff;
+  animation: hall-boot-slide 1.05s ease-in-out infinite;
+}
+
+.hall-boot-msg {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(244, 250, 255, 0.7);
+}
+
+@keyframes hall-boot-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(280%); }
 }

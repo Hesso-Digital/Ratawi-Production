@@ -20,8 +20,8 @@
   justify-content: flex-start;
   /* Row pitch stays in the 40–56px band: number height + this gap. */
   gap: clamp(10px, 1.4cqb, 16px);
-  width: var(--explore-stack-width, 10.25rem);
-  max-width: 11rem;
+  width: var(--explore-stack-width, 12.5rem);
+  max-width: 13.5rem;
   max-height: calc(100cqb - var(--reveal-dock-height, 170px) - var(--scene-cluster-h, 52px) - 140px);
   overflow: visible;
   pointer-events: none;
@@ -76,12 +76,12 @@
     width: auto;
     min-height: var(--touch-min, 44px);
     flex: 0 0 auto;
-    grid-template-columns: auto auto auto;
-    column-gap: 4px;
+    grid-template-columns: auto 12px 2.4rem;
+    column-gap: 6px;
   }
 
   .explore-nav-item.mode {
-    grid-template-columns: auto auto;
+    grid-template-columns: auto 12px 2.4rem;
   }
 
   .explore-nav-num {
@@ -107,6 +107,14 @@
 
   .explore-hint {
     display: none;
+  }
+
+  .reveal-bottom-dock {
+    bottom: 6px;
+  }
+
+  .reveal-bottom-dock .reveal-kpi {
+    padding: 6px 10px 8px;
   }
 }
 
@@ -257,7 +265,7 @@
   }
 
   .explore-bar {
-    width: 10.25rem;
+    width: 12.5rem;
   }
 }
 
