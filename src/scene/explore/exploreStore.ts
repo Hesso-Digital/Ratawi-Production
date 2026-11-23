@@ -84,6 +84,10 @@ export const exploreStore = {
   flyToPreset(id: string) {
     set({ fly: { kind: 'preset', id, seq: ++seq }, areaId: id, selectedId: null, kpiId: null });
   },
+  /** Highlight an area without issuing a camera fly (used by the field tour). */
+  focusArea(id: string | null) {
+    if (state.areaId !== id) set({ areaId: id });
+  },
   startExplore() {
     set({ exploreSeq: state.exploreSeq + 1 });
   },

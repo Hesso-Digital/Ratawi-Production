@@ -22,6 +22,8 @@ import type { CameraState } from '../ceremonyTimeline';
 import { assetById, presetById } from './assets';
 import { flySecondsFor } from './areas';
 import { exploreStore, type ExploreMode } from './exploreStore';
+import { attachTourInterrupts, fieldTour } from './fieldTour';
+import { buildFieldTourTimeline } from './fieldTourShots';
 import { publishHeading } from './heading';
 
 /** Fall back to the show's slow drift after this long without input. */
@@ -74,6 +76,8 @@ export function ExploreCameraRig({
 }) {
   const sceneClock = useSceneClockRef();
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
+  const gl = useThree((s) => s.gl);
+  const size = useThree((s) => s.size);
   const controls = useRef<OrbitControlsImpl>(null);
 
   const mode = useRef<ExploreMode>(debugOrbit ? 'explore' : 'show');
@@ -81,6 +85,7 @@ export function ExploreCameraRig({
   const returnFrom = useRef<Cam>({ p: new Vector3(), t: new Vector3(), fov: 30 });
   const returnK = useRef(0);
   const tween = useRef<gsap.core.Tween | null>(null);
+  const tourTl = useRef<gsap.core.Timeline | null>(null);
   const flying = useRef(false);
   const scratch = useRef<Cam>({ p: new Vector3(), t: new Vector3(), fov: 30 });
   const overrideRef = useRef(override);
@@ -112,18 +117,71 @@ export function ExploreCameraRig({
   const killTween = () => {
     tween.current?.kill();
     tween.current = null;
+    tourTl.current?.kill();
+    tourTl.current = null;
     flying.current = false;
     if (controls.current) controls.current.enableDamping = true;
   };
 
+  const endTourTakeover = () => {
+    tourTl.current?.kill();
+    tourTl.current = null;
+    if (!tween.current) {
+      flying.current = false;
+      if (controls.current) {
+        controls.current.enableDamping = true;
+        controls.current.update();
+      }
+    }
+    lastInput.current = performance.now();
+  };
+
+  const startTour = () => {
+    killTween();
+    setMode('explore');
+    lastInput.current = performance.now();
+    flying.current = true;
+    if (controls.current) controls.current.enableDamping = false;
+    const getAspect = () => {
+      const el = gl.domElement;
+      const w = el?.clientWidth || size.width || 1;
+      const h = el?.clientHeight || size.height || 1;
+      return w / Math.max(1, h);
+    };
+    tourTl.current = buildFieldTourTimeline({
+      getCurrent: () => {
+        const c = current();
+        return { position: [c.p.x, c.p.y, c.p.z], target: [c.t.x, c.t.y, c.t.z], fov: c.fov };
+      },
+      apply: (cam) => apply(fromState(cam)),
+      getAspect,
+      onCaption: (caption, areaId) => {
+        fieldTour.setCaption(caption);
+        exploreStore.focusArea(areaId);
+        lastInput.current = performance.now();
+      },
+      onComplete: () => {
+        tourTl.current = null;
+        flying.current = false;
+        if (controls.current) controls.current.enableDamping = true;
+        lastInput.current = performance.now();
+        exploreStore.focusArea('aerial');
+        fieldTour.stop();
+      },
+    });
+    tourTl.current.play();
+  };
+
   const enterExplore = () => {
     lastInput.current = performance.now();
+    if (fieldTour.get().playing) fieldTour.stop();
     if (mode.current === 'explore') return;
     killTween();
     setMode('explore');
   };
 
   const flyTo = (dest: CameraState, kind: 'preset' | 'asset' = 'asset', id?: string) => {
+    if (fieldTour.get().playing) fieldTour.stop();
     killTween();
     setMode('explore');
     lastInput.current = performance.now();
@@ -150,6 +208,7 @@ export function ExploreCameraRig({
 
 
   const orientNorth = () => {
+    if (fieldTour.get().playing) fieldTour.stop();
     killTween();
     setMode('explore');
     lastInput.current = performance.now();
@@ -186,6 +245,7 @@ export function ExploreCameraRig({
   };
 
   const startReturn = () => {
+    if (fieldTour.get().playing) fieldTour.stop();
     if (mode.current === 'show' || mode.current === 'returning' || debugOrbit) return;
     killTween();
     returnFrom.current = current();
@@ -226,6 +286,27 @@ export function ExploreCameraRig({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locked]);
 
+  useEffect(() => {
+    if (locked) return;
+    let prev = fieldTour.get();
+    return fieldTour.subscribe(() => {
+      const s = fieldTour.get();
+      if (s.startSeq !== prev.startSeq && s.playing) startTour();
+      if (s.stopSeq !== prev.stopSeq) endTourTakeover();
+      prev = s;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked]);
+
+  useEffect(() => {
+    if (locked) return;
+    const handle = attachTourInterrupts(window, {
+      isPlaying: () => fieldTour.get().playing,
+      onStop: () => fieldTour.stop(),
+    });
+    return () => handle.stop();
+  }, [locked]);
+
   // A new /operator cue: the show camera takes over again (and the panel closes).
   const firstCue = useRef(true);
   useEffect(() => {
@@ -240,10 +321,15 @@ export function ExploreCameraRig({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cueKey]);
 
-  useEffect(() => () => killTween(), []);
+  useEffect(
+    () => () => {
+      killTween();
+      if (fieldTour.get().playing) fieldTour.stop();
+    },
+    [],
+  );
 
   // Screen position of an asset, for the e2e explore spec (e2e/explore.spec.ts).
-  const gl = useThree((s) => s.gl);
   useEffect(() => {
     const w = window as unknown as { __ratawiExplore?: unknown };
     w.__ratawiExplore = {
@@ -270,6 +356,11 @@ export function ExploreCameraRig({
   useFrame(() => {
     if (locked || (debugOrbit && mode.current === 'explore' && !flying.current)) {
       if (locked) apply(showCam());
+      writeHeading();
+      return;
+    }
+    if (fieldTour.get().playing) {
+      lastInput.current = performance.now();
       writeHeading();
       return;
     }
