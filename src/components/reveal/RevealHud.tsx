@@ -6,14 +6,15 @@ import { HeroNumber } from './HeroNumber';
 import { KpiRail } from './KpiRail';
 import { PlaybackBar } from './PlaybackBar';
 import { StepTracker } from './StepTracker';
+import { exploreStore } from '../../scene/explore/exploreStore';
 
-export function RevealHud() {
+export function RevealHud({ interactive = false }: { interactive?: boolean }) {
   const state = useSceneSnapshot();
   const gold = state.gold > 0.5;
   const isPlayback = state.cueKind === 'playback';
 
   return (
-    <div className={`reveal-hud ${gold ? 'gold' : ''}`}>
+    <div className={`reveal-hud ${gold ? 'gold' : ''} ${interactive ? 'interactive' : ''}`}>
       <div className="reveal-brand">
         <div className="eyebrow">{WORDING.eyebrow}</div>
         <h1>{WORDING.title}</h1>
@@ -23,10 +24,16 @@ export function RevealHud() {
         </div>
       </div>
       {isPlayback ? <PlaybackBar state={state} /> : <StepTracker state={state} />}
-      <HeroNumber state={state} />
+      {interactive ? (
+        <div onClick={() => exploreStore.openKpi('oil')}>
+          <HeroNumber state={state} />
+        </div>
+      ) : (
+        <HeroNumber state={state} />
+      )}
       <CountdownRing state={state} />
       <Compass state={state} />
-      <KpiRail state={state} />
+      <KpiRail state={state} interactive={interactive} />
       {isPlayback ? (
         <div className="reveal-caption">
           From shutdown to above target in six months.

@@ -7,6 +7,9 @@ import { useEffect } from 'react';
 import { useSceneSnapshot } from '../../scene/useSceneClock';
 import { VIEW_PRESETS, assetById } from '../../scene/explore/assets';
 import { exploreStore, useExploreState } from '../../scene/explore/exploreStore';
+import { relatedKpis } from '../../scene/explore/assets';
+import { KpiDrawer } from './charts/KpiDrawer';
+import type { KpiId } from '../../data/kpis';
 
 function isTyping(target: EventTarget | null) {
   const el = target as HTMLElement | null;
@@ -30,6 +33,31 @@ export function useExploreKeys(enabled: boolean) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [enabled]);
+}
+
+const KPI_LABEL: Record<KpiId, string> = {
+  oil: 'Oil trend',
+  wells: 'Well status',
+  export: 'Export trend',
+  gas: 'Gas trend',
+  bsw: 'BSW trend',
+  salt: 'Salt trend',
+  efficiency: 'Efficiency',
+};
+
+/** Links from a 3D asset to its related charts (their KPI tiles glow too). */
+function RelatedKpis({ id }: { id: string }) {
+  const ids = relatedKpis(id);
+  if (!ids.length) return null;
+  return (
+    <div className="explore-related">
+      {ids.map((k) => (
+        <button key={k} type="button" className="chip" onClick={() => exploreStore.openKpi(k)}>
+          {KPI_LABEL[k]}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function InspectPanel({ id }: { id: string }) {
@@ -64,13 +92,19 @@ function InspectPanel({ id }: { id: string }) {
           </div>
         ))}
       </dl>
+      <RelatedKpis id={asset.id} />
       <footer>Esc to close · R back to show</footer>
     </aside>
   );
 }
 
+function Drawer({ id, selectedId }: { id: KpiId; selectedId: string | null }) {
+  const state = useSceneSnapshot();
+  return <KpiDrawer key={id} id={id} state={state} relatedIds={relatedKpis(selectedId)} />;
+}
+
 export function ExploreOverlay() {
-  const { mode, selectedId } = useExploreState();
+  const { mode, selectedId, kpiId } = useExploreState();
   useExploreKeys(true);
   const exploring = mode !== 'show';
 
@@ -93,10 +127,12 @@ export function ExploreOverlay() {
           </button>
         ))}
       </div>
-      {exploring ? (
+      {exploring && !kpiId ? (
         <div className="explore-hint">Drag to orbit · right drag or two fingers to pan · scroll or pinch to zoom · click an asset</div>
       ) : null}
       {selectedId ? <InspectPanel id={selectedId} /> : null}
+      {/* Data panels stay collapsed in show mode and expand in explore. */}
+      {exploring && kpiId ? <Drawer id={kpiId} selectedId={selectedId} /> : null}
     </div>
   );
 }

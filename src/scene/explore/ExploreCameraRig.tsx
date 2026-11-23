@@ -167,7 +167,8 @@ export function ExploreCameraRig({
         const dest = s.fly.kind === 'preset' ? presetById(s.fly.id)?.camera : assetById(s.fly.id)?.view;
         if (dest) flyTo(dest);
       }
-      if (s.selectedId !== prev.selectedId) lastInput.current = performance.now();
+      // Any panel / chart interaction keeps free roam alive.
+      lastInput.current = performance.now();
       prev = s;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,6 +183,7 @@ export function ExploreCameraRig({
     }
     exploreStore.select(null);
     exploreStore.hover(null);
+    exploreStore.openKpi(null);
     startReturn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cueKey]);
@@ -235,10 +237,12 @@ export function ExploreCameraRig({
       if (camera.position.y < floor) camera.position.y = floor;
     }
     const idleFor = performance.now() - lastInput.current;
-    const limit = exploreStore.get().selectedId ? EXPLORE_IDLE_PANEL_MS : EXPLORE_IDLE_MS;
+    const st = exploreStore.get();
+    const limit = st.selectedId || st.kpiId ? EXPLORE_IDLE_PANEL_MS : EXPLORE_IDLE_MS;
     if (!flying.current && idleFor > limit) {
       exploreStore.select(null);
       exploreStore.hover(null);
+      exploreStore.openKpi(null);
       startReturn();
     }
   });

@@ -65,3 +65,33 @@ test('explore: orbit, viewpoints, inspect CPF-1 and a wellhead, cue returns to s
   expect(errors).toEqual([]);
   await context.close();
 });
+
+test('interactive data: KPI drawer, scrubber, well chip flies to the well in 3D', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/reveal?quality=low');
+  await expect(page.locator('.reveal-hero .big .n')).toBeVisible({ timeout: 15000 });
+
+  // Panels stay collapsed in show mode.
+  await expect(page.locator('.kpi-drawer')).toHaveCount(0);
+
+  // Oil tile opens its drawer (and free roam) with the trend chart and gauge.
+  await page.click('.reveal-kpi[data-kpi="oil"]');
+  await expect(page.locator('.kpi-drawer[data-kpi="oil"]')).toBeVisible();
+  await expect(page.locator('.explore-overlay')).toHaveClass(/on/);
+  await expect(page.locator('.kpi-drawer .gauge')).toBeVisible();
+  await page.locator('.kpi-drawer input[type="range"]').fill('3');
+  await expect(page.locator('.scrub-read b')).toHaveText('Sep');
+
+  // Wells tile: clicking a well chip selects it in 3D and opens its panel.
+  await page.click('.reveal-kpi[data-kpi="wells"]');
+  await expect(page.locator('.kpi-drawer[data-kpi="wells"] .well-chip')).toHaveCount(32);
+  await page.click('.well-chip[data-well="RT-60"]');
+  await expect(page.locator('.explore-panel h2')).toHaveText('RT-60');
+  await expect(page.locator('.reveal-kpi[data-kpi="wells"]')).toHaveClass(/related/);
+
+  // Back to show collapses the panels.
+  await page.keyboard.press('r');
+  await expect(page.locator('.kpi-drawer')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

@@ -9,6 +9,7 @@
  *   returning  a short GSAP-eased hand-back from wherever the viewer was to the show camera
  */
 import { useSyncExternalStore } from 'react';
+import type { KpiId } from '../../data/kpis';
 
 export type ExploreMode = 'show' | 'explore' | 'returning';
 
@@ -26,6 +27,8 @@ export type ExploreState = {
   returnSeq: number;
   /** Incremented to ask the rig to start free roam from the current view. */
   exploreSeq: number;
+  /** KPI whose detail drawer is open (explore mode only). */
+  kpiId: KpiId | null;
 };
 
 type Listener = () => void;
@@ -37,6 +40,7 @@ let state: ExploreState = {
   fly: null,
   returnSeq: 0,
   exploreSeq: 0,
+  kpiId: null,
 };
 const listeners = new Set<Listener>();
 let seq = 0;
@@ -74,11 +78,20 @@ export const exploreStore = {
     set({ exploreSeq: state.exploreSeq + 1 });
   },
   backToShow() {
-    set({ selectedId: null, hoveredId: null, returnSeq: state.returnSeq + 1 });
+    set({ selectedId: null, hoveredId: null, kpiId: null, returnSeq: state.returnSeq + 1 });
+  },
+  /** Open a KPI's detail drawer; this also starts free roam (panels only expand in explore). */
+  openKpi(id: KpiId | null) {
+    if (id === null) set({ kpiId: null });
+    else set({ kpiId: id, exploreSeq: state.exploreSeq + 1 });
+  },
+  /** Any interaction with the panels counts as activity for the idle timer. */
+  touch() {
+    set({});
   },
   /** Test/reset hook: back to a clean show state. */
   reset() {
-    set({ mode: 'show', hoveredId: null, selectedId: null, fly: null });
+    set({ mode: 'show', hoveredId: null, selectedId: null, fly: null, kpiId: null });
   },
 };
 

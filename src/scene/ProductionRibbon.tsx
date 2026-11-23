@@ -81,19 +81,19 @@ export function ProductionRibbon() {
         <meshBasicMaterial color={[4, 4.6, 5]} toneMapped={false} />
       </mesh>
       {MONTHS.map((p, i) => (
-        <Html key={p.key} position={point(i, 0)} center distanceFactor={60} occlude={false}>
+        <Html zIndexRange={[3, 0]} key={p.key} position={point(i, 0)} center distanceFactor={60} occlude={false}>
           <div className="ribbon-month" style={{ opacity: i <= index + 0.5 ? 1 : 0.35 }}>
             {p.label}
           </div>
         </Html>
       ))}
-      <Html position={point(0, BUDGET_KBOPD)} center={false} distanceFactor={60} occlude={false}>
+      <Html zIndexRange={[3, 0]} position={point(0, BUDGET_KBOPD)} center={false} distanceFactor={60} occlude={false}>
         <div className="ribbon-month" style={{ transform: 'translate(-110%, 0)' }}>
           {WORDING.commitmentLabel} {BUDGET_KBOPD}
         </div>
       </Html>
       {CALLOUTS.map((c) => (
-        <Html key={c.i} position={point(c.i, MONTHS[c.i].oil)} center distanceFactor={48} occlude={false}>
+        <Html zIndexRange={[3, 0]} key={c.i} position={point(c.i, MONTHS[c.i].oil)} center distanceFactor={48} occlude={false}>
           <div
             className={`ribbon-callout ${c.i >= PLAYBACK_END_INDEX ? 'gold' : ''}`}
             style={{ opacity: index >= c.i - 0.05 ? 1 : 0, transition: 'opacity .3s' }}
