@@ -17,7 +17,7 @@
   --brand-size: clamp(1.35rem, 2cqi, 2.45rem);
   --kpi-size: clamp(1.05rem, 1.6cqi, 1.95rem);
   --touch-min: 44px;
-  --explore-stack-width: 11.75rem;
+  --explore-stack-width: 10.25rem;
   --scene-cluster-h: 52px;
 }
 
@@ -689,8 +689,9 @@
   justify-content: flex-end;
   gap: 8px;
   max-width: 920px;
-  pointer-events: auto;
-  opacity: 0.38;
+  pointer-events: none;
+  background: none;
+  opacity: 0.78;
   transition: opacity 0.4s ease;
 }
 
@@ -700,53 +701,141 @@
   opacity: 1;
 }
 
-.explore-bar .chip {
-  display: inline-flex;
+/* Text-only area nav: no panel, no pill chrome. */
+.explore-nav-item {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "num label mark";
   align-items: center;
-  gap: 8px;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(77, 208, 225, 0.28);
-  background: rgba(8, 14, 22, 0.62);
-  backdrop-filter: var(--ratawi-backdrop);
-  color: var(--ratawi-text);
+  column-gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: rgba(200, 214, 224, 0.72);
   font-family: inherit;
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  text-align: right;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: color 0.28s ease, transform 0.28s ease, opacity 0.28s ease;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 14px rgba(0, 0, 0, 0.7),
+    0 0 28px rgba(0, 0, 0, 0.4);
 }
 
-.explore-bar .chip:hover,
-.explore-bar .chip:focus-visible {
-  border-color: #4dd0e1;
-  color: #fff;
-  box-shadow: 0 0 14px rgba(77, 208, 225, 0.35);
+.explore-nav-item.mode {
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: "label key mark";
+}
+
+.explore-nav-num {
+  grid-area: num;
+  font-family: var(--ratawi-font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  font-size: clamp(1.55rem, 2.1cqi, 2.35rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgba(232, 240, 248, 0.42);
+  transition: color 0.28s ease, font-weight 0.28s ease, text-shadow 0.28s ease, transform 0.28s ease;
+}
+
+.explore-nav-label {
+  grid-area: label;
+  justify-self: end;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color 0.28s ease, font-size 0.28s ease, font-weight 0.28s ease;
+}
+
+.explore-nav-item.mode .explore-nav-label {
+  color: rgba(200, 214, 224, 0.55);
+  letter-spacing: 0.1em;
+}
+
+.explore-nav-item kbd {
+  grid-area: key;
+  font-family: var(--ratawi-font-numeric);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(200, 214, 224, 0.4);
+  text-shadow: inherit;
+}
+
+.explore-nav-mark {
+  grid-area: mark;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(200, 214, 224, 0.45);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.55);
+  justify-self: end;
+  align-self: center;
+  transition: width 0.28s ease, height 0.28s ease, border-radius 0.28s ease,
+    background 0.28s ease, box-shadow 0.28s ease;
+}
+
+.explore-nav-item:hover,
+.explore-nav-item:focus-visible {
+  color: #f4fbff;
+  transform: translateY(-2px);
   outline: none;
 }
 
-.explore-bar .chip.primary {
-  border-color: rgba(77, 208, 225, 0.55);
-  color: #bff4fb;
+.explore-nav-item:hover .explore-nav-num,
+.explore-nav-item:focus-visible .explore-nav-num {
+  color: rgba(232, 240, 248, 0.78);
 }
 
-.explore-bar .chip.on {
-  border-color: #4dd0e1;
-  color: #fff;
-  box-shadow: 0 0 14px rgba(77, 208, 225, 0.35);
+.explore-nav-item:hover .explore-nav-label,
+.explore-nav-item:focus-visible .explore-nav-label,
+.explore-nav-item:hover kbd,
+.explore-nav-item:focus-visible kbd {
+  color: #f4fbff;
 }
 
-.explore-bar kbd {
-  font-family: var(--ratawi-font-numeric);
-  font-size: 10px;
-  min-width: 16px;
-  height: 16px;
-  line-height: 16px;
-  text-align: center;
-  border-radius: 4px;
-  background: rgba(77, 208, 225, 0.14);
-  color: #4dd0e1;
+.explore-nav-item:focus-visible .explore-nav-mark {
+  background: var(--ratawi-cyan);
+}
+
+.explore-nav-item.on {
+  color: #f4fbff;
+}
+
+.explore-nav-item.on .explore-nav-num {
+  color: var(--ratawi-cyan);
+  font-weight: 400;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 16px rgba(43, 231, 255, 0.45);
+}
+
+.explore-nav-item.on .explore-nav-label {
+  color: #f4fbff;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.explore-nav-item.on .explore-nav-mark {
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ratawi-cyan);
+  box-shadow: 0 0 10px rgba(43, 231, 255, 0.7);
 }
 
 .explore-hint {
@@ -1605,7 +1694,7 @@ button.reveal-compass:focus-visible {
 
 .admin-name {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--ratawi-text-strong);
 }
 
@@ -1715,7 +1804,6 @@ button.reveal-compass:focus-visible {
 :root[data-time-of-day='day'] .reveal-bottom-dock .oil-timeline,
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail,
 :root[data-time-of-day='day'] .admin-drawer,
-:root[data-time-of-day='day'] .explore-bar .chip,
 :root[data-time-of-day='day'] .kpi-drawer,
 :root[data-time-of-day='day'] .oil-timeline-actions .chip {
   background: rgba(8, 14, 22, 0.86);

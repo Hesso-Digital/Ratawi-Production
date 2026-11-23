@@ -112,24 +112,30 @@ export function ExploreOverlay() {
     <div className={`explore-overlay ${exploring ? 'on' : ''}`}>
       <div className="explore-bar" role="toolbar" aria-label="Camera">
         {exploring ? (
-          <button type="button" className="chip primary" onClick={() => exploreStore.backToShow()}>
-            Back to show <kbd>R</kbd>
+          <button type="button" className="explore-nav-item mode" onClick={() => exploreStore.backToShow()}>
+            <span className="explore-nav-label">Back to show</span>
+            <kbd>R</kbd>
+            <span className="explore-nav-mark" aria-hidden="true" />
           </button>
         ) : (
-          <button type="button" className="chip primary" onClick={() => exploreStore.startExplore()}>
-            Explore <kbd>E</kbd>
+          <button type="button" className="explore-nav-item mode" onClick={() => exploreStore.startExplore()}>
+            <span className="explore-nav-label">Explore</span>
+            <kbd>E</kbd>
+            <span className="explore-nav-mark" aria-hidden="true" />
           </button>
         )}
         {VIEW_PRESETS.map((p) => (
           <button
             key={p.id}
             type="button"
-            className={`chip${areaId === p.id ? ' on' : ''}`}
+            className={`explore-nav-item${areaId === p.id ? ' on' : ''}`}
             data-view={p.id}
+            aria-current={areaId === p.id ? 'true' : undefined}
             onClick={() => exploreStore.flyToPreset(p.id)}
           >
-            <kbd>{p.key}</kbd>
-            {p.label}
+            <span className="explore-nav-num">{p.key}</span>
+            <span className="explore-nav-label">{p.label}</span>
+            <span className="explore-nav-mark" aria-hidden="true" />
           </button>
         ))}
       </div>

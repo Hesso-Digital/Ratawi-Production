@@ -1,47 +1,43 @@
 /**
  * Fluid hall HUD: the stage fills the viewport (no 1920×1080 letterbox).
- * Type and gutters use clamp() / container query units. Area pills stack
- * vertically on the right when height allows; short or narrow frames get a
+ * Type and gutters use clamp() / container query units. Area nav stacks
+ * as text on the right when height allows; short or narrow frames get a
  * compact horizontal scroller. Small screens collapse KPIs into a sheet.
  */
 
-/* —— Area pills: vertical right stack when the stage is tall and wide enough —— */
+/* —— Area nav: vertical right text list, no panel, spreads to available height —— */
 .explore-bar {
   position: absolute;
   right: var(--hud-gutter, 56px);
   top: clamp(88px, 12cqb, 128px);
-  bottom: auto;
-  height: fit-content;
+  bottom: calc(var(--reveal-dock-height, 170px) + var(--scene-cluster-h, 52px) + 28px);
+  height: auto;
   left: auto;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
   align-items: stretch;
-  justify-content: flex-start;
-  gap: 6px;
-  width: var(--explore-stack-width, 11.75rem);
-  max-width: 13.5rem;
-  max-height: calc(100cqb - var(--reveal-dock-height, 170px) - var(--scene-cluster-h, 52px) - 140px);
-  overflow-x: hidden;
-  overflow-y: auto;
-  pointer-events: auto;
-  padding: 8px;
-  border-radius: 14px;
-  background: rgba(8, 14, 22, 0.38);
-  backdrop-filter: var(--ratawi-backdrop);
-  scrollbar-width: thin;
+  justify-content: space-between;
+  gap: 0;
+  width: var(--explore-stack-width, 10.25rem);
+  max-width: 11rem;
+  max-height: none;
+  overflow: visible;
+  pointer-events: none;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-.explore-bar .chip {
-  width: 100%;
-  justify-content: flex-start;
+.explore-nav-item {
   flex: 0 0 auto;
-  height: 30px;
-  white-space: nowrap;
+  width: 100%;
 }
 
 .explore-panel {
-  right: calc(var(--hud-gutter, 56px) + var(--explore-stack-width, 11.75rem) + 16px);
+  right: calc(var(--hud-gutter, 56px) + var(--explore-stack-width, 10.25rem) + 16px);
   max-height: calc(100cqb - var(--reveal-dock-height, 170px) - 140px);
   overflow: auto;
 }
@@ -50,7 +46,7 @@
   bottom: calc(var(--reveal-dock-height, 170px) + 10px);
 }
 
-/* Short or narrow: compact horizontal scroller, clear of the dock and buttons. */
+/* Short or narrow: compact horizontal scroller, still text-only. */
 @container stage (max-width: 719px) or (max-height: 639px) {
   .explore-bar {
     left: var(--hud-gutter, 12px);
@@ -65,18 +61,34 @@
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
+    justify-content: flex-start;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 6px 8px;
-    gap: 8px;
+    padding: 0;
+    gap: 18px;
+    background: none;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
-  .explore-bar .chip {
+  .explore-nav-item {
     width: auto;
     min-height: var(--touch-min, 44px);
-    height: var(--touch-min, 44px);
-    padding: 0 12px;
+    flex: 0 0 auto;
+    grid-template-columns: auto auto auto;
+    column-gap: 6px;
+  }
+
+  .explore-nav-item.mode {
+    grid-template-columns: auto auto auto;
+  }
+
+  .explore-nav-num {
+    font-size: 1.45rem;
+  }
+
+  .explore-nav-item.on .explore-nav-label {
+    font-size: 12px;
   }
 
   .explore-panel {
@@ -177,7 +189,7 @@
   }
 
   .oil-timeline-actions .chip,
-  .explore-bar .chip,
+  .explore-nav-item,
   .scene-toggle,
   button.reveal-compass,
   .admin-menu-btn,
@@ -240,20 +252,53 @@
   }
 
   .explore-bar {
-    width: 12rem;
+    width: 10.25rem;
   }
 }
 
 /* 4K / big hall: slightly roomier cluster, still capped. */
 @container stage (min-width: 3000px) {
-  .explore-bar .chip {
-    height: 36px;
-    font-size: 13px;
+  .explore-nav-num {
+    font-size: 2.5rem;
+  }
+
+  .explore-nav-label {
+    font-size: 14px;
   }
 }
 
-:root[data-time-of-day='day'] .explore-bar {
-  background: rgba(8, 14, 22, 0.78);
+:root[data-time-of-day='day'] .explore-nav-item {
+  color: rgba(244, 250, 255, 0.88);
+  text-shadow:
+    0 1px 2px rgba(8, 14, 22, 0.85),
+    0 0 10px rgba(8, 14, 22, 0.8),
+    0 0 22px rgba(8, 14, 22, 0.55);
+}
+
+:root[data-time-of-day='day'] .explore-nav-num {
+  color: rgba(244, 250, 255, 0.55);
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.mode .explore-nav-label,
+:root[data-time-of-day='day'] .explore-nav-item kbd {
+  color: rgba(244, 250, 255, 0.62);
+}
+
+:root[data-time-of-day='day'] .explore-nav-mark {
+  background: rgba(244, 250, 255, 0.55);
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-num {
+  color: var(--ratawi-cyan);
+  text-shadow:
+    0 1px 2px rgba(8, 14, 22, 0.85),
+    0 0 14px rgba(43, 231, 255, 0.5);
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-mark,
+:root[data-time-of-day='day'] .explore-nav-item:focus-visible .explore-nav-mark {
+  background: var(--ratawi-cyan);
+  box-shadow: 0 0 10px rgba(43, 231, 255, 0.65);
 }
 
 .reveal-canvas-wrap,
@@ -278,10 +323,6 @@
 
 .reveal-kpi {
   padding-top: 10px;
-}
-
-.explore-bar {
-  background: rgba(8, 14, 22, 0.38);
 }
 
 .field-tour-caption {

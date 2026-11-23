@@ -1,15 +1,15 @@
 /**
- * Subtle ground plate, glowing outline and a local light that lift the
- * active viewpoint (keys 1–8) on the field. Reads exploreStore.areaId so it
- * stays in sync with the camera fly-to. Does not edit well / facility meshes;
- * flow-line dimming stays in focusGain().
+ * Edge-only highlight of the active viewpoint (keys 1–8). A ground outline
+ * and a clear wireframe prism (no filled plate, no tinted wall faces) stay
+ * in sync with exploreStore.areaId / the camera fly-to. Does not edit well
+ * or facility meshes; flow-line dimming stays in focusGain().
  */
 import { Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import gsap from 'gsap';
 import { useEffect, useMemo, useRef } from 'react';
-import { DoubleSide, EllipseCurve, Shape, ShapeGeometry, type Group, type MeshBasicMaterial } from 'three';
-import { dayBlend, useTimeOfDay } from '../../state/sceneSettings';
+import { EllipseCurve, type Group } from 'three';
+import { useTimeOfDay } from '../../state/sceneSettings';
 import { prefersReducedMotion, type AreaFootprint, areaFootprint } from './areas';
 import { useExploreState } from './exploreStore';
 import type { Vec2 } from '../world';
@@ -27,70 +27,64 @@ function polyPoints(points: readonly Vec2[], y: number): [number, number, number
   return pts;
 }
 
-function pathRibbon(points: readonly Vec2[], y: number): [number, number, number][] {
-  // A thin outline that follows the export corridor (centerline, closed as a long loop is wrong).
+function pathPoints(points: readonly Vec2[], y: number): [number, number, number][] {
   return points.map((p) => [p[0], y, p[1]] as [number, number, number]);
 }
 
-function shapeFromPoly(points: readonly Vec2[]): Shape {
-  const s = new Shape();
-  s.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) s.lineTo(points[i][0], points[i][1]);
-  s.closePath();
-  return s;
+function footprintRing(foot: AreaFootprint, y: number): [number, number, number][] {
+  if (foot.kind === 'polygon') return polyPoints(foot.points, y);
+  if (foot.kind === 'ellipse') return ringPoints(foot.cx, foot.cz, foot.rx, foot.rz, y);
+  return pathPoints(foot.points, y);
 }
 
-function shapeFromEllipse(cx: number, cz: number, rx: number, rz: number): Shape {
-  const s = new Shape();
-  s.absellipse(cx, cz, rx, rz, 0, Math.PI * 2, false, 0);
-  return s;
+/** Open posts around the ring (skip the closing duplicate of a loop). */
+function verticalPosts(ring: [number, number, number][], y1: number, count: number): [number, number, number][][] {
+  if (ring.length < 2) return [];
+  const looped = ring.length > 2 && ring[0][0] === ring[ring.length - 1][0] && ring[0][2] === ring[ring.length - 1][2];
+  const open = looped ? ring.slice(0, -1) : ring;
+  const n = Math.min(count, open.length);
+  if (n <= 0) return [];
+  const step = open.length / n;
+  const posts: [number, number, number][][] = [];
+  for (let i = 0; i < n; i++) {
+    const p = open[Math.min(open.length - 1, Math.round(i * step)) % open.length];
+    posts.push([p, [p[0], y1, p[2]]]);
+  }
+  return posts;
 }
 
-function Plate({ foot, opacity }: { foot: AreaFootprint; opacity: number }) {
-  const geometry = useMemo(() => {
-    if (foot.kind === 'polygon') return new ShapeGeometry(shapeFromPoly(foot.points));
-    if (foot.kind === 'ellipse') return new ShapeGeometry(shapeFromEllipse(foot.cx, foot.cz, foot.rx, foot.rz));
-    if (foot.kind === 'path' && foot.points.length >= 2) {
-      // A simple stadium around the corridor: offset is approximated as an ellipse along the bbox.
-      const xs = foot.points.map((p) => p[0]);
-      const zs = foot.points.map((p) => p[1]);
-      const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-      const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-      const rx = (Math.max(...xs) - Math.min(...xs)) / 2 + foot.width;
-      const rz = (Math.max(...zs) - Math.min(...zs)) / 2 + foot.width;
-      return new ShapeGeometry(shapeFromEllipse(cx, cz, rx, rz));
-    }
-    return new ShapeGeometry(new Shape());
-  }, [foot]);
-
-  const mat = useRef<MeshBasicMaterial>(null);
-  useFrame(() => {
-    if (!mat.current) return;
-    const day = dayBlend.value;
-    mat.current.color.setRGB(0.08 + 0.05 * day, 0.55 - 0.15 * day, 0.72 - 0.25 * day);
-    mat.current.opacity = opacity * (0.16 + 0.1 * (1 - day));
-  });
-
-  return (
-    <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} position={[0, foot.y, 0]} renderOrder={2}>
-      <meshBasicMaterial ref={mat} transparent depthWrite={false} side={DoubleSide} toneMapped={false} />
-    </mesh>
-  );
+function wallHeight(foot: AreaFootprint): number {
+  if (foot.id === 'aerial') return 2.2;
+  if (foot.id === 'export') return 3.2;
+  if (foot.id === 'north' || foot.id === 'south' || foot.id === 'agup') return 5;
+  return 9;
 }
 
-function Outline({ foot, y }: { foot: AreaFootprint; y: number }) {
-  const points = useMemo(() => {
-    if (foot.kind === 'polygon') return polyPoints(foot.points, y);
-    if (foot.kind === 'ellipse') return ringPoints(foot.cx, foot.cz, foot.rx, foot.rz, y);
-    return pathRibbon(foot.points, y);
-  }, [foot, y]);
-  const color = dayBlend.value > 0.5 ? '#0d5c6d' : '#4dd0e1';
-  return <Line points={points} color={color} lineWidth={2} transparent opacity={0.95} depthWrite={false} />;
+function postCount(foot: AreaFootprint): number {
+  if (foot.kind === 'polygon') return Math.max(foot.points.length, 4);
+  if (foot.kind === 'path') return Math.min(Math.max(foot.points.length, 2), 8);
+  if (foot.id === 'aerial') return 12;
+  return 8;
+}
+
+function Outline({
+  points,
+  color,
+  width,
+  opacity,
+}: {
+  points: [number, number, number][];
+  color: string;
+  width: number;
+  opacity: number;
+}) {
+  if (points.length < 2) return null;
+  return <Line points={points} color={color} lineWidth={width} transparent opacity={opacity} depthWrite={false} />;
 }
 
 export function AreaFocusHighlight() {
   const { areaId } = useExploreState();
-  useTimeOfDay();
+  const { mode } = useTimeOfDay();
   const next = useMemo(() => areaFootprint(areaId), [areaId]);
   const held = useRef<AreaFootprint | null>(next);
   if (next) held.current = next;
@@ -114,41 +108,33 @@ export function AreaFocusHighlight() {
     if (!g) return;
     const v = amount.current.v;
     g.visible = v > 0.01;
-    g.position.y = v * 0.55;
-    g.scale.setScalar(0.96 + 0.04 * v);
+    g.scale.setScalar(0.98 + 0.02 * v);
   });
 
-  if (!foot) return null;
+  const rings = useMemo(() => {
+    if (!foot) return null;
+    const h = wallHeight(foot);
+    const y0 = foot.y + 0.08;
+    const y1 = foot.y + h;
+    const bottom = footprintRing(foot, y0);
+    const top = footprintRing(foot, y1);
+    const posts = verticalPosts(bottom, y1, postCount(foot));
+    return { bottom, top, posts };
+  }, [foot]);
 
-  const lightPos: [number, number, number] =
-    foot.kind === 'ellipse'
-      ? [foot.cx, foot.y + 14, foot.cz]
-      : foot.kind === 'polygon'
-        ? [
-            foot.points.reduce((s, p) => s + p[0], 0) / foot.points.length,
-            foot.y + 16,
-            foot.points.reduce((s, p) => s + p[1], 0) / foot.points.length,
-          ]
-        : [
-            foot.points[Math.floor(foot.points.length / 2)][0],
-            foot.y + 12,
-            foot.points[Math.floor(foot.points.length / 2)][1],
-          ];
+  if (!foot || !rings) return null;
 
-  const day = dayBlend.value;
-  const lightIntensity = foot.id === 'aerial' ? 0.4 + 0.2 * day : 1.6 + 0.6 * (1 - day);
+  const day = mode === 'day';
+  const color = day ? '#0d5c6d' : '#4dd0e1';
+  const topColor = day ? '#164e5c' : '#7ee7ff';
 
   return (
     <group ref={group}>
-      <Plate foot={foot} opacity={foot.id === 'aerial' ? 0.55 : 1} />
-      <Outline foot={foot} y={foot.y + 0.08} />
-      <pointLight
-        position={lightPos}
-        intensity={lightIntensity}
-        distance={foot.id === 'aerial' ? 120 : 46}
-        color={day > 0.5 ? '#fff4d8' : '#7ee7ff'}
-        decay={2}
-      />
+      <Outline points={rings.bottom} color={color} width={1.8} opacity={0.9} />
+      <Outline points={rings.top} color={topColor} width={2.2} opacity={0.95} />
+      {rings.posts.map((pts, i) => (
+        <Outline key={i} points={pts} color={color} width={1.2} opacity={0.55} />
+      ))}
     </group>
   );
 }
