@@ -8,6 +8,7 @@ import { NightRevealCanvas } from '../scene/NightRevealCanvas';
 import { SceneClockProvider } from '../scene/useSceneClock';
 import { SceneErrorBoundary } from '../scene/SceneErrorBoundary';
 import { RevealHud } from '../components/reveal/RevealHud';
+import { ExploreOverlay } from '../components/reveal/ExploreOverlay';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { resolveQuality } from '../scene/quality';
 import { FRAME_PRESETS, presetForGlobalTime, presetForReplay } from '../scene/framePresets';
@@ -35,6 +36,8 @@ export function RevealAudience({
   const [fatal, setFatal] = useState<string | null>(null);
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const debugOrbit = params.get('debug') === 'orbit';
+  /** `?locked=1` keeps the hall display-only (no free roam, no inspect). */
+  const locked = params.get('locked') === '1';
   const quality = resolveQuality(params.get('quality'), store.quality);
   const webgl2 = useMemo(() => hasWebGL2(), []);
 
@@ -87,12 +90,15 @@ export function RevealAudience({
               debugOrbit={debugOrbit}
               showRibbon={showRibbon}
               cameraOverride={preset?.cameraOverride}
+              cueKey={`${cue.kind}:${cue.startedAt}`}
+              locked={locked}
               onQualityDrop={autoDowngradeQuality && !params.get('quality') && !preset ? (q: Quality) => store.setQuality(q) : undefined}
             />
           </div>
         </SceneErrorBoundary>
         <div className="reveal-vignette" />
         <RevealHud />
+        {locked ? null : <ExploreOverlay />}
       </div>
     </SceneClockProvider>
   );

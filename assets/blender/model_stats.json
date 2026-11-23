@@ -1,0 +1,180 @@
+{
+  "wellhead": {
+    "triangles": 912,
+    "bytes": 53796,
+    "size_m": [
+      1.48,
+      1.1,
+      1.24
+    ],
+    "nodes": [
+      "Beacon",
+      "ValveLight",
+      "wellhead_Concrete",
+      "wellhead_Steel",
+      "wellhead_SteelDark",
+      "wellhead_ValveRed"
+    ],
+    "preview": "assets/blender/previews/wellhead.png"
+  },
+  "wellhead_agup": {
+    "triangles": 1032,
+    "bytes": 63108,
+    "size_m": [
+      1.68,
+      1.1,
+      1.64
+    ],
+    "nodes": [
+      "Beacon",
+      "PanelLight",
+      "StatusRing",
+      "ValveLight",
+      "wellhead_agup_Concrete",
+      "wellhead_agup_PaintWhite",
+      "wellhead_agup_Steel",
+      "wellhead_agup_SteelDark",
+      "wellhead_agup_ValveRed"
+    ],
+    "preview": "assets/blender/previews/wellhead_agup.png"
+  },
+  "cpf1": {
+    "triangles": 3034,
+    "bytes": 199872,
+    "size_m": [
+      15.49,
+      7.3,
+      12.68
+    ],
+    "nodes": [
+      "AviationLights",
+      "Flame_Core",
+      "Flame_Tip",
+      "InletValve_1",
+      "InletValve_2",
+      "InletValve_3",
+      "MastLights",
+      "Pilot",
+      "TankLights",
+      "WindowLights",
+      "cpf1_Cladding",
+      "cpf1_Concrete",
+      "cpf1_PaintWhite",
+      "cpf1_PipeYellow",
+      "cpf1_RackSteel",
+      "cpf1_RoofBlue",
+      "cpf1_Steel",
+      "cpf1_SteelDark"
+    ],
+    "preview": "assets/blender/previews/cpf1.png"
+  },
+  "ag25": {
+    "triangles": 2600,
+    "bytes": 143168,
+    "size_m": [
+      11.19,
+      5.43,
+      7.94
+    ],
+    "nodes": [
+      "AviationLights",
+      "Flame_Core",
+      "Flame_Tip",
+      "GasLights",
+      "MastLights",
+      "Pilot",
+      "ag25_Cladding",
+      "ag25_Concrete",
+      "ag25_PaintWhite",
+      "ag25_PipeYellow",
+      "ag25_RackSteel",
+      "ag25_RoofBlue",
+      "ag25_Steel",
+      "ag25_SteelDark"
+    ],
+    "preview": "assets/blender/previews/ag25.png"
+  },
+  "pipeline_segment": {
+    "triangles": 180,
+    "bytes": 14712,
+    "size_m": [
+      4.0,
+      0.41,
+      0.5
+    ],
+    "nodes": [
+      "pipeline_segment_Concrete",
+      "pipeline_segment_Steel",
+      "pipeline_segment_SteelDark"
+    ],
+    "preview": "assets/blender/previews/pipeline_segment.png"
+  },
+  "pipe_rack": {
+    "triangles": 336,
+    "bytes": 26888,
+    "size_m": [
+      4.24,
+      1.22,
+      1.14
+    ],
+    "nodes": [
+      "pipe_rack_Concrete",
+      "pipe_rack_PipeYellow",
+      "pipe_rack_RackSteel",
+      "pipe_rack_Steel",
+      "pipe_rack_SteelDark"
+    ],
+    "preview": "assets/blender/previews/pipe_rack.png"
+  },
+  "export_marker": {
+    "triangles": 192,
+    "bytes": 17976,
+    "size_m": [
+      0.78,
+      1.99,
+      0.5
+    ],
+    "nodes": [
+      "Beacon",
+      "export_marker_Concrete",
+      "export_marker_PaintWhite",
+      "export_marker_PipeYellow",
+      "export_marker_SteelDark",
+      "export_marker_ValveRed"
+    ],
+    "preview": "assets/blender/previews/export_marker.png"
+  },
+  "flare": {
+    "triangles": 348,
+    "bytes": 30912,
+    "size_m": [
+      4.5,
+      7.25,
+      4.17
+    ],
+    "nodes": [
+      "AviationLights",
+      "Flame_Core",
+      "Flame_Tip",
+      "Pilot",
+      "flare_Concrete",
+      "flare_PipeYellow",
+      "flare_Steel",
+      "flare_SteelDark"
+    ],
+    "preview": "assets/blender/previews/flare.png"
+  },
+  "terrain_tile": {
+    "triangles": 1152,
+    "bytes": 28168,
+    "size_m": [
+      40.0,
+      1.07,
+      40.0
+    ],
+    "nodes": [
+      "terrain_tile_DesertNight"
+    ],
+    "preview": "assets/blender/previews/terrain_tile.png"
+  }
+}

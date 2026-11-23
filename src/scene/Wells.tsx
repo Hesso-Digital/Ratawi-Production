@@ -21,7 +21,17 @@ const COL_GOLD = new Color('#ffc247');
 const dummy = new Object3D();
 const AGUP_ORDER = WORLD_WELLS.filter((w) => w.kind === 'agup').map((w) => w.name);
 
-export function Wells({ quality }: { quality: QualityProfile }) {
+export function Wells({
+  quality,
+  hideStatic = false,
+  beaconLift = 0,
+}: {
+  quality: QualityProfile;
+  /** Skip the procedural pad + tree when the GLB wellheads are drawn instead (models/FieldModels.tsx). */
+  hideStatic?: boolean;
+  /** Raise beacon and beam to sit on the taller GLB beacon mast. */
+  beaconLift?: number;
+}) {
   const sceneClock = useSceneClockRef();
   const padRef = useRef<InstancedMesh>(null);
   const bodyRef = useRef<InstancedMesh>(null);
@@ -102,14 +112,14 @@ export function Wells({ quality }: { quality: QualityProfile }) {
       }
 
       const beaconColor = hdr(col, k * pulse);
-      dummy.position.set(w.world[0], y + 0.08 + 0.72, w.world[1]);
+      dummy.position.set(w.world[0], y + 0.08 + 0.72 + beaconLift, w.world[1]);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
       beacon.setMatrixAt(i, dummy.matrix);
       beacon.setColorAt(i, beaconColor);
 
       const beamVisible = beamK > 0.02;
-      dummy.position.set(w.world[0], y + 0.08 + 0.95 + 1.8, w.world[1]);
+      dummy.position.set(w.world[0], y + 0.08 + 0.95 + 1.8 + beaconLift, w.world[1]);
       dummy.scale.set(1, beamVisible ? 1 : 0.0001, 1);
       dummy.updateMatrix();
       beam.setMatrixAt(i, dummy.matrix);
@@ -133,10 +143,10 @@ export function Wells({ quality }: { quality: QualityProfile }) {
 
   return (
     <group>
-      <instancedMesh ref={padRef} args={[padGeo, undefined, count]} castShadow receiveShadow>
+      <instancedMesh ref={padRef} args={[padGeo, undefined, count]} castShadow receiveShadow visible={!hideStatic}>
         <meshStandardMaterial color="#4a4a4c" roughness={0.95} />
       </instancedMesh>
-      <instancedMesh ref={bodyRef} args={[bodyGeo, undefined, count]} castShadow>
+      <instancedMesh ref={bodyRef} args={[bodyGeo, undefined, count]} castShadow visible={!hideStatic}>
         <meshStandardMaterial color="#9aa1a8" metalness={0.5} roughness={0.5} />
       </instancedMesh>
       <instancedMesh ref={beaconRef} args={[beaconGeo, undefined, count]}>

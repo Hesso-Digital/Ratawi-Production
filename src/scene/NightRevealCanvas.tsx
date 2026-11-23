@@ -1,22 +1,26 @@
 /**
  * The <Canvas>: dpr from the quality profile, ACES + sRGB output, shader
  * pre-compile so the first cue doesn't stall, and every scene part mounted.
- * `?debug=orbit` swaps the audience camera rig for drei OrbitControls so the
- * operator can frame/rehearse shots.
+ * The camera is the cinematic show rig with free roam on top
+ * (explore/ExploreCameraRig.tsx); `?locked=1` restores the display-only camera
+ * and `?debug=orbit` starts in free roam with no return to the show.
+ * Facilities and wellheads come from the GLB models in public/models when
+ * present, with the procedural geometry as fallback (models/FieldModels.tsx).
  */
 import { Canvas } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { Suspense, useCallback, useState } from 'react';
 import { ACESFilmicToneMapping, SRGBColorSpace, type WebGLRenderer } from 'three';
-import { CameraRig } from './CameraRig';
+import { ExploreCameraRig } from './explore/ExploreCameraRig';
+import { InspectTargets } from './explore/InspectTargets';
+import { exploreStore } from './explore/exploreStore';
+import { FieldFacilities } from './models/FieldModels';
+import { registerRenderer } from './models/glbLoader';
 import { SkyAndFog } from './SkyAndFog';
 import { Lighting } from './Lighting';
 import { FieldTerrain } from './FieldTerrain';
 import { ConcessionPentagon } from './ConcessionPentagon';
 import { SppSolar } from './SppSolar';
-import { CPF1 } from './facilities/CPF1';
-import { AG25 } from './facilities/AG25';
-import { Wells } from './Wells';
 import { FlowLines } from './FlowLines';
 import { MilestoneShockwave } from './MilestoneShockwave';
 import { ProductionRibbon } from './ProductionRibbon';
@@ -31,12 +35,18 @@ export function NightRevealCanvas({
   debugOrbit,
   showRibbon,
   cameraOverride,
+  cueKey,
+  locked = false,
   onQualityDrop,
 }: {
   quality: Quality;
   debugOrbit: boolean;
   showRibbon: boolean;
   cameraOverride?: CameraState;
+  /** Changes on every /operator cue so the show camera can take the view back. */
+  cueKey: string;
+  /** Display-only camera, no free roam or inspect. */
+  locked?: boolean;
   onQualityDrop?: (next: Quality) => void;
 }) {
   const profile = QUALITY_PROFILES[quality];
@@ -46,6 +56,7 @@ export function NightRevealCanvas({
     gl.toneMapping = ACESFilmicToneMapping;
     gl.toneMappingExposure = 1.05;
     gl.outputColorSpace = SRGBColorSpace;
+    registerRenderer(gl);
   }, []);
 
   return (
@@ -58,20 +69,22 @@ export function NightRevealCanvas({
       gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       camera={{ fov: 30, near: 0.5, far: 2000, position: [-118, 94, 44] }}
       onCreated={handleCreated}
+      onPointerMissed={(e) => {
+        if (e.type === 'click') exploreStore.select(null);
+      }}
     >
       <Suspense fallback={null}>
-        <CameraRig debugOrbit={debugOrbit} override={cameraOverride} />
+        <ExploreCameraRig debugOrbit={debugOrbit} override={cameraOverride} cueKey={cueKey} locked={locked} />
         <SkyAndFog />
         <Lighting quality={profile} />
         <FieldTerrain quality={profile} />
         <ConcessionPentagon />
         <SppSolar />
-        <CPF1 />
-        <AG25 />
-        <Wells quality={profile} />
+        <FieldFacilities quality={profile} />
         <FlowLines quality={profile} />
         <MilestoneShockwave quality={profile} />
         {showRibbon ? <ProductionRibbon /> : <AnchoredTags />}
+        {locked ? null : <InspectTargets />}
         {profile.bloom ? <PostFX /> : null}
         {onQualityDrop ? (
           <PerformanceMonitor
