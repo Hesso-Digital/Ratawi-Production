@@ -46,8 +46,10 @@ export function ProductionRibbon() {
     return out;
   }, []);
   const baseline = useMemo(() => MONTHS.map((_, i) => point(i, 0)), []);
-  const commitment = useMemo(() => MONTHS.map((_, i) => point(i, BUDGET_KBOPD)), []);
-  const target = useMemo(() => MONTHS.map((_, i) => point(i, TARGET_KBOPD)), []);
+  const commitVal = state.commitmentKbopd ?? BUDGET_KBOPD;
+  const targetVal = state.targetKbopd ?? TARGET_KBOPD;
+  const commitment = useMemo(() => MONTHS.map((_, i) => point(i, commitVal)), [commitVal]);
+  const target = useMemo(() => MONTHS.map((_, i) => point(i, targetVal)), [targetVal]);
 
   useFrame(() => {
     const progress = sceneClock.current.playback?.progress ?? 0;
@@ -87,9 +89,9 @@ export function ProductionRibbon() {
           </div>
         </Html>
       ))}
-      <Html zIndexRange={[3, 0]} position={point(0, BUDGET_KBOPD)} center={false} distanceFactor={60} occlude={false}>
+      <Html zIndexRange={[3, 0]} position={point(0, commitVal)} center={false} distanceFactor={60} occlude={false}>
         <div className="ribbon-month" style={{ transform: 'translate(-110%, 0)' }}>
-          {WORDING.commitmentLabel} {BUDGET_KBOPD}
+          {WORDING.commitmentLabel} {commitVal}
         </div>
       </Html>
       {CALLOUTS.map((c) => (

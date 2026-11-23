@@ -1,8 +1,5 @@
 import { VENUE } from './data/ceremonyConfig';
 
-/** Client-side operator PIN. Hidden console only, not a security boundary. */
-export const OPERATOR_PIN = '12026';
-
 export const STORAGE_KEY = 'ratawi_production_state_v1';
 export const CHANNEL_NAME = 'ratawi-production';
 

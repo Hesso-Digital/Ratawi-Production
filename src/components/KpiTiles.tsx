@@ -19,7 +19,7 @@ function Tile({
   alert?: boolean;
   tone?: 'default' | 'gold' | 'gas';
 }) {
-  const ref = useCountUp<HTMLSpanElement>(value, { decimals, durationS: 0.8 });
+  const ref = useCountUp<HTMLSpanElement>(value, { decimals, durationS: 0.42 });
   return (
     <article
       className="panel tile"

@@ -3,13 +3,17 @@ import gsap from 'gsap';
 import { useCountUp } from '../hooks/useCountUp';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { BUDGET_KBOPD, TARGET_KBOPD } from '../data/defaults';
-import { isAboveCommitment } from '../data/kpis';
+import { isAboveCommitment, isGold } from '../data/kpis';
+import { useCeremonyStore } from '../data/store';
 import { OilDrop } from './OilDrop';
 
 export function HeroCard({ oil }: { oil: number }) {
-  const celebrate = oil >= TARGET_KBOPD;
-  const aboveCommitment = isAboveCommitment(oil);
-  const valueRef = useCountUp<HTMLSpanElement>(oil, { decimals: 1, durationS: 0.9 });
+  const presets = useCeremonyStore().presets;
+  const commitment = presets.commitmentKbopd ?? BUDGET_KBOPD;
+  const target = presets.targetKbopd ?? TARGET_KBOPD;
+  const celebrate = isGold(oil, target);
+  const aboveCommitment = isAboveCommitment(oil, commitment);
+  const valueRef = useCountUp<HTMLSpanElement>(oil, { decimals: 1, durationS: 0.42 });
   const cardRef = useRef<HTMLElement>(null);
   const wasGold = useRef(celebrate);
   const reduced = usePrefersReducedMotion();
@@ -52,10 +56,10 @@ export function HeroCard({ oil }: { oil: number }) {
           </div>
           <div className="hero-targets">
             <span>
-              Commitment <b className={isAboveCommitment(oil) ? 'on' : ''}>{BUDGET_KBOPD}</b>
+              Commitment <b className={aboveCommitment ? 'on' : ''}>{commitment}</b>
             </span>
             <span>
-              AGUP target <b className={celebrate ? 'on' : ''}>{TARGET_KBOPD}</b>
+              AGUP target <b className={celebrate ? 'on' : ''}>{target}</b>
             </span>
           </div>
         </div>
@@ -69,11 +73,11 @@ export function HeroCard({ oil }: { oil: number }) {
       </div>
       <div className="meter" aria-hidden="true">
         <div className="meter-fill" style={{ width: `${fill}%` }} />
-        <div className="meter-tick" style={tick(BUDGET_KBOPD)}>
-          <span>90</span>
+        <div className="meter-tick" style={tick(commitment)}>
+          <span>{commitment}</span>
         </div>
-        <div className="meter-tick" style={tick(TARGET_KBOPD)}>
-          <span>120</span>
+        <div className="meter-tick" style={tick(target)}>
+          <span>{target}</span>
         </div>
       </div>
     </article>

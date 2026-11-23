@@ -2,6 +2,7 @@ import { KPIS } from '../../data/kpis';
 import type { SceneState } from '../../scene/ceremonyTimeline';
 import { relatedKpis } from '../../scene/explore/assets';
 import { exploreStore, useExploreState } from '../../scene/explore/exploreStore';
+import { CountText } from '../CountText';
 
 export function KpiRail({ state, interactive = false }: { state: SceneState; interactive?: boolean }) {
   const { selectedId, kpiId } = useExploreState();
@@ -34,14 +35,14 @@ export function KpiRail({ state, interactive = false }: { state: SceneState; int
             <div className="bar" style={{ width: `${barPct}%` }} />
             <div className="k">{kpi.label}</div>
             <div className="v">
-              {value.toFixed(kpi.decimals)}
+              <CountText value={value} decimals={kpi.decimals} />
               <small>{kpi.unit}</small>
             </div>
             <div className="s">
               <i />
               {kpi.sub(state)}
             </div>
-            {interactive ? <div className="kpi-tip">June to December trend · click to open</div> : null}
+            {interactive ? <div className="kpi-tip">June 2026 to April 2027 · click to open</div> : null}
           </div>
         );
       })}

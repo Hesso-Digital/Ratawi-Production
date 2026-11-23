@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { STORAGE_KEY } from '../config';
-import { BASELINE, STEP_1, STEP_2 } from './defaults';
+import { BASELINE, DEFAULT_PRESETS, STEP_1, STEP_2 } from './defaults';
 import { useCeremonyStore } from './store';
 
 beforeEach(() => {
@@ -96,5 +96,49 @@ describe('useCeremonyStore', () => {
     expect(result.current.cue.kind).toBe('playback');
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) as string);
     expect(stored.cue.kind).toBe('playback');
+  });
+
+  it('Bring AGUP online animates from Current to the AGUP snapshot', () => {
+    const { result } = renderHook(() => useCeremonyStore());
+    act(() => result.current.bringAgupOnline());
+    expect(result.current.cue.kind).toBe('step2');
+    expect(result.current.prevSnapshot.oil).toBe(DEFAULT_PRESETS.current.oil);
+    expect(result.current.snapshot.oil).toBe(DEFAULT_PRESETS.agup.oil);
+    expect(result.current.snapshot.wells).toBe(32);
+  });
+
+  it('Reset to current eases back with the live cue', () => {
+    const { result } = renderHook(() => useCeremonyStore());
+    act(() => result.current.bringAgupOnline());
+    act(() => result.current.resetToCurrent());
+    expect(result.current.cue.kind).toBe('live');
+    expect(result.current.snapshot.oil).toBe(DEFAULT_PRESETS.current.oil);
+    expect(result.current.step).toBe(0);
+  });
+
+  it('saves edited presets and shares them through storage', () => {
+    const { result, unmount } = renderHook(() => useCeremonyStore());
+    const next = {
+      ...DEFAULT_PRESETS,
+      current: { ...DEFAULT_PRESETS.current, oil: 106 },
+      agup: { ...DEFAULT_PRESETS.agup, oil: 122 },
+    };
+    act(() => {
+      expect(result.current.savePresets(next)).toBe(true);
+    });
+    expect(result.current.presets.current.oil).toBe(106);
+    unmount();
+    const { result: resumed } = renderHook(() => useCeremonyStore());
+    expect(resumed.current.presets.current.oil).toBe(106);
+    expect(resumed.current.presets.agup.oil).toBe(122);
+  });
+
+  it('rejects invalid presets and leaves the stored values alone', () => {
+    const { result } = renderHook(() => useCeremonyStore());
+    const bad = { ...DEFAULT_PRESETS, current: { ...DEFAULT_PRESETS.current, oil: Number.NaN } };
+    act(() => {
+      expect(result.current.savePresets(bad)).toBe(false);
+    });
+    expect(result.current.presets.current.oil).toBe(DEFAULT_PRESETS.current.oil);
   });
 });

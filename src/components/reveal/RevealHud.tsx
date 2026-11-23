@@ -1,29 +1,54 @@
+import { useEffect, useState } from 'react';
 import { WORDING } from '../../data/ceremonyConfig';
+import { useCeremonyStore } from '../../data/store';
+import { useDisplayedKpis } from '../../hooks/useDisplayedKpis';
 import { useSceneSnapshot } from '../../scene/useSceneClock';
+import { AlHarisHomeMark } from '../AlHarisHomeMark';
 import { Compass } from './Compass';
-import { CountdownRing } from './CountdownRing';
 import { HeroNumber } from './HeroNumber';
 import { KpiRail } from './KpiRail';
-import { PlaybackBar } from './PlaybackBar';
-import { StepTracker } from './StepTracker';
+import { OilTimeline } from './OilTimeline';
 import { exploreStore } from '../../scene/explore/exploreStore';
 
+function formatNow(d: Date) {
+  const time = d.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  const date = d
+    .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toUpperCase();
+  return `${time}  ·  ${date}`;
+}
+
 export function RevealHud({ interactive = false }: { interactive?: boolean }) {
-  const state = useSceneSnapshot();
+  const live = useSceneSnapshot();
+  const state = useDisplayedKpis(live);
+  const showDateTime = useCeremonyStore().settings.showDateTime;
   const gold = state.gold > 0.5;
-  const isPlayback = state.cueKind === 'playback';
+  const [clock, setClock] = useState(() => formatNow(new Date()));
+
+  useEffect(() => {
+    const id = window.setInterval(() => setClock(formatNow(new Date())), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
     <div className={`reveal-hud ${gold ? 'gold' : ''} ${interactive ? 'interactive' : ''}`}>
       <div className="reveal-brand">
         <div className="eyebrow">{WORDING.eyebrow}</div>
-        <h1>{WORDING.title}</h1>
+        <div className="brand-title-row">
+          <AlHarisHomeMark size={38} />
+          <h1>{WORDING.title}</h1>
+        </div>
         <div className="live">
           <i />
           <span>Live</span>
         </div>
+        {showDateTime ? <div className="reveal-clock">{clock}</div> : null}
       </div>
-      {isPlayback ? <PlaybackBar state={state} /> : <StepTracker state={state} />}
       {interactive ? (
         <div onClick={() => exploreStore.openKpi('oil')}>
           <HeroNumber state={state} />
@@ -31,15 +56,9 @@ export function RevealHud({ interactive = false }: { interactive?: boolean }) {
       ) : (
         <HeroNumber state={state} />
       )}
-      <CountdownRing state={state} />
-      <Compass state={state} />
+      <OilTimeline />
+      <Compass />
       <KpiRail state={state} interactive={interactive} />
-      {isPlayback ? (
-        <div className="reveal-caption">
-          From shutdown to above target in six months.
-          <small>Replay · June to December 2026</small>
-        </div>
-      ) : null}
     </div>
   );
 }

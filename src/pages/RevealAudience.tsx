@@ -81,7 +81,7 @@ export function RevealAudience({
   const showRibbon = cue.kind === 'playback';
 
   return (
-    <SceneClockProvider cue={cue} prevSnapshot={prevSnapshot} snapshot={snapshot} frozenAtS={preset?.elapsedS}>
+    <SceneClockProvider cue={cue} prevSnapshot={prevSnapshot} snapshot={snapshot} frozenAtS={preset?.elapsedS} lines={store.lines}>
       <div className="reveal-root">
         <SceneErrorBoundary onFatal={() => setFatal('scene-crash')}>
           <div className="reveal-canvas-wrap">

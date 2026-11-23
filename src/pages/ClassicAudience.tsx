@@ -11,12 +11,14 @@ import { KpiTiles } from '../components/KpiTiles';
 import { TrajectoryChart } from '../components/TrajectoryChart';
 import { useCeremonyStore } from '../data/store';
 import { useLiveScene } from '../scene/useLiveScene';
+import { useDisplayedKpis } from '../hooks/useDisplayedKpis';
 import { useTileEntrance } from '../hooks/useTileEntrance';
+import { OilTimeline } from '../components/reveal/OilTimeline';
 
 export function ClassicAudience() {
   const store = useCeremonyStore();
-  const scene = useLiveScene(store.cue, store.prevSnapshot, store.snapshot);
-  const display = scene;
+  const scene = useLiveScene(store.cue, store.prevSnapshot, store.snapshot, 50, store.lines);
+  const display = useDisplayedKpis(scene);
   const root = useTileEntrance<HTMLDivElement>();
 
   return (
@@ -28,7 +30,10 @@ export function ClassicAudience() {
           <HeroCard oil={display.oil} />
           <KpiTiles data={display} />
         </div>
-        <TrajectoryChart oil={scene.oil} playback={scene.playback} />
+        <div className="chart-panel-wrap">
+          <OilTimeline />
+          <TrajectoryChart oil={display.oil} playback={display.playback} />
+        </div>
       </div>
     </div>
   );

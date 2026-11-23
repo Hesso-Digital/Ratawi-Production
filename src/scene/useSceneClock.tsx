@@ -7,7 +7,7 @@
  * displays and far cheaper than re-rendering HUD DOM at 60fps.
  */
 import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from 'react';
-import { sceneStateAt, type SceneState } from './ceremonyTimeline';
+import { sceneStateAt, type SceneLines, type SceneState } from './ceremonyTimeline';
 import type { Cue, Snapshot } from '../data/types';
 
 const HUD_UPDATE_INTERVAL_MS = 80;
@@ -25,19 +25,19 @@ function elapsedOf(cue: Cue, frozenAtS?: number) {
   return frozenAtS ?? (Date.now() - cue.startedAt) / 1000;
 }
 
-function makeInitialState(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot, frozenAtS?: number): SceneState {
-  return sceneStateAt(cue, elapsedOf(cue, frozenAtS), prevSnapshot, snapshot);
+function makeInitialState(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot, frozenAtS?: number, lines?: SceneLines): SceneState {
+  return sceneStateAt(cue, elapsedOf(cue, frozenAtS), prevSnapshot, snapshot, lines);
 }
 
-function useCreateSceneClock(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot, frozenAtS?: number): SceneClock {
-  const ref = useRef<SceneState>(makeInitialState(cue, prevSnapshot, snapshot, frozenAtS));
+function useCreateSceneClock(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapshot, frozenAtS?: number, lines?: SceneLines): SceneClock {
+  const ref = useRef<SceneState>(makeInitialState(cue, prevSnapshot, snapshot, frozenAtS, lines));
   const listeners = useRef(new Set<Listener>());
   const lastHudUpdate = useRef(0);
 
   useEffect(() => {
     let raf = 0;
     const loop = () => {
-      ref.current = sceneStateAt(cue, elapsedOf(cue, frozenAtS), prevSnapshot, snapshot);
+      ref.current = sceneStateAt(cue, elapsedOf(cue, frozenAtS), prevSnapshot, snapshot, lines);
       const now = performance.now();
       if (now - lastHudUpdate.current >= HUD_UPDATE_INTERVAL_MS) {
         lastHudUpdate.current = now;
@@ -47,7 +47,7 @@ function useCreateSceneClock(cue: Cue, prevSnapshot: Snapshot, snapshot: Snapsho
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [cue, prevSnapshot, snapshot, frozenAtS]);
+  }, [cue, prevSnapshot, snapshot, frozenAtS, lines]);
 
   return useMemo(
     () => ({
@@ -71,6 +71,7 @@ export function SceneClockProvider({
   prevSnapshot,
   snapshot,
   frozenAtS,
+  lines,
   children,
 }: {
   cue: Cue;
@@ -78,9 +79,10 @@ export function SceneClockProvider({
   snapshot: Snapshot;
   /** Pin the scene at this many seconds into the cue (rehearsal deep links and stills). */
   frozenAtS?: number;
+  lines?: SceneLines;
   children: ReactNode;
 }) {
-  const clock = useCreateSceneClock(cue, prevSnapshot, snapshot, frozenAtS);
+  const clock = useCreateSceneClock(cue, prevSnapshot, snapshot, frozenAtS, lines);
   return <SceneClockContext.Provider value={clock}>{children}</SceneClockContext.Provider>;
 }
 

@@ -12,11 +12,14 @@
  */
 import { CatmullRomCurve3, Vector3 } from 'three';
 import { PLAYBACK_MS } from '../config';
-import { BASELINE, PLAYBACK_END_INDEX, TARGET_KBOPD, snapshotAtPlayback } from '../data/defaults';
+import { BASELINE, COMMITMENT_KBOPD, PLAYBACK_END_INDEX, TARGET_KBOPD, snapshotAtPlayback } from '../data/defaults';
 import { BEATS, COUNTDOWN_DURATION_S } from '../data/scenario';
-import type { Cue, CueKind, Snapshot } from '../data/types';
+import type { Cue, CueKind, DataPresets, Snapshot } from '../data/types';
 
 export { BEATS };
+
+/** Smooth return from AGUP online back to Current. */
+export const LIVE_DURATION_S = 2.2;
 
 const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ramp = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
@@ -113,15 +116,31 @@ export type SceneState = {
   bloomPulse: number;
   step: 0 | 1 | 2 | 3;
   playback: PlaybackState | null;
+  commitmentKbopd: number;
+  targetKbopd: number;
+  currentWells: number;
+  agupWells: number;
+};
+
+export type SceneLines = Pick<DataPresets, 'commitmentKbopd' | 'targetKbopd'> & {
+  currentWells?: number;
+  agupWells?: number;
+};
+
+const DEFAULT_LINES: SceneLines = {
+  commitmentKbopd: COMMITMENT_KBOPD,
+  targetKbopd: TARGET_KBOPD,
+  currentWells: BASELINE.wells,
+  agupWells: 32,
 };
 
 const valvesOpenIn = (s: Snapshot) => s.oil > BASELINE.oil + 0.5;
-const agupOnlineIn = (s: Snapshot) => s.wells > BASELINE.wells + 0.5;
-const goldIn = (s: Snapshot) => s.oil >= TARGET_KBOPD - 1e-6;
+const agupOnlineIn = (s: Snapshot, currentWells = BASELINE.wells) => s.wells > currentWells + 0.5;
+const goldIn = (s: Snapshot, target = TARGET_KBOPD) => s.oil >= target - 1e-6;
 
-function stepOf(s: Snapshot): SceneState['step'] {
-  if (goldIn(s)) return 3;
-  if (agupOnlineIn(s)) return 2;
+function stepOf(s: Snapshot, lines: SceneLines = DEFAULT_LINES): SceneState['step'] {
+  if (goldIn(s, lines.targetKbopd)) return 3;
+  if (agupOnlineIn(s, lines.currentWells ?? BASELINE.wells)) return 2;
   if (valvesOpenIn(s)) return 1;
   return 0;
 }
@@ -166,6 +185,8 @@ function clockFor(cue: Cue, el: number, to: Snapshot) {
     }
     case 'playback':
       return { anim: el, cam: 2.25 - 2.25 * Math.cos((el * Math.PI * 2) / 9), ceremonyT: null, inStep2: false };
+    case 'live':
+      return { anim: el, cam: 2.25 - 2.25 * Math.cos((el * Math.PI * 2) / 9), ceremonyT: null, inStep2: false };
     default: {
       if (agupOnlineIn(to)) {
         return { anim: el, cam: 21 + 5 * (0.5 - 0.5 * Math.cos((el * Math.PI * 2) / 14)), ceremonyT: null, inStep2: false };
@@ -204,24 +225,31 @@ export function elapsedFor(cue: Cue, now = Date.now()) {
  * The single entry point the scene, the HUD, the tiles and the fallback views
  * read every frame. `from` and `to` are the store's `prevSnapshot` and `snapshot`.
  */
-export function sceneStateAt(cue: Cue, el: number, from: Snapshot, to: Snapshot): SceneState {
+export function sceneStateAt(cue: Cue, el: number, from: Snapshot, to: Snapshot, lines: SceneLines = DEFAULT_LINES): SceneState {
+  const commitmentKbopd = lines.commitmentKbopd ?? COMMITMENT_KBOPD;
+  const targetKbopd = lines.targetKbopd ?? TARGET_KBOPD;
+  const currentWells = lines.currentWells ?? BASELINE.wells;
+  const agupWells = lines.agupWells ?? 32;
   const { anim, cam, ceremonyT, inStep2 } = clockFor(cue, el, to);
   let camera = cameraAt(cam);
   const countdown = countdownAt(cue, el);
 
   let valves = valvesOpenIn(to) ? 1 : 0;
   let oilFlow = valves;
-  let agupIgnite: AgupIgnite = agupOnlineIn(to) ? 2 : 0;
-  let agupWave = agupOnlineIn(to) ? 1 : 0;
-  let agupFlow = agupOnlineIn(to) ? 1 : 0;
+  let agupIgnite: AgupIgnite = agupOnlineIn(to, currentWells) ? 2 : 0;
+  let agupWave = agupOnlineIn(to, currentWells) ? 1 : 0;
+  let agupFlow = agupOnlineIn(to, currentWells) ? 1 : 0;
   let gasFlow = to.gas > 0 ? 1 : 0;
   let oil = to.oil;
   let wells = to.wells;
   let exportKbopd = to.exportKbopd;
   let gas = to.gas;
+  let bsw = to.bsw;
+  let salt = to.salt;
+  let efficiency = to.efficiency;
   let playback: PlaybackState | null = null;
-  let step: SceneState['step'] = stepOf(to);
-  let gold = goldIn(to) ? 1 : 0;
+  let step: SceneState['step'] = stepOf(to, lines);
+  let gold = goldIn(to, targetKbopd) ? 1 : 0;
   let milestoneSince = gold > 0 ? 999 : -999;
 
   if (cue.kind === 'step1' && ceremonyT !== null) {
@@ -254,7 +282,7 @@ export function sceneStateAt(cue: Cue, el: number, from: Snapshot, to: Snapshot)
       gasFlow = 0;
       gold = 0;
       milestoneSince = -999;
-      step = stepOf(from);
+      step = stepOf(from, lines);
     } else {
       agupIgnite = 2;
       agupWave = ramp(ceremonyT, BEATS.step2Start, BEATS.agupWaveEnd);
@@ -268,8 +296,8 @@ export function sceneStateAt(cue: Cue, el: number, from: Snapshot, to: Snapshot)
       gas = lerp(from.gas, to.gas, gasProgress);
       // Gold is data-driven: it only exists once oil has reached the target,
       // and the cue then eases it in rather than flipping it.
-      gold = oil >= TARGET_KBOPD - 1e-6 ? easeInOut(ramp(ceremonyT, BEATS.milestone, BEATS.goldSettle)) : 0;
-      milestoneSince = goldIn(to) ? ceremonyT - BEATS.milestone : -999;
+      gold = oil >= targetKbopd - 1e-6 ? easeInOut(ramp(ceremonyT, BEATS.milestone, BEATS.goldSettle)) : 0;
+      milestoneSince = goldIn(to, targetKbopd) ? ceremonyT - BEATS.milestone : -999;
       step = gold >= 0.999 ? 3 : 2;
     }
   } else if (cue.kind === 'playback') {
@@ -286,11 +314,30 @@ export function sceneStateAt(cue: Cue, el: number, from: Snapshot, to: Snapshot)
     agupIgnite = agupWave > 0 ? 2 : 0;
     gasFlow = gas > 0 ? 1 : 0;
     const after = el - PLAYBACK_MS / 1000;
-    gold = goldIn(snap) ? easeInOut(ramp(after, 0, 0.8)) : 0;
-    milestoneSince = goldIn(snap) ? after : -999;
-    step = stepOf(snap);
+    gold = goldIn(snap, targetKbopd) ? easeInOut(ramp(after, 0, 0.8)) : 0;
+    milestoneSince = goldIn(snap, targetKbopd) ? after : -999;
+    step = stepOf(snap, lines);
     camera = blendCamera(camera, RIBBON_CAMERA, easeInOut(ramp(el, 0, 1.4)));
     playback = { progress, index: progress * PLAYBACK_END_INDEX, done: progress >= 1 };
+  } else if (cue.kind === 'live') {
+    const climb = easeInOut(clamp(el / LIVE_DURATION_S));
+    oil = lerp(from.oil, to.oil, climb);
+    exportKbopd = lerp(from.exportKbopd, to.exportKbopd, climb);
+    wells = lerp(from.wells, to.wells, climb);
+    gas = lerp(from.gas, to.gas, climb);
+    bsw = lerp(from.bsw, to.bsw, climb);
+    salt = lerp(from.salt, to.salt, climb);
+    efficiency = lerp(from.efficiency, to.efficiency, climb);
+    const span = Math.max(0.0001, agupWells - currentWells);
+    agupWave = clamp((wells - currentWells) / span);
+    agupFlow = agupWave;
+    agupIgnite = agupWave > 0.02 ? 2 : 0;
+    oilFlow = Math.max(oilFlow, easeInOut(climb));
+    valves = oilFlow;
+    gasFlow = gas > 0 ? 1 : easeOut(climb) * (from.gas > 0 ? 1 - climb : 0);
+    gold = oil >= targetKbopd - 1e-6 ? easeInOut(climb) : gold * (1 - climb);
+    milestoneSince = gold > 0.5 ? el : -999;
+    step = stepOf({ ...to, oil, wells, exportKbopd, gas }, lines);
   }
 
   const bloomPulse = milestoneSince > 0 && milestoneSince < 999 ? 0.9 * Math.exp(-milestoneSince * 1.6) : 0;
@@ -311,13 +358,17 @@ export function sceneStateAt(cue: Cue, el: number, from: Snapshot, to: Snapshot)
     wells,
     exportKbopd,
     gas,
-    bsw: to.bsw,
-    salt: to.salt,
-    efficiency: to.efficiency,
+    bsw,
+    salt,
+    efficiency,
     gold,
     milestoneSince,
     bloomPulse,
     step,
     playback,
+    commitmentKbopd,
+    targetKbopd,
+    currentWells,
+    agupWells,
   };
 }

@@ -22,6 +22,7 @@ import type { CameraState } from '../ceremonyTimeline';
 import { assetById, presetById } from './assets';
 import { flySecondsFor } from './areas';
 import { exploreStore, type ExploreMode } from './exploreStore';
+import { publishHeading } from './heading';
 
 /** Fall back to the show's slow drift after this long without input. */
 export const EXPLORE_IDLE_MS = 20_000;
@@ -147,6 +148,43 @@ export function ExploreCameraRig({
     });
   };
 
+
+  const orientNorth = () => {
+    killTween();
+    setMode('explore');
+    lastInput.current = performance.now();
+    const a = current();
+    const ox = a.p.x - a.t.x;
+    const oz = a.p.z - a.t.z;
+    const horiz = Math.hypot(ox, oz) || 1e-4;
+    const start = Math.atan2(ox, oz);
+    const end = 0; // camera sits on +Z of the target, looking toward −Z (north)
+    let delta = end - start;
+    while (delta > Math.PI) delta -= Math.PI * 2;
+    while (delta < -Math.PI) delta += Math.PI * 2;
+    const o = { k: 0 };
+    flying.current = true;
+    if (controls.current) controls.current.enableDamping = false;
+    tween.current = gsap.to(o, {
+      k: 1,
+      duration: 0.8,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        const ang = start + delta * o.k;
+        scratch.current.p.set(a.t.x + Math.sin(ang) * horiz, a.p.y, a.t.z + Math.cos(ang) * horiz);
+        scratch.current.t.copy(a.t);
+        scratch.current.fov = a.fov;
+        apply(scratch.current);
+      },
+      onComplete: () => {
+        flying.current = false;
+        tween.current = null;
+        if (controls.current) controls.current.enableDamping = true;
+        lastInput.current = performance.now();
+      },
+    });
+  };
+
   const startReturn = () => {
     if (mode.current === 'show' || mode.current === 'returning' || debugOrbit) return;
     killTween();
@@ -175,6 +213,7 @@ export function ExploreCameraRig({
     return exploreStore.subscribe(() => {
       const s = exploreStore.get();
       if (s.exploreSeq !== prev.exploreSeq) enterExplore();
+      if (s.northUpSeq !== prev.northUpSeq) orientNorth();
       if (s.returnSeq !== prev.returnSeq) startReturn();
       if (s.fly && s.fly !== prev.fly) {
         const dest = s.fly.kind === 'preset' ? presetById(s.fly.id)?.camera : assetById(s.fly.id)?.view;
@@ -223,18 +262,26 @@ export function ExploreCameraRig({
   }, [camera, gl]);
   useEffect(() => () => exploreStore.reset(), []);
 
+  const writeHeading = () => {
+    const t = controls.current?.target ?? showCam().t;
+    publishHeading(camera.position.x, camera.position.z, t.x, t.z);
+  };
+
   useFrame(() => {
     if (locked || (debugOrbit && mode.current === 'explore' && !flying.current)) {
       if (locked) apply(showCam());
+      writeHeading();
       return;
     }
     const m = mode.current;
     if (m === 'show') {
       apply(showCam());
+      writeHeading();
       return;
     }
     if (m === 'returning') {
       apply(lerpCam(returnFrom.current, showCam(), returnK.current, scratch.current));
+      writeHeading();
       return;
     }
     // explore: keep the orbit target on the field and the camera above the dunes.
@@ -258,6 +305,7 @@ export function ExploreCameraRig({
       exploreStore.openKpi(null);
       startReturn();
     }
+    writeHeading();
   });
 
   if (locked) return null;

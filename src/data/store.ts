@@ -1,20 +1,34 @@
-import { useEffect, useState } from 'react';
-import { CHANNEL_NAME, STORAGE_KEY } from '../config';
-import { BASELINE, defaultState, STEP_1, STEP_2 } from './defaults';
+import { useEffect, useMemo, useState } from 'react';
+import { CHANNEL_NAME, PLAYBACK_MS, STORAGE_KEY } from '../config';
+import { BASELINE, DEFAULT_PRESETS, DEFAULT_SETTINGS, STEP_1, STEP_2, clonePresets, cloneSettings, defaultState } from './defaults';
+import { isAgupOnline, linesFromPresets, parsePresets, presetsAreValid, validatePresets } from './presets';
 import type {
   AppState,
   CeremonyStep,
   ChannelMessage,
   Cue,
   CueKind,
+  DataPresets,
+  DisplaySettings,
   Quality,
   Snapshot,
   ViewMode,
 } from './types';
 
-const VALID_CUE_KINDS: CueKind[] = ['idle', 'countdown', 'step1', 'step2', 'playback'];
+const VALID_CUE_KINDS: CueKind[] = ['idle', 'countdown', 'step1', 'step2', 'playback', 'live'];
 const VALID_VIEWS: ViewMode[] = ['reveal', 'classic', 'fallback'];
 const VALID_QUALITIES: Quality[] = ['low', 'medium', 'high'];
+
+
+function parseSettings(v: unknown, fallback: DisplaySettings = DEFAULT_SETTINGS): DisplaySettings {
+  if (!v || typeof v !== 'object') return cloneSettings(fallback);
+  const raw = v as Partial<DisplaySettings>;
+  return {
+    reducedMotion: typeof raw.reducedMotion === 'boolean' ? raw.reducedMotion : fallback.reducedMotion,
+    showAreaMarkers: typeof raw.showAreaMarkers === 'boolean' ? raw.showAreaMarkers : fallback.showAreaMarkers,
+    showDateTime: typeof raw.showDateTime === 'boolean' ? raw.showDateTime : fallback.showDateTime,
+  };
+}
 
 function isSnapshot(v: unknown): v is Snapshot {
   return !!v && typeof v === 'object' && typeof (v as Snapshot).oil === 'number';
@@ -39,6 +53,8 @@ function readStored(): AppState {
       cue,
       view: parsed.view && VALID_VIEWS.includes(parsed.view) ? parsed.view : fallback.view,
       quality: parsed.quality && VALID_QUALITIES.includes(parsed.quality) ? parsed.quality : fallback.quality,
+      presets: parsePresets(parsed.presets, fallback.presets),
+      settings: parseSettings(parsed.settings, fallback.settings),
     };
   } catch {
     return defaultState();
@@ -83,7 +99,14 @@ export function useCeremonyStore() {
     const onMessage = (e: MessageEvent<ChannelMessage>) => {
       const msg = e.data;
       if (!msg || typeof msg !== 'object') return;
-      if (msg.type === 'state') setCore(msg.state);
+      if (msg.type === 'state') {
+        const incoming = msg.state;
+        setCore({
+          ...incoming,
+          presets: parsePresets(incoming.presets, DEFAULT_PRESETS),
+          settings: parseSettings(incoming.settings, DEFAULT_SETTINGS),
+        });
+      }
       if (msg.type === 'cue') setCore((c) => ({ ...c, cue: msg.cue }));
     };
     window.addEventListener('storage', onStorage);
@@ -132,10 +155,48 @@ export function useCeremonyStore() {
   /** Step 2 without the countdown (rehearsal, or if the operator skips it). */
   const runStep2 = () => startCue('step2', { from: STEP_1, to: STEP_2, step: 2 });
 
-  /** Replay of June to December. Leaves the snapshot untouched. */
-  const playStory = () => startCue('playback', { from: core.snapshot, to: core.snapshot });
+  /** Hall switch: Current values climb to AGUP online, wells connect in sequence. */
+  const bringAgupOnline = () =>
+    startCue('step2', { from: core.presets.current, to: core.presets.agup, step: 2 });
+
+  /** Hall switch: ease back to the Current values. */
+  const resetToCurrent = () =>
+    startCue('live', { from: core.snapshot, to: core.presets.current, step: 0 });
+
+  const savePresets = (presets: DataPresets): boolean => {
+    if (!presetsAreValid(validatePresets(presets))) return false;
+    const next = clonePresets(presets);
+    const online = isAgupOnline(core.snapshot, core.presets) || core.cue.kind === 'step2' || core.step >= 2;
+    const snapshot = online ? { ...next.agup } : { ...next.current };
+    const midCue = core.cue.kind === 'step2' || core.cue.kind === 'live' || core.cue.kind === 'playback';
+    setState({
+      ...core,
+      presets: next,
+      snapshot,
+      prevSnapshot: midCue ? core.prevSnapshot : snapshot,
+      step: online ? 2 : 0,
+      cue: midCue ? core.cue : { kind: 'idle', startedAt: Date.now() },
+    });
+    return true;
+  };
+
+  const resetPresets = () => savePresets(clonePresets(DEFAULT_PRESETS));
+
+  /** Replay of June to December. Leaves the stored snapshot untouched. */
+  const playStory = () =>
+    startCue('playback', { from: core.presets.agup, to: core.presets.agup, step: 2 });
 
   const stopStory = () => startCue('idle', { from: core.snapshot, to: core.snapshot });
+
+  const scrubPlayback = (progress: number) => {
+    const p = Math.min(1, Math.max(0, progress));
+    startCue('playback', {
+      from: core.presets.agup,
+      to: core.presets.agup,
+      step: 2,
+      startedAt: Date.now() - p * PLAYBACK_MS,
+    });
+  };
 
   /**
    * Rehearsal jump: start the given beat as if it began `offsetS` seconds ago,
@@ -145,28 +206,49 @@ export function useCeremonyStore() {
     const startedAt = Date.now() - Math.max(0, offsetS) * 1000;
     if (kind === 'step1') startCue('step1', { from: BASELINE, to: STEP_1, step: 1, startedAt });
     else if (kind === 'countdown' || kind === 'step2') startCue(kind, { from: STEP_1, to: STEP_2, step: 2, startedAt });
-    else if (kind === 'playback') startCue('playback', { from: STEP_2, to: STEP_2, step: 2, startedAt });
-    else startCue('idle', { from: BASELINE, to: BASELINE, step: 0, startedAt });
+    else if (kind === 'playback') startCue('playback', { from: core.presets.agup, to: core.presets.agup, step: 2, startedAt });
+    else if (kind === 'live') startCue('live', { from: core.snapshot, to: core.presets.current, step: 0, startedAt });
+    else startCue('idle', { from: core.presets.current, to: core.presets.current, step: 0, startedAt });
   };
 
-  /** Back to the establishing shot. View and quality are kept. */
-  const reset = () => setState({ ...defaultState(), view: core.view, quality: core.quality });
+  /** Back to the Current values. View and quality are kept. */
+  const reset = () =>
+    setState({
+      ...defaultState(),
+      view: core.view,
+      quality: core.quality,
+      presets: clonePresets(core.presets),
+      settings: cloneSettings(core.settings),
+      snapshot: { ...core.presets.current },
+      prevSnapshot: { ...core.presets.current },
+    });
 
   const setView = (view: ViewMode) => setState({ ...core, view });
   const setQuality = (quality: Quality) => setState({ ...core, quality });
+  const setSettings = (patch: Partial<DisplaySettings>) =>
+    setState({ ...core, settings: { ...core.settings, ...patch } });
+
+  const lines = useMemo(() => linesFromPresets(core.presets), [core.presets]);
 
   return {
     ...core,
+    lines,
     startCue,
     applySnapshot,
     runStep1,
     runCountdown,
     runStep2,
+    bringAgupOnline,
+    resetToCurrent,
+    savePresets,
+    resetPresets,
     jumpToCue,
     playStory,
     stopStory,
+    scrubPlayback,
     reset,
     setView,
     setQuality,
+    setSettings,
   };
 }

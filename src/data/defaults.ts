@@ -1,6 +1,6 @@
 import { DEFAULT_QUALITY, DEFAULT_VIEW } from '../config';
 import { GAS, GAS_STEP2_MMSCFD, MONTHLY_QUALITY } from './ceremonyConfig';
-import type { AppState, MonthPoint, Snapshot } from './types';
+import type { AppState, DataPresets, DisplaySettings, MonthPoint, Snapshot } from './types';
 
 /**
  * The brief and design frames call this the "Commitment" (not "Budget").
@@ -50,6 +50,33 @@ export const STEP_2: Snapshot = {
 };
 
 export const STEPS = [BASELINE, STEP_1, STEP_2] as const;
+
+/** Default Current / AGUP online values and chart reference lines. */
+export const DEFAULT_PRESETS: DataPresets = {
+  current: { ...BASELINE },
+  agup: { ...STEP_2 },
+  commitmentKbopd: COMMITMENT_KBOPD,
+  targetKbopd: TARGET_KBOPD,
+};
+
+export function clonePresets(presets: DataPresets = DEFAULT_PRESETS): DataPresets {
+  return {
+    current: { ...presets.current },
+    agup: { ...presets.agup },
+    commitmentKbopd: presets.commitmentKbopd,
+    targetKbopd: presets.targetKbopd,
+  };
+}
+
+export const DEFAULT_SETTINGS: DisplaySettings = {
+  reducedMotion: false,
+  showAreaMarkers: true,
+  showDateTime: true,
+};
+
+export function cloneSettings(settings: DisplaySettings = DEFAULT_SETTINGS): DisplaySettings {
+  return { ...settings };
+}
 
 /**
  * June 2026 to April 2027 series from the requirements document.
@@ -105,5 +132,7 @@ export function defaultState(): AppState {
     cue: { kind: 'idle', startedAt: Date.now() },
     view: DEFAULT_VIEW,
     quality: DEFAULT_QUALITY,
+    presets: clonePresets(),
+    settings: cloneSettings(),
   };
 }

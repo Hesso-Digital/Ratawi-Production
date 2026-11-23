@@ -36,7 +36,20 @@ export type Quality = 'low' | 'medium' | 'high';
  * beat. `startedAt` is wall-clock (Date.now()), so a late-joining or refreshed
  * audience window can resume mid-sequence: elapsed = now - startedAt.
  */
-export type CueKind = 'idle' | 'countdown' | 'step1' | 'step2' | 'playback';
+export type DataPresets = {
+  current: Snapshot;
+  agup: Snapshot;
+  commitmentKbopd: number;
+  targetKbopd: number;
+};
+
+export type DisplaySettings = {
+  reducedMotion: boolean;
+  showAreaMarkers: boolean;
+  showDateTime: boolean;
+};
+
+export type CueKind = 'idle' | 'countdown' | 'step1' | 'step2' | 'playback' | 'live';
 
 export type Cue = {
   kind: CueKind;
@@ -52,6 +65,9 @@ export type AppState = {
   cue: Cue;
   view: ViewMode;
   quality: Quality;
+  /** Editable Current and AGUP online values, plus chart reference lines. */
+  presets: DataPresets;
+  settings: DisplaySettings;
 };
 
 export type ChannelMessage =

@@ -25,9 +25,10 @@ test.describe('routes', () => {
     await expect(page.locator('.fallback-stage .hero-value')).toBeVisible();
   });
 
-  test('/operator is PIN-gated', async ({ page }) => {
+  test('/operator opens with hall controls and no PIN prompt', async ({ page }) => {
     await page.goto('/operator');
-    await expect(page.locator('input[aria-label="Operator PIN"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Bring AGUP online' })).toBeVisible();
+    await expect(page.locator('input[aria-label="Operator PIN"]')).toHaveCount(0);
   });
 });
 
@@ -54,16 +55,14 @@ test('operator cues drive the audience in another tab', async ({ browser }) => {
   await expect(audience.locator('.reveal-hero .big .n')).toHaveText('105.0', { timeout: 15000 });
 
   await operator.goto('/operator');
-  await operator.fill('input[aria-label="Operator PIN"]', '12026');
-  await operator.click('button:has-text("Unlock")');
-  await operator.click('button:has-text("Step 1 · Valves open")');
+  await expect(operator.getByRole('button', { name: 'Bring AGUP online' })).toBeVisible();
+  await operator.getByRole('button', { name: 'Bring AGUP online' }).click();
 
-  await expect(audience.locator('.reveal-hero .big .n')).toHaveText('110.0', { timeout: 15000 });
-
-  await operator.click('button:has-text("Countdown")');
-  await expect(audience.locator('.reveal-count')).toBeVisible({ timeout: 10000 });
   await expect(audience.locator('.reveal-hud')).toHaveClass(/gold/, { timeout: 40000 });
   await expect(audience.locator('.reveal-hero .big .n')).toHaveText('120.0');
+  await expect(audience.locator('.reveal-steps')).toHaveCount(0);
+  await expect(audience.locator('.reveal-count')).toHaveCount(0);
+  await expect(audience.locator('.reveal-playback')).toHaveCount(0);
 
   await context.close();
 });
@@ -78,11 +77,7 @@ test.describe('wording', () => {
       await page.goto(path);
       await page.waitForTimeout(2500);
       if (path === '/operator') {
-        const visible = await page.evaluate(() => document.body.innerText);
-        expect(visible).not.toMatch(forbidden);
-        await page.fill('input[aria-label="Operator PIN"]', '12026');
-        await page.click('button:has-text("Unlock")');
-        await page.waitForTimeout(500);
+        await expect(page.getByRole('button', { name: 'Bring AGUP online' })).toBeVisible();
       }
       const text = await page.evaluate(() => document.body.innerText);
       const attrs = await page.evaluate(() =>

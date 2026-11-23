@@ -18,7 +18,7 @@ import {
   TRAJECTORY,
 } from './defaults';
 import type { KpiId } from './kpis';
-import type { Snapshot } from './types';
+import type { DataPresets, Snapshot } from './types';
 
 /** The replay window: June (0) to December (6). */
 export const MONTHS = TRAJECTORY.slice(0, PLAYBACK_END_INDEX + 1);
@@ -63,7 +63,7 @@ export const KPI_SERIES: Record<KpiId, KpiSeries> = {
     id: 'export',
     values: monthly('exportKbopd'),
     domain: [0, 130],
-    refs: [{ value: STEP_2.exportKbopd, label: `Step 2 · ${STEP_2.exportKbopd}`, tone: 'target' }],
+    refs: [{ value: STEP_2.exportKbopd, label: `AGUP online · ${STEP_2.exportKbopd}`, tone: 'target' }],
     tone: 'export',
   },
   gas: {
@@ -112,3 +112,66 @@ export const OIL_STEPS = [
 ] as const;
 
 export const GAS_STEP2 = GAS.step2Mmscfd;
+
+/** Full viewer timeline: June 2026 to April 2027. */
+export const TIMELINE_MONTHS = TRAJECTORY;
+
+function qualityAt(index: number) {
+  const last = MONTHLY_QUALITY.length - 1;
+  if (index <= 0) return { ...MONTHLY_QUALITY[0] };
+  if (index >= last) return { ...MONTHLY_QUALITY[last] };
+  const lo = Math.floor(index);
+  const hi = Math.min(last, lo + 1);
+  const t = index - lo;
+  const a = MONTHLY_QUALITY[lo];
+  const b = MONTHLY_QUALITY[hi];
+  return {
+    bsw: a.bsw + (b.bsw - a.bsw) * t,
+    salt: a.salt + (b.salt - a.salt) * t,
+    efficiency: a.efficiency + (b.efficiency - a.efficiency) * t,
+  };
+}
+
+function lerpTrajectory(index: number): Snapshot {
+  const max = TRAJECTORY.length - 1;
+  const i = Math.max(0, Math.min(max, index));
+  const lo = Math.floor(i);
+  const hi = Math.min(max, lo + 1);
+  const t = i - lo;
+  const a = TRAJECTORY[lo];
+  const b = TRAJECTORY[hi];
+  const q = qualityAt(Math.min(i, MONTHLY_QUALITY.length - 1));
+  return {
+    oil: a.oil + (b.oil - a.oil) * t,
+    wells: a.wells + (b.wells - a.wells) * t,
+    exportKbopd: a.exportKbopd + (b.exportKbopd - a.exportKbopd) * t,
+    gas: a.gas + (b.gas - a.gas) * t,
+    bsw: q.bsw,
+    salt: q.salt,
+    efficiency: q.efficiency,
+  };
+}
+
+/**
+ * KPI snapshot at a date on the June 2026–April 2027 series.
+ * Historical months (through November) always use recorded actuals.
+ * Future months: if AGUP is online, the series forecast is shifted so December
+ * lands on the AGUP online values; if not, future actuals hold at Current.
+ */
+export function snapshotAtMonth(index: number, presets: DataPresets, agupOnline: boolean): Snapshot {
+  const max = TRAJECTORY.length - 1;
+  const i = Math.max(0, Math.min(max, index));
+  if (i <= TODAY_INDEX + 1e-6) return lerpTrajectory(i);
+  if (!agupOnline) return { ...presets.current };
+  const dec = TRAJECTORY[PLAYBACK_END_INDEX];
+  const future = lerpTrajectory(i);
+  return {
+    oil: future.oil + (presets.agup.oil - dec.oil),
+    wells: future.wells + (presets.agup.wells - dec.wells),
+    exportKbopd: future.exportKbopd + (presets.agup.exportKbopd - dec.exportKbopd),
+    gas: future.gas + (presets.agup.gas - dec.gas),
+    bsw: presets.agup.bsw,
+    salt: presets.agup.salt,
+    efficiency: presets.agup.efficiency,
+  };
+}

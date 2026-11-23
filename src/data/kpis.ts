@@ -19,14 +19,21 @@ export type KpiDef = {
   label: string;
   unit: string;
   decimals: number;
-  value: (s: Snapshot) => number;
-  sub: (s: Snapshot) => string;
-  alert?: (s: Snapshot) => boolean;
-  tone?: (s: Snapshot) => 'default' | 'gold' | 'gas';
+  value: (s: KpiSource) => number;
+  sub: (s: KpiSource) => string;
+  alert?: (s: KpiSource) => boolean;
+  tone?: (s: KpiSource) => 'default' | 'gold' | 'gas';
 };
 
-export const isGold = (oil: number) => oil >= TARGET_KBOPD;
-export const isAboveCommitment = (oil: number) => oil > BUDGET_KBOPD;
+export type KpiSource = Snapshot & {
+  commitmentKbopd?: number;
+  targetKbopd?: number;
+  currentWells?: number;
+  agupWells?: number;
+};
+
+export const isGold = (oil: number, target = TARGET_KBOPD) => oil >= target;
+export const isAboveCommitment = (oil: number, commitment = BUDGET_KBOPD) => oil > commitment;
 export const isGasOperating = (gas: number) => gas >= GAS_MIN_TO_OPERATE_MMSCFD;
 export const isGasRamping = (gas: number) => gas > 0 && gas < GAS_MIN_TO_OPERATE_MMSCFD;
 
@@ -37,8 +44,12 @@ export const KPIS: KpiDef[] = [
     unit: 'kbopd',
     decimals: 1,
     value: (s) => s.oil,
-    sub: (s) => (isGold(s.oil) ? 'Above 120 target' : `Above ${BUDGET_KBOPD} commitment`),
-    tone: (s) => (isGold(s.oil) ? 'gold' : 'default'),
+    sub: (s) => {
+      const target = s.targetKbopd ?? TARGET_KBOPD;
+      const commitment = s.commitmentKbopd ?? BUDGET_KBOPD;
+      return isGold(s.oil, target) ? `Above ${target} target` : `Above ${commitment} commitment`;
+    },
+    tone: (s) => (isGold(s.oil, s.targetKbopd ?? TARGET_KBOPD) ? 'gold' : 'default'),
   },
   {
     id: 'wells',
@@ -46,8 +57,12 @@ export const KPIS: KpiDef[] = [
     unit: 'of 32',
     decimals: 0,
     value: (s) => s.wells,
-    sub: (s) => (s.wells > 25.5 ? `+${Math.round(s.wells - 25)} AGUP online` : '7 AGUP ready'),
-    tone: (s) => (s.wells > 25.5 ? (isGold(s.oil) ? 'gold' : 'default') : 'default'),
+    sub: (s) => {
+      const current = s.currentWells ?? 25;
+      const extra = Math.max(0, Math.round(s.wells - current));
+      return s.wells > current + 0.5 ? `+${extra} AGUP online` : 'AGUP wells standing by';
+    },
+    tone: (s) => (s.wells > (s.currentWells ?? 25) + 0.5 ? (isGold(s.oil, s.targetKbopd ?? TARGET_KBOPD) ? 'gold' : 'default') : 'default'),
   },
   {
     id: 'export',

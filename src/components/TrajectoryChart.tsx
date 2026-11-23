@@ -1,5 +1,6 @@
 import { WORDING } from '../data/ceremonyConfig';
 import { BUDGET_KBOPD, TARGET_KBOPD, PLAYBACK_END_INDEX, TODAY_INDEX, TRAJECTORY } from '../data/defaults';
+import { useCeremonyStore } from '../data/store';
 
 const W = 1800;
 const H = 150;
@@ -19,7 +20,9 @@ function poly(key: 'oil' | 'exportKbopd', from: number, to: number) {
 }
 
 export function TrajectoryChart({ oil, playback }: { oil: number; playback: { index: number } | null }) {
-  // Outside the replay the cursor travels from November to December as oil climbs, so the chart follows the ceremony.
+  const presets = useCeremonyStore().presets;
+  const commitment = presets.commitmentKbopd ?? BUDGET_KBOPD;
+  const target = presets.targetKbopd ?? TARGET_KBOPD;
   const cursor = playback
     ? playback.index
     : TODAY_INDEX + Math.min(1, Math.max(0, (oil - TRAJECTORY[TODAY_INDEX].oil) / (TRAJECTORY[PLAYBACK_END_INDEX].oil - TRAJECTORY[TODAY_INDEX].oil)));
@@ -41,14 +44,14 @@ export function TrajectoryChart({ oil, playback }: { oil: number; playback: { in
           <span>
             <b style={{ color: 'var(--ratawi-export)' }}>Export</b>
           </span>
-          <span>{WORDING.commitmentLabel} 90  ·  Target 120</span>
+          <span>{WORDING.commitmentLabel} {commitment}  ·  Target {target}</span>
         </div>
       </div>
       <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Oil and export trajectory">
-        <line x1={PAD.l} y1={yAt(BUDGET_KBOPD)} x2={W - PAD.r} y2={yAt(BUDGET_KBOPD)} stroke="rgba(245,158,11,0.45)" strokeDasharray="6 6" strokeWidth="1.2" />
-        <line x1={PAD.l} y1={yAt(TARGET_KBOPD)} x2={W - PAD.r} y2={yAt(TARGET_KBOPD)} stroke="rgba(245,208,122,0.7)" strokeDasharray="6 6" strokeWidth="1.2" />
-        <text x={PAD.l - 6} y={yAt(BUDGET_KBOPD) + 3} textAnchor="end" fill="#f59e0b" fontSize="10">90</text>
-        <text x={PAD.l - 6} y={yAt(TARGET_KBOPD) + 3} textAnchor="end" fill="#f5d07a" fontSize="10">120</text>
+        <line x1={PAD.l} y1={yAt(commitment)} x2={W - PAD.r} y2={yAt(commitment)} stroke="rgba(245,158,11,0.45)" strokeDasharray="6 6" strokeWidth="1.2" />
+        <line x1={PAD.l} y1={yAt(target)} x2={W - PAD.r} y2={yAt(target)} stroke="rgba(245,208,122,0.7)" strokeDasharray="6 6" strokeWidth="1.2" />
+        <text x={PAD.l - 6} y={yAt(commitment) + 3} textAnchor="end" fill="#f59e0b" fontSize="10">{commitment}</text>
+        <text x={PAD.l - 6} y={yAt(target) + 3} textAnchor="end" fill="#f5d07a" fontSize="10">{target}</text>
         <polygon points={area} fill="rgba(43,231,255,0.08)" />
         <polyline points={actualOil} fill="none" stroke="#2be7ff" strokeWidth="2.4" />
         <polyline points={forecastOil} fill="none" stroke="#2be7ff" strokeWidth="2.2" strokeDasharray="7 6" opacity="0.85" />

@@ -1,27 +1,34 @@
 # Ratawi Production
 
-Ceremony dashboard for the AGUP Phase 1 RFSU opening. A standalone Vite and React app in the Al-Haris family, not part of IOC or WBMS.
+Hall dashboard for the AGUP Phase 1 RFSU opening. A standalone Vite and React app in the Al-Haris family, not part of IOC or WBMS.
 
 | Route | What it is |
 | --- | --- |
-| `/` | Hall screen. Shows the Night Reveal 3D view (or whichever view the operator selects). |
-| `/operator` | Hidden operator console, PIN-gated (`OPERATOR_PIN` in `src/config.ts`). |
+| `/` | Hall screen. Live production view (3D field, or whichever view is selected). |
+| `/operator` | Operator console. Opens directly, with no PIN. |
 | `/classic` | The original control-room grid. Kept as the fallback. |
-| `/fallback` | Minimal 2D screen (hero, tiles, countdown, gold moment) with no WebGL. |
+| `/fallback` | Minimal 2D screen (hero and tiles) with no WebGL. |
 
-## The ceremony
+## How to switch to AGUP online
 
-One scenario drives everything (`src/data/scenario.ts`, evaluated by `src/scene/ceremonyTimeline.ts`):
+The hall screen shows one of two live states: **Current** (pre-AGUP figures) or **AGUP online** (higher KPIs, the seven AGUP wells connected, 32 of 32 wells online). The audience never sees ceremony steps, a countdown or replay chrome.
 
-1. **Establishing shot.** 25 wells, 105 kbopd, AG-25 on standby.
-2. **Step 1.** Valves open at CPF-1, the gathering lines brighten, oil climbs 105 to 110 kbopd.
-3. **Countdown.** 3, 2, 1 over the field. Step 2 starts by itself when it ends.
-4. **Step 2.** The 7 AGUP wells come online one after another, their oil races to CPF-1, gas flows to AG-25 (52 MMscfd) and oil climbs to 120 kbopd. The gold milestone fires at 120.
-5. **Replay.** The ribbon draws June to December 2026 in nine seconds, with tiles and chart moving with it, and ends on the same 120 kbopd.
+On the hall screen:
 
-The operator clicks Step 1, then starts the countdown on the narrator's "three". Everything on screen (hero number, tiles, tags, ribbon, classic and fallback views) comes from the same scene state, so nothing can drift apart.
+1. Move the pointer so the small three-dot control appears in the top-right corner, then click it. Or press **Shift+A**.
+2. Use the **Current / AGUP online** switch, or **Bring AGUP online**. Numbers count up and the wells connect in sequence.
+3. **Edit KPI numbers** opens the editor for both states (oil, wells, export, gas, BS&W, salt, plant efficiency, and the commitment and AGUP target lines). **Save** stores the values on this machine and updates the hall screen; **Reset to defaults** restores the original figures.
+4. **Playback** in this menu (and on `/operator`) replays June to December. The audience does not see that chrome.
+5. **Settings** cover quality, reduced motion, area markers, and the date/time display.
+6. **Open operator console** opens `/operator` in a new tab, where the same controls are laid out in full.
 
-Two windows on the same machine stay in sync through `localStorage` and `BroadcastChannel`. A cue stores its start time, so a refreshed or late-joining hall window resumes mid-sequence.
+From `/operator`, use **Bring AGUP online** / **Reset to current**. Two windows on the same machine stay in sync through `localStorage` and `BroadcastChannel`.
+
+The Al-Haris mark beside the title opens the Al-Haris home at https://dev1.hessodigital.com/.
+
+## Oil production timeline
+
+The oil production view has a June 2026 to April 2027 timeline. Play runs the series in about seven seconds and stops on April 2027. Pause stops; **Live** returns to the current operating figures. Pointing at, clicking or dragging a date sets the “as of” date and the KPI numbers move to that month (actual versus commitment and target). With AGUP online, later months follow the AGUP forecast; otherwise they hold at the Current figures.
 
 ## Configuration
 
@@ -31,7 +38,7 @@ Venue, wording, gas figure, run of show and the monthly series live in one file:
 
 - `/?frame=F1` to `F6` and `F2b` freeze the hall view at a named beat. `?t=<seconds>` does the same on the scenario clock.
 - `?quality=low|medium|high` overrides the quality profile. `?debug=orbit` unlocks the camera.
-- The operator console has a "Jump to beat" menu and "Run the whole ceremony".
+- The operator console has a **Rehearsal** section for older sequence jumps.
 
 The venue checklist is in `docs/venue-rehearsal-checklist.md`.
 
@@ -44,7 +51,7 @@ npm run build
 npm run lint
 npm test            # unit tests
 npm run e2e         # browser tests (uses the system Chrome, builds first with npm run build)
-npx playwright test e2e/capture.spec.ts   # replays the ceremony and saves stills to docs/screens/after
+npx playwright test e2e/capture.spec.ts   # saves stills to docs/screens/after
 ```
 
 Data is entered on the operator console today, with a feed interface (`src/data/feed.ts`) that can later swap in PI Vision.

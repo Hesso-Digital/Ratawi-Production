@@ -36,42 +36,31 @@ test('ceremony end to end', async ({ browser }) => {
 
   await operator.goto('/operator');
   await operator.bringToFront();
-  await operator.screenshot({ path: `${OUT}/02-operator-locked.png` });
-  await operator.fill('input[aria-label="Operator PIN"]', '12026');
-  await operator.click('button:has-text("Unlock")');
-  await expect(operator.locator('button:has-text("Step 1")').first()).toBeVisible();
+  await expect(operator.getByRole('button', { name: 'Bring AGUP online' })).toBeVisible();
+  await operator.screenshot({ path: `${OUT}/02-operator.png` });
   await operator.screenshot({ path: `${OUT}/03-operator-unlocked.png` });
 
-  await click(operator, hall, '1 · Step 1');
-  await waitForOil(hall, (o) => o >= 109.95);
-  await hall.waitForTimeout(2500);
-  await hall.screenshot({ path: `${OUT}/04-audience-after-step1.png` });
-
-  await click(operator, hall, '2 · Countdown');
-  await expect(hall.locator('.reveal-count')).toBeVisible({ timeout: 10_000 });
-  await expect(hall.locator('.reveal-count')).toBeHidden({ timeout: 10_000 });
-  await hall.screenshot({ path: `${OUT}/06-audience-after-countdown.png` });
-
+  await click(operator, hall, 'Bring AGUP online');
   await waitForOil(hall, (o) => o >= 119.95);
+  await expect(hall.locator('.reveal-hud')).toHaveClass(/gold/, { timeout: 15_000 });
+  await expect(hall.locator('.reveal-steps')).toHaveCount(0);
+  await expect(hall.locator('.reveal-count')).toHaveCount(0);
   await hall.waitForTimeout(400);
   await hall.screenshot({ path: `${OUT}/07-audience-gold-120.png` });
-
-  await hall.waitForTimeout(4500);
   await hall.screenshot({ path: `${OUT}/08-audience-after-step2.png` });
   await operator.bringToFront();
   await operator.waitForTimeout(300);
-  await operator.screenshot({ path: `${OUT}/09-operator-after-step2.png` });
+  await operator.screenshot({ path: `${OUT}/09-operator-after-agup.png` });
 
-  await click(operator, hall, 'Replay June to December');
-  await expect(hall.locator('.reveal-playback')).toBeVisible({ timeout: 10_000 });
-  await waitForOil(hall, (o) => o > 60 && o < 100);
+  await click(operator, hall, 'Play replay');
+  await expect(hall.locator('.reveal-playback')).toHaveCount(0);
+  await waitForOil(hall, (o) => o > 20 && o < 100);
   await hall.screenshot({ path: `${OUT}/10-audience-mid-replay.png` });
-  await expect(hall.locator('.reveal-playback .k')).toContainText('Dec', { timeout: 20_000 });
   await waitForOil(hall, (o) => o >= 119.95);
   await hall.waitForTimeout(2500);
   await hall.screenshot({ path: `${OUT}/11-audience-after-replay.png` });
 
-  await click(operator, hall, 'Reset');
+  await click(operator, hall, 'Reset to current');
   await expect(hall.locator('.reveal-hero .big .n')).toHaveText('105.0', { timeout: 10_000 });
   await hall.waitForTimeout(2500);
   await hall.screenshot({ path: `${OUT}/12-audience-after-reset.png` });
@@ -79,12 +68,14 @@ test('ceremony end to end', async ({ browser }) => {
   await context.close();
 });
 
-test('countdown on the 2', async ({ page }) => {
+test('hall view has no countdown chrome at F2b', async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto('/?frame=F2b');
-  await expect(page.locator('.reveal-count')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.reveal-hero .big .n')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.reveal-count')).toHaveCount(0);
+  await expect(page.locator('.reveal-steps')).toHaveCount(0);
   await page.waitForTimeout(2000);
-  await page.screenshot({ path: `${OUT}/05-audience-countdown.png` });
+  await page.screenshot({ path: `${OUT}/05-audience-f2b.png` });
 });
 
 test('close-up on CPF-1 and AG-25 (F5)', async ({ page }) => {

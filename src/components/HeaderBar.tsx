@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { WORDING } from '../data/ceremonyConfig';
+import { useCeremonyStore } from '../data/store';
+import { AlHarisHomeMark } from './AlHarisHomeMark';
 
 function formatNow(d: Date) {
   const time = d.toLocaleTimeString('en-GB', {
@@ -14,7 +16,8 @@ function formatNow(d: Date) {
   return `${time}  ·  ${date}`;
 }
 
-export function HeaderBar() {
+export function HeaderBar({ alwaysShowClock = false }: { alwaysShowClock?: boolean }) {
+  const showDateTime = useCeremonyStore().settings.showDateTime;
   const [clock, setClock] = useState(() => formatNow(new Date()));
 
   useEffect(() => {
@@ -26,9 +29,12 @@ export function HeaderBar() {
     <header className="header">
       <div className="brand-block">
         <div className="kicker">{WORDING.eyebrow}</div>
-        <h1>{WORDING.title}</h1>
+        <div className="brand-title-row">
+          <AlHarisHomeMark size={28} />
+          <h1>{WORDING.title}</h1>
+        </div>
       </div>
-      <div className="clock">{clock}</div>
+      {alwaysShowClock || showDateTime ? <div className="clock">{clock}</div> : null}
     </header>
   );
 }

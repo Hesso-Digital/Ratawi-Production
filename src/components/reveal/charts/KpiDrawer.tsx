@@ -1,16 +1,18 @@
 /**
  * KPI detail drawer: opens from a KPI tile (or the hero number) in explore
- * mode. Trend chart June to December with commitment / target / limit lines,
- * a scrubber linked to the June to December replay, gauges and a breakdown,
- * and for wells the clickable well status chart. Live values come from the
- * same scene state as the HUD, so they animate with every /operator cue.
+ * mode. Trend charts with commitment / target / limit lines, gauges, and for
+ * wells the clickable well status chart. Oil uses the June 2026–April 2027
+ * viewer timeline (Play / Pause / Live), not the admin ceremony replay.
  */
-import { useState } from 'react';
 import { KPIS, type KpiId } from '../../../data/kpis';
-import { KPI_SERIES, MONTHS, OIL_STEPS, TODAY_INDEX, valueAt } from '../../../data/series';
+import { KPI_SERIES, MONTHS, TIMELINE_MONTHS, TODAY_INDEX, valueAt } from '../../../data/series';
+import { asOfStore, useAsOfState } from '../../../data/asOfStore';
 import { BUDGET_KBOPD, GAS_MIN_TO_OPERATE_MMSCFD, LIMITS, TARGET_KBOPD } from '../../../data/defaults';
+import { useCeremonyStore } from '../../../data/store';
 import type { SceneState } from '../../../scene/ceremonyTimeline';
 import { exploreStore } from '../../../scene/explore/exploreStore';
+import { CountText } from '../../CountText';
+import { OilCompare, OilTimeline } from '../OilTimeline';
 import { Gauge } from './Gauge';
 import { LineChart } from './LineChart';
 import { WellStatusChart } from './WellStatusChart';
@@ -29,6 +31,8 @@ const FOCUS: Record<KpiId, { kind: 'asset' | 'preset'; id: string; label: string
 function Side({ id, state, gold }: { id: KpiId; state: SceneState; gold: boolean }) {
   if (id === 'wells') return <WellStatusChart state={state} />;
   if (id === 'oil') {
+    const commitment = state.commitmentKbopd ?? BUDGET_KBOPD;
+    const target = state.targetKbopd ?? TARGET_KBOPD;
     return (
       <div className="drawer-side">
         <Gauge
@@ -39,21 +43,11 @@ function Side({ id, state, gold }: { id: KpiId; state: SceneState; gold: boolean
           decimals={1}
           color={gold ? CHART.gold : CHART.cyan}
           ticks={[
-            { value: BUDGET_KBOPD, label: `${BUDGET_KBOPD}` },
-            { value: TARGET_KBOPD, label: `${TARGET_KBOPD}`, gold: true },
+            { value: commitment, label: `${commitment}` },
+            { value: target, label: `${target}`, gold: true },
           ]}
         />
-        <div className="breakdown">
-          {OIL_STEPS.map((s) => {
-            const reached = state.oil >= s.value - 0.05;
-            return (
-              <div key={s.label} className={`bd-row ${reached ? 'on' : ''}`}>
-                <span>{s.label}</span>
-                <b>{s.value === OIL_STEPS[0].value ? s.value : `+${s.delta}`}</b>
-              </div>
-            );
-          })}
-        </div>
+        <OilCompare actual={state.oil} commitment={commitment} target={target} />
       </div>
     );
   }
@@ -114,11 +108,11 @@ function Side({ id, state, gold }: { id: KpiId; state: SceneState; gold: boolean
       <div className="breakdown wide">
         <div className="bd-row on">
           <span>Oil into CPF-1</span>
-          <b>{state.oil.toFixed(1)} kbopd</b>
+          <b><CountText value={state.oil} decimals={1} /> kbopd</b>
         </div>
         <div className="bd-row on">
           <span>Oil export, metered</span>
-          <b>{state.exportKbopd.toFixed(1)} kbopd</b>
+          <b><CountText value={state.exportKbopd} decimals={1} /> kbopd</b>
         </div>
         <div className="bd-row">
           <span>Difference</span>
@@ -132,16 +126,24 @@ function Side({ id, state, gold }: { id: KpiId; state: SceneState; gold: boolean
 export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneState; relatedIds: KpiId[] }) {
   const kpi = KPIS.find((k) => k.id === id)!;
   const series = KPI_SERIES[id];
+  const presets = useCeremonyStore().presets;
   const gold = state.gold > 0.5 && (id === 'oil' || id === 'wells');
   const color = toneColor(series.tone, gold);
-  const [scrub, setScrub] = useState<number | null>(null);
-  const playbackIndex = state.cueKind === 'playback' && state.playback ? state.playback.index : null;
-  const cursor = scrub ?? playbackIndex ?? TODAY_INDEX;
-  const following = scrub === null && playbackIndex !== null;
-  const monthLabel = MONTHS[Math.round(cursor)]?.label ?? '';
+  const asOf = useAsOfState();
+  const oilSeries = id === 'oil';
+  const months = oilSeries ? TIMELINE_MONTHS : MONTHS;
+  const values = oilSeries ? TIMELINE_MONTHS.map((m) => m.oil) : series.values;
+  const cursor = oilSeries ? (asOf.index ?? TODAY_INDEX) : (asOf.index != null && asOf.index <= MONTHS.length - 1 ? asOf.index : TODAY_INDEX);
+  const monthLabel = months[Math.min(months.length - 1, Math.round(cursor))]?.label ?? '';
   const focus = FOCUS[id];
+  const oilRefs = oilSeries
+    ? [
+        { value: presets.commitmentKbopd, label: `Commitment ${presets.commitmentKbopd}`, tone: 'commit' as const },
+        { value: presets.targetKbopd, label: `Target ${presets.targetKbopd}`, tone: 'target' as const },
+      ]
+    : series.refs;
 
-  const points = MONTHS.map((m, i) => ({ label: m.label, value: series.values[i], forecast: m.kind === 'forecast' }));
+  const points = months.map((m, i) => ({ label: m.label, value: values[i] ?? 0, forecast: m.kind === 'forecast' }));
 
   return (
     <section className={`kpi-drawer ${relatedIds.includes(id) ? 'related' : ''}`} role="dialog" aria-label={`${kpi.label} details`} data-kpi={id}>
@@ -149,7 +151,7 @@ export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneSt
         <div>
           <div className="eyebrow">{kpi.label}</div>
           <div className="big">
-            {kpi.value(state).toFixed(kpi.decimals)}
+            <CountText value={kpi.value(state)} decimals={kpi.decimals} />
             <small>{kpi.unit}</small>
             <span className="sub">{kpi.sub(state)}</span>
           </div>
@@ -169,40 +171,44 @@ export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneSt
       </header>
       <div className="drawer-body">
         <div className="drawer-chart">
-          <div className="drawer-title">June to December 2026</div>
+          <div className="drawer-title">{oilSeries ? 'June 2026 to April 2027' : 'June to December 2026'}</div>
           <LineChart
             points={points}
-            domain={series.domain}
-            refs={series.refs}
+            domain={oilSeries ? [0, 140] : series.domain}
+            refs={oilRefs}
             color={color}
             unit={kpi.unit}
             decimals={kpi.decimals}
             cursor={cursor}
-            onHover={() => exploreStore.touch()}
+            onHover={(i) => {
+              exploreStore.touch();
+              if (i != null) asOfStore.setIndex(i);
+            }}
           />
+          {oilSeries ? <OilTimeline compact /> : (
           <div className="scrubber">
             <input
               type="range"
               min={0}
-              max={MONTHS.length - 1}
+              max={months.length - 1}
               step={0.01}
-              value={cursor}
+              value={Math.min(months.length - 1, cursor)}
               aria-label="Month"
               onChange={(e) => {
-                setScrub(Number(e.target.value));
+                asOfStore.setIndex(Number(e.target.value));
                 exploreStore.touch();
               }}
             />
             <div className="scrub-read">
-              <b>{monthLabel}</b> {valueAt(series.values, cursor).toFixed(kpi.decimals)} {kpi.unit}
-              {following ? <em>following replay</em> : null}
-              {scrub !== null ? (
-                <button type="button" className="link" onClick={() => setScrub(null)}>
-                  {playbackIndex !== null ? 'Follow replay' : 'Back to today'}
+              <b>{monthLabel}</b> {valueAt(values, cursor).toFixed(kpi.decimals)} {kpi.unit}
+              {asOf.index != null ? (
+                <button type="button" className="link" onClick={() => asOfStore.live()}>
+                  Live
                 </button>
               ) : null}
             </div>
           </div>
+          )}
         </div>
         <Side id={id} state={state} gold={gold} />
       </div>

@@ -683,3 +683,262 @@
 .fallback-stage.gold .hero {
   --accent: var(--ratawi-gold);
 }
+
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-title-row h1 {
+  margin: 0;
+}
+
+.alharis-home {
+  display: inline-flex;
+  flex: none;
+  border-radius: 8px;
+  line-height: 0;
+  opacity: 0.92;
+  transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+}
+
+.alharis-home:hover,
+.alharis-home:focus-visible {
+  opacity: 1;
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 10px rgba(43, 231, 255, 0.35));
+  outline: none;
+}
+
+.alharis-home img {
+  display: block;
+}
+
+.chart-panel-wrap {
+  grid-column: 1 / -1;
+}
+
+.count-text {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-family: var(--ratawi-font-numeric);
+}
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  color: #f5a3a3;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.save-ok {
+  align-self: center;
+  color: var(--ratawi-success);
+  font-size: 12px;
+}
+
+.preset-block {
+  border: 1px solid var(--ratawi-border-subtle);
+  border-radius: 10px;
+  padding: 12px 14px 16px;
+  margin: 0 0 14px;
+}
+
+.preset-block legend {
+  padding: 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ratawi-cyan);
+  font-weight: 700;
+}
+
+.preset-block .unit {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: var(--ratawi-muted);
+}
+
+.presets-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.presets-cols.stacked,
+.presets-form.compact .presets-cols {
+  grid-template-columns: 1fr;
+}
+
+.admin-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-toggle .chip,
+.op-rehearsal .chip,
+.oil-timeline-actions .chip {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 208, 225, 0.28);
+  background: rgba(8, 14, 22, 0.62);
+  color: var(--ratawi-text);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.admin-toggle .chip.on,
+.oil-timeline-actions .chip.on {
+  border-color: #4dd0e1;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(77, 208, 225, 0.35);
+}
+
+.settings-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.op-rehearsal {
+  margin-top: 26px;
+  border-top: 1px solid var(--ratawi-border-subtle);
+  padding-top: 14px;
+}
+
+.op-rehearsal summary {
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ratawi-cyan);
+  font-weight: 700;
+}
+
+.playback-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.reveal-playback.interactive {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: auto;
+  margin-top: 8px;
+}
+
+.reveal-playback.interactive input[type='range'] {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.oil-timeline {
+  margin-top: 12px;
+}
+
+.oil-timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.oil-timeline-title {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
+.oil-timeline-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.oil-timeline input[type='range'] {
+  width: 100%;
+  accent-color: var(--ratawi-cyan);
+}
+
+.oil-months {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.oil-month {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--ratawi-muted);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.oil-month.on {
+  color: #fff;
+}
+
+.oil-month.forecast {
+  font-style: italic;
+}
+
+.oil-compare {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.oil-compare .k {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+  margin-bottom: 2px;
+}
+
+.oil-compare b {
+  font-family: var(--ratawi-font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--ratawi-text-strong);
+}
+
+.oil-compare small {
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--ratawi-muted);
+}
+
+.oil-compare small.up {
+  color: var(--ratawi-success);
+}
+
+.oil-compare small.down {
+  color: #f5a3a3;
+}
+
+.tile .value,
+.hero-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

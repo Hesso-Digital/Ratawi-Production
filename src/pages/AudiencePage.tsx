@@ -6,6 +6,8 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { ClassicAudience } from './ClassicAudience';
 import { FallbackAudience } from './FallbackAudience';
+import { AdminMenu } from '../components/reveal/AdminMenu';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { useCeremonyStore } from '../data/store';
 import type { ViewMode } from '../data/types';
 
@@ -20,24 +22,34 @@ const RevealAudience = lazy(() => loadReveal().then((m) => ({ default: m.RevealA
 
 export function AudiencePage({ forceView }: { forceView?: ViewMode }) {
   const store = useCeremonyStore();
+  const osReduced = usePrefersReducedMotion();
+  const reduced = osReduced || store.settings.reducedMotion;
   const [autoFallback, setAutoFallback] = useState<string | null>(null);
   const onFallback = useCallback((reason: string) => setAutoFallback(reason), []);
 
-  const view = forceView ?? (autoFallback ? 'classic' : store.view);
+  const view = forceView ?? (autoFallback || reduced ? 'classic' : store.view);
 
   useEffect(() => {
     if (view === 'reveal') loadReveal();
   }, [view]);
 
+  let screen;
   if (view === 'reveal') {
-    return (
+    screen = (
       <Suspense fallback={<ClassicAudience />}>
         <RevealAudience onFallback={onFallback} />
       </Suspense>
     );
+  } else if (view === 'fallback') {
+    screen = <FallbackAudience />;
+  } else {
+    screen = <ClassicAudience />;
   }
-  if (view === 'fallback') {
-    return <FallbackAudience />;
-  }
-  return <ClassicAudience />;
+
+  return (
+    <>
+      {screen}
+      <AdminMenu />
+    </>
+  );
 }

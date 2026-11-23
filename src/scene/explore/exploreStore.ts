@@ -27,6 +27,8 @@ export type ExploreState = {
   returnSeq: number;
   /** Incremented to ask the rig to start free roam from the current view. */
   exploreSeq: number;
+  /** Incremented to ask the rig to yaw the view so north is up, keeping target and distance. */
+  northUpSeq: number;
   /** KPI whose detail drawer is open (explore mode only). */
   kpiId: KpiId | null;
   /** Focused area (keys 1–8). Null in show mode and before a viewpoint is chosen. */
@@ -42,6 +44,7 @@ let state: ExploreState = {
   fly: null,
   returnSeq: 0,
   exploreSeq: 0,
+  northUpSeq: 0,
   kpiId: null,
   areaId: null,
 };
@@ -84,6 +87,10 @@ export const exploreStore = {
   startExplore() {
     set({ exploreSeq: state.exploreSeq + 1 });
   },
+  /** Yaw the live camera so north is up. Enters explore if the show is running. */
+  orientNorthUp() {
+    set({ northUpSeq: state.northUpSeq + 1 });
+  },
   backToShow() {
     set({ selectedId: null, hoveredId: null, kpiId: null, areaId: null, returnSeq: state.returnSeq + 1 });
   },
@@ -98,7 +105,7 @@ export const exploreStore = {
   },
   /** Test/reset hook: back to a clean show state. */
   reset() {
-    set({ mode: 'show', hoveredId: null, selectedId: null, fly: null, kpiId: null, areaId: null });
+    set({ mode: 'show', hoveredId: null, selectedId: null, fly: null, kpiId: null, areaId: null, northUpSeq: 0 });
   },
 };
 

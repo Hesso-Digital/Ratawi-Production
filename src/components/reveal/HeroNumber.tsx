@@ -1,6 +1,8 @@
 import { WORDING } from '../../data/ceremonyConfig';
 import { BUDGET_KBOPD, TARGET_KBOPD } from '../../data/defaults';
 import type { SceneState } from '../../scene/ceremonyTimeline';
+import { CountText } from '../CountText';
+import { OilCompare } from './OilTimeline';
 
 function HeroDrop({ gold }: { gold: boolean }) {
   const stroke = gold ? '#f5d07a' : '#2be7ff';
@@ -19,17 +21,17 @@ function HeroDrop({ gold }: { gold: boolean }) {
 
 export function HeroNumber({ state }: { state: SceneState }) {
   const gold = state.gold > 0.5;
+  const commitment = state.commitmentKbopd ?? BUDGET_KBOPD;
+  const target = state.targetKbopd ?? TARGET_KBOPD;
   const fillPct = Math.min(100, (state.oil / 140) * 100);
   const tickPct = (v: number) => (v / 140) * 100;
-  const statusText = gold
-    ? 'Above target · 120 kbopd reached'
-    : state.step >= 2
-      ? `AGUP coming online · +${(state.oil - BUDGET_KBOPD).toFixed(1)} vs ${WORDING.commitmentLabel.toLowerCase()}`
-      : state.step === 1
-        ? `Valves open · +${(state.oil - BUDGET_KBOPD).toFixed(1)} vs ${WORDING.commitmentLabel.toLowerCase()}`
-        : state.oil > BUDGET_KBOPD
-          ? `Above ${WORDING.commitmentLabel.toLowerCase()} · +${(state.oil - BUDGET_KBOPD).toFixed(1)}`
-          : `Ramping to ${WORDING.commitmentLabel.toLowerCase()} · ${state.oil.toFixed(1)} of ${BUDGET_KBOPD}`;
+  const statusText = gold || state.oil >= target - 0.05
+    ? `Above target · ${target} kbopd reached`
+    : state.agupWave > 0 && state.agupWave < 0.999
+      ? `Production rising · +${(state.oil - commitment).toFixed(1)} vs ${WORDING.commitmentLabel.toLowerCase()}`
+      : state.oil > commitment
+        ? `Above ${WORDING.commitmentLabel.toLowerCase()} · +${(state.oil - commitment).toFixed(1)}`
+        : `Daily production · ${state.oil.toFixed(1)} of ${commitment}`;
 
   return (
     <div className="reveal-hero">
@@ -38,7 +40,7 @@ export function HeroNumber({ state }: { state: SceneState }) {
         <span>Oil production · Daily</span>
       </div>
       <div className="big">
-        <span className="n">{state.oil.toFixed(1)}</span>
+        <span className="n"><CountText value={state.oil} decimals={1} /></span>
         <span className="u">kbopd</span>
       </div>
       <div className="scale">
@@ -47,17 +49,18 @@ export function HeroNumber({ state }: { state: SceneState }) {
         <div className="tick" style={{ left: `${tickPct(0)}%` }}>
           <span>0</span>
         </div>
-        <div className="tick" style={{ left: `${tickPct(BUDGET_KBOPD)}%` }}>
-          <span>{BUDGET_KBOPD} · {WORDING.commitmentLabel}</span>
+        <div className="tick" style={{ left: `${tickPct(commitment)}%` }}>
+          <span>{commitment} · {WORDING.commitmentLabel}</span>
         </div>
-        <div className="tick target" style={{ left: `${tickPct(TARGET_KBOPD)}%` }}>
-          <span>{TARGET_KBOPD} · {WORDING.targetLabel}</span>
+        <div className="tick target" style={{ left: `${tickPct(target)}%` }}>
+          <span>{target} · {WORDING.targetLabel}</span>
         </div>
       </div>
       <div className="status">
         <i />
         <span>{statusText}</span>
       </div>
+      <OilCompare actual={state.oil} commitment={commitment} target={target} />
     </div>
   );
 }

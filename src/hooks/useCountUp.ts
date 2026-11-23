@@ -12,7 +12,7 @@ function formatValue(value: number, decimals: number) {
 /** GSAP count-up, same pattern as the WBMS command-centre hook. */
 export function useCountUp<T extends HTMLElement>(
   value: number,
-  { decimals = 0, durationS = 0.8 }: { decimals?: number; durationS?: number } = {},
+  { decimals = 0, durationS = 0.42 }: { decimals?: number; durationS?: number } = {},
 ) {
   const ref = useRef<T>(null);
   const shown = useRef<{ n: number } | null>(null);
@@ -36,7 +36,7 @@ export function useCountUp<T extends HTMLElement>(
     const tween = gsap.to(state, {
       n: value,
       duration: durationS,
-      ease: 'power2.out',
+      ease: 'expo.out',
       overwrite: 'auto',
       onUpdate: write,
       onComplete: write,

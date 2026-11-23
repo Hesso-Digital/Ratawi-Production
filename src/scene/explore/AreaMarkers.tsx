@@ -4,11 +4,13 @@
  */
 import { Html } from '@react-three/drei';
 import { AREA_MARKERS } from './areas';
+import { useCeremonyStore } from '../../data/store';
 import { exploreStore, useExploreState } from './exploreStore';
 
 export function AreaMarkers() {
   const { mode, areaId } = useExploreState();
-  if (mode === 'show' || mode === 'returning') return null;
+  const show = useCeremonyStore().settings.showAreaMarkers;
+  if (!show || mode === 'show' || mode === 'returning') return null;
 
   return (
     <group>

@@ -55,12 +55,10 @@ test('explore: orbit, viewpoints, inspect CPF-1 and a wellhead, cue returns to s
   // An operator cue hands control back to the show camera and closes the panel.
   const operator = await context.newPage();
   await operator.goto('/operator');
-  await operator.fill('input[aria-label="Operator PIN"]', '12026');
-  await operator.click('button:has-text("Unlock")');
-  await operator.click('button:has-text("Step 1 · Valves open")');
+  await expect(operator.getByRole('button', { name: 'Bring AGUP online' })).toBeVisible();
+  await operator.getByRole('button', { name: 'Bring AGUP online' }).click();
   await expect(audience.locator('.explore-panel')).toHaveCount(0, { timeout: 10000 });
   await expect(audience.locator('.explore-overlay')).not.toHaveClass(/on/, { timeout: 10000 });
-  await expect(audience.locator('.reveal-hero .big .n')).toHaveText('110.0', { timeout: 15000 });
 
   expect(errors).toEqual([]);
   await context.close();

@@ -1359,3 +1359,223 @@
   background: rgba(255, 198, 90, 0.25);
   color: #ffc65a;
 }
+
+.reveal-brand .brand-title-row {
+  margin-top: 8px;
+}
+
+.reveal-brand .brand-title-row h1 {
+  margin: 0;
+  font-size: 38px;
+}
+
+.reveal-brand .alharis-home img {
+  height: 38px;
+  width: 38px;
+}
+
+.reveal-clock {
+  margin-top: 8px;
+  font-family: var(--ratawi-font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ratawi-muted);
+}
+
+button.reveal-compass {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  z-index: 5;
+}
+
+button.reveal-compass:hover .lbl,
+button.reveal-compass:focus-visible .lbl {
+  color: #fff;
+}
+
+button.reveal-compass:hover svg circle,
+button.reveal-compass:focus-visible svg circle {
+  stroke: rgba(43, 231, 255, 0.7);
+}
+
+button.reveal-compass:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 8px rgba(43, 231, 255, 0.4));
+}
+
+.reveal-hero .n,
+.reveal-kpi .v,
+.kpi-drawer .big {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.reveal-hud .oil-timeline {
+  position: absolute;
+  left: 56px;
+  bottom: 28px;
+  width: min(720px, calc(100% - 420px));
+  z-index: 4;
+  padding: 10px 14px 8px;
+  border-radius: 12px;
+  background: rgba(8, 14, 22, 0.58);
+  backdrop-filter: var(--ratawi-backdrop);
+  pointer-events: auto;
+}
+
+/* Corner admin menu */
+.admin-menu {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.admin-menu-btn {
+  pointer-events: auto;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(200, 220, 240, 0.55);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.35s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.admin-menu.visible .admin-menu-btn,
+.admin-menu.open .admin-menu-btn,
+.admin-menu-btn:hover,
+.admin-menu-btn:focus-visible {
+  opacity: 0.85;
+}
+
+.admin-menu-btn:hover,
+.admin-menu-btn:focus-visible {
+  opacity: 1;
+  color: #fff;
+  background: rgba(8, 14, 22, 0.55);
+  outline: none;
+}
+
+.admin-drawer {
+  pointer-events: auto;
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 420px;
+  max-height: min(920px, calc(100vh - 80px));
+  overflow: auto;
+  padding: 16px 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(77, 208, 225, 0.22);
+  background: linear-gradient(160deg, rgba(12, 20, 30, 0.96), rgba(8, 12, 20, 0.98));
+  backdrop-filter: var(--ratawi-backdrop);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  color: var(--ratawi-text);
+}
+
+.admin-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 231, 255, 0.16);
+  color: #bff4fb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-name {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ratawi-text-strong);
+}
+
+.admin-role {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ratawi-muted);
+}
+
+.admin-drawer-body h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.admin-section {
+  margin: 0 0 16px;
+}
+
+.admin-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ratawi-cyan);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.admin-wide {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.admin-back {
+  border: 0;
+  background: transparent;
+  color: var(--ratawi-cyan);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.admin-operator-link {
+  display: inline-flex;
+  margin-top: 4px;
+  color: #bff4fb;
+  font-size: 13px;
+}
+
+.admin-hint {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--ratawi-muted);
+}
+
+.admin-hint kbd {
+  font-family: var(--ratawi-font-numeric);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(77, 208, 225, 0.14);
+  color: #4dd0e1;
+}
