@@ -31,6 +31,14 @@ function Slot({ name, fallback, children }: { name: FieldModelName; fallback: Re
   );
 }
 
+/** Records which GLBs actually rendered (read by the release checks as window.__ratawiModels). */
+function useMarkLoaded(name: FieldModelName) {
+  useEffect(() => {
+    const w = window as unknown as { __ratawiModels?: string[] };
+    w.__ratawiModels = [...new Set([...(w.__ratawiModels ?? []), name])];
+  }, [name]);
+}
+
 function flicker(node: Object3D | undefined, t: number, k: number, seed: number) {
   if (!node) return;
   node.visible = k > 0.02;
@@ -40,6 +48,7 @@ function flicker(node: Object3D | undefined, t: number, k: number, seed: number)
 
 function CPF1Glb({ shadows }: { shadows: boolean }) {
   const gltf = useFieldGLTF('cpf1');
+  useMarkLoaded('cpf1');
   const sceneClock = useSceneClockRef();
   const [cx, cz] = CPF_WORLD;
   const y = heightAt(cx, cz) + 0.02;
@@ -71,6 +80,7 @@ function CPF1Glb({ shadows }: { shadows: boolean }) {
 
 function AG25Glb({ shadows }: { shadows: boolean }) {
   const gltf = useFieldGLTF('ag25');
+  useMarkLoaded('ag25');
   const sceneClock = useSceneClockRef();
   const [ax, az] = AG25_WORLD;
   const y = heightAt(ax, az) + 0.02;
@@ -121,6 +131,7 @@ function useInstancedParts(root: Object3D, count: number) {
 
 function WellSet({ name, wells, shadows }: { name: 'wellhead' | 'wellhead_agup'; wells: typeof WORLD_WELLS; shadows: boolean }) {
   const gltf = useFieldGLTF(name);
+  useMarkLoaded(name);
   const root = useMemo(() => cloneForScene(gltf.scene, { shadows }), [gltf, shadows]);
   const parts = useInstancedParts(root, wells.length);
   const group = useRef<Object3D>(null);
@@ -168,6 +179,7 @@ function WellsGlb({ quality }: { quality: QualityProfile }) {
 
 function ExportMarkersGlb({ shadows }: { shadows: boolean }) {
   const gltf = useFieldGLTF('export_marker');
+  useMarkLoaded('export_marker');
   const roots = useMemo(
     () => EXPORT_LINE_WORLD.slice(1).map(() => cloneForScene(gltf.scene, { shadows })),
     [gltf, shadows],
@@ -192,9 +204,15 @@ export function FieldFacilities({ quality }: { quality: QualityProfile }) {
       <Slot name="ag25" fallback={<AG25 />}>
         <AG25Glb shadows={quality.shadows} />
       </Slot>
-      <Slot name="wellhead" fallback={<Wells quality={quality} />}>
-        {hasFieldModel('wellhead_agup') ? <WellsGlb quality={quality} /> : <Wells quality={quality} />}
-      </Slot>
+      {/* The detailed wellheads add ~280k triangles across 32 wells; the low profile
+          (?quality=low, laptops) keeps the light procedural wells. */}
+      {quality.id === 'low' ? (
+        <Wells quality={quality} />
+      ) : (
+        <Slot name="wellhead" fallback={<Wells quality={quality} />}>
+          {hasFieldModel('wellhead_agup') ? <WellsGlb quality={quality} /> : <Wells quality={quality} />}
+        </Slot>
+      )}
       <Slot name="export_marker" fallback={null}>
         <ExportMarkersGlb shadows={quality.shadows} />
       </Slot>

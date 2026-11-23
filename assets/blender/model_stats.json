@@ -1,180 +1,593 @@
 {
   "wellhead": {
-    "triangles": 912,
-    "bytes": 53796,
-    "size_m": [
-      1.48,
-      1.1,
-      1.24
-    ],
-    "nodes": [
-      "Beacon",
-      "ValveLight",
-      "wellhead_Concrete",
-      "wellhead_Steel",
-      "wellhead_SteelDark",
-      "wellhead_ValveRed"
-    ],
-    "preview": "assets/blender/previews/wellhead.png"
+    "v1": {
+      "triangles": 912,
+      "bytes": 53796,
+      "size_m": [
+        1.48,
+        1.1,
+        1.24
+      ],
+      "nodes": [
+        "Beacon",
+        "ValveLight",
+        "wellhead_Concrete",
+        "wellhead_Steel",
+        "wellhead_SteelDark",
+        "wellhead_ValveRed"
+      ],
+      "preview": "assets/blender/previews/wellhead.png"
+    },
+    "v2": {
+      "triangles": 8652,
+      "raw_bytes": 1100344,
+      "texture_px": 1024,
+      "size_m": [
+        1.51,
+        1.15,
+        1.24
+      ],
+      "nodes": [
+        "Beacon",
+        "ValveLight",
+        "wellhead_Body",
+        "wellhead"
+      ],
+      "preview": "assets/blender/previews/v2/wellhead.png",
+      "bytes": 782816,
+      "texture_bytes": 661772,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_Cyan",
+        "wellhead_PBR"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 3,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/wellhead_v1_vs_v2.jpg"
+    }
   },
   "wellhead_agup": {
-    "triangles": 1032,
-    "bytes": 63108,
-    "size_m": [
-      1.68,
-      1.1,
-      1.64
-    ],
-    "nodes": [
-      "Beacon",
-      "PanelLight",
-      "StatusRing",
-      "ValveLight",
-      "wellhead_agup_Concrete",
-      "wellhead_agup_PaintWhite",
-      "wellhead_agup_Steel",
-      "wellhead_agup_SteelDark",
-      "wellhead_agup_ValveRed"
-    ],
-    "preview": "assets/blender/previews/wellhead_agup.png"
+    "v1": {
+      "triangles": 1032,
+      "bytes": 63108,
+      "size_m": [
+        1.68,
+        1.1,
+        1.64
+      ],
+      "nodes": [
+        "Beacon",
+        "PanelLight",
+        "StatusRing",
+        "ValveLight",
+        "wellhead_agup_Concrete",
+        "wellhead_agup_PaintWhite",
+        "wellhead_agup_Steel",
+        "wellhead_agup_SteelDark",
+        "wellhead_agup_ValveRed"
+      ],
+      "preview": "assets/blender/previews/wellhead_agup.png"
+    },
+    "v2": {
+      "triangles": 9408,
+      "raw_bytes": 1149372,
+      "texture_px": 1024,
+      "size_m": [
+        1.71,
+        1.15,
+        1.64
+      ],
+      "nodes": [
+        "Beacon",
+        "PanelLight",
+        "StatusRing",
+        "ValveLight",
+        "wellhead_agup_Body",
+        "wellhead_agup"
+      ],
+      "preview": "assets/blender/previews/v2/wellhead_agup.png",
+      "bytes": 806008,
+      "texture_bytes": 672780,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_Gold",
+        "Emit_GoldRing",
+        "wellhead_agup_PBR"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 4,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/wellhead_agup_v1_vs_v2.jpg"
+    }
   },
   "cpf1": {
-    "triangles": 3034,
-    "bytes": 199872,
-    "size_m": [
-      15.49,
-      7.3,
-      12.68
-    ],
-    "nodes": [
-      "AviationLights",
-      "Flame_Core",
-      "Flame_Tip",
-      "InletValve_1",
-      "InletValve_2",
-      "InletValve_3",
-      "MastLights",
-      "Pilot",
-      "TankLights",
-      "WindowLights",
-      "cpf1_Cladding",
-      "cpf1_Concrete",
-      "cpf1_PaintWhite",
-      "cpf1_PipeYellow",
-      "cpf1_RackSteel",
-      "cpf1_RoofBlue",
-      "cpf1_Steel",
-      "cpf1_SteelDark"
-    ],
-    "preview": "assets/blender/previews/cpf1.png"
+    "v1": {
+      "triangles": 3034,
+      "bytes": 199872,
+      "size_m": [
+        15.49,
+        7.3,
+        12.68
+      ],
+      "nodes": [
+        "AviationLights",
+        "Flame_Core",
+        "Flame_Tip",
+        "InletValve_1",
+        "InletValve_2",
+        "InletValve_3",
+        "MastLights",
+        "Pilot",
+        "TankLights",
+        "WindowLights",
+        "cpf1_Cladding",
+        "cpf1_Concrete",
+        "cpf1_PaintWhite",
+        "cpf1_PipeYellow",
+        "cpf1_RackSteel",
+        "cpf1_RoofBlue",
+        "cpf1_Steel",
+        "cpf1_SteelDark"
+      ],
+      "preview": "assets/blender/previews/cpf1.png"
+    },
+    "v2": {
+      "triangles": 45936,
+      "raw_bytes": 3303952,
+      "texture_px": 1024,
+      "size_m": [
+        15.72,
+        7.4,
+        12.97
+      ],
+      "nodes": [
+        "AviationLights",
+        "cpf1_Body",
+        "Flame_Core",
+        "Flame_Tip",
+        "InletValve_1",
+        "InletValve_2",
+        "InletValve_3",
+        "MastLights",
+        "Pilot",
+        "TankLights",
+        "WindowLights",
+        "cpf1"
+      ],
+      "preview": "assets/blender/previews/v2/cpf1.png",
+      "bytes": 1485468,
+      "texture_bytes": 922450,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_Red",
+        "cpf1_PBR",
+        "Emit_FlameCore",
+        "Emit_FlameTip",
+        "Emit_Valve",
+        "Emit_White",
+        "Emit_Pilot",
+        "Emit_Warm"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 11,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/cpf1_v1_vs_v2.jpg"
+    }
   },
   "ag25": {
-    "triangles": 2600,
-    "bytes": 143168,
-    "size_m": [
-      11.19,
-      5.43,
-      7.94
-    ],
-    "nodes": [
-      "AviationLights",
-      "Flame_Core",
-      "Flame_Tip",
-      "GasLights",
-      "MastLights",
-      "Pilot",
-      "ag25_Cladding",
-      "ag25_Concrete",
-      "ag25_PaintWhite",
-      "ag25_PipeYellow",
-      "ag25_RackSteel",
-      "ag25_RoofBlue",
-      "ag25_Steel",
-      "ag25_SteelDark"
-    ],
-    "preview": "assets/blender/previews/ag25.png"
+    "v1": {
+      "triangles": 2600,
+      "bytes": 143168,
+      "size_m": [
+        11.19,
+        5.43,
+        7.94
+      ],
+      "nodes": [
+        "AviationLights",
+        "Flame_Core",
+        "Flame_Tip",
+        "GasLights",
+        "MastLights",
+        "Pilot",
+        "ag25_Cladding",
+        "ag25_Concrete",
+        "ag25_PaintWhite",
+        "ag25_PipeYellow",
+        "ag25_RackSteel",
+        "ag25_RoofBlue",
+        "ag25_Steel",
+        "ag25_SteelDark"
+      ],
+      "preview": "assets/blender/previews/ag25.png"
+    },
+    "v2": {
+      "triangles": 31716,
+      "raw_bytes": 2461652,
+      "texture_px": 1024,
+      "size_m": [
+        11.4,
+        5.5,
+        8.08
+      ],
+      "nodes": [
+        "ag25_Body",
+        "AviationLights",
+        "Flame_Core",
+        "Flame_Tip",
+        "GasLights",
+        "MastLights",
+        "Pilot",
+        "ag25"
+      ],
+      "preview": "assets/blender/previews/v2/ag25.png",
+      "bytes": 1238764,
+      "texture_bytes": 846576,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "ag25_PBR",
+        "Emit_Red",
+        "Emit_FlameCore",
+        "Emit_FlameTip",
+        "Emit_Warm",
+        "Emit_White",
+        "Emit_Pilot"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 7,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/ag25_v1_vs_v2.jpg"
+    }
   },
   "pipeline_segment": {
-    "triangles": 180,
-    "bytes": 14712,
-    "size_m": [
-      4.0,
-      0.41,
-      0.5
-    ],
-    "nodes": [
-      "pipeline_segment_Concrete",
-      "pipeline_segment_Steel",
-      "pipeline_segment_SteelDark"
-    ],
-    "preview": "assets/blender/previews/pipeline_segment.png"
+    "v1": {
+      "triangles": 180,
+      "bytes": 14712,
+      "size_m": [
+        4.0,
+        0.41,
+        0.5
+      ],
+      "nodes": [
+        "pipeline_segment_Concrete",
+        "pipeline_segment_Steel",
+        "pipeline_segment_SteelDark"
+      ],
+      "preview": "assets/blender/previews/pipeline_segment.png"
+    },
+    "v2": {
+      "triangles": 1340,
+      "raw_bytes": 127432,
+      "texture_px": 512,
+      "size_m": [
+        4.02,
+        0.42,
+        0.5
+      ],
+      "nodes": [
+        "FlowGlow",
+        "pipeline_segment_Body",
+        "pipeline_segment"
+      ],
+      "preview": "assets/blender/previews/v2/pipeline_segment.png",
+      "bytes": 76404,
+      "texture_bytes": 52908,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_FlowGlow",
+        "pipeline_segment_PBR"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 2,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/pipeline_segment_v1_vs_v2.jpg"
+    }
   },
   "pipe_rack": {
-    "triangles": 336,
-    "bytes": 26888,
-    "size_m": [
-      4.24,
-      1.22,
-      1.14
-    ],
-    "nodes": [
-      "pipe_rack_Concrete",
-      "pipe_rack_PipeYellow",
-      "pipe_rack_RackSteel",
-      "pipe_rack_Steel",
-      "pipe_rack_SteelDark"
-    ],
-    "preview": "assets/blender/previews/pipe_rack.png"
+    "v1": {
+      "triangles": 336,
+      "bytes": 26888,
+      "size_m": [
+        4.24,
+        1.22,
+        1.14
+      ],
+      "nodes": [
+        "pipe_rack_Concrete",
+        "pipe_rack_PipeYellow",
+        "pipe_rack_RackSteel",
+        "pipe_rack_Steel",
+        "pipe_rack_SteelDark"
+      ],
+      "preview": "assets/blender/previews/pipe_rack.png"
+    },
+    "v2": {
+      "triangles": 3916,
+      "raw_bytes": 332832,
+      "texture_px": 512,
+      "size_m": [
+        4.3,
+        1.25,
+        1.2
+      ],
+      "nodes": [
+        "FlowGlow",
+        "pipe_rack_Body",
+        "pipe_rack"
+      ],
+      "preview": "assets/blender/previews/v2/pipe_rack.png",
+      "bytes": 178408,
+      "texture_bytes": 122020,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_FlowGlow",
+        "pipe_rack_PBR"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 2,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/pipe_rack_v1_vs_v2.jpg"
+    }
   },
   "export_marker": {
-    "triangles": 192,
-    "bytes": 17976,
-    "size_m": [
-      0.78,
-      1.99,
-      0.5
-    ],
-    "nodes": [
-      "Beacon",
-      "export_marker_Concrete",
-      "export_marker_PaintWhite",
-      "export_marker_PipeYellow",
-      "export_marker_SteelDark",
-      "export_marker_ValveRed"
-    ],
-    "preview": "assets/blender/previews/export_marker.png"
+    "v1": {
+      "triangles": 192,
+      "bytes": 17976,
+      "size_m": [
+        0.78,
+        1.99,
+        0.5
+      ],
+      "nodes": [
+        "Beacon",
+        "export_marker_Concrete",
+        "export_marker_PaintWhite",
+        "export_marker_PipeYellow",
+        "export_marker_SteelDark",
+        "export_marker_ValveRed"
+      ],
+      "preview": "assets/blender/previews/export_marker.png"
+    },
+    "v2": {
+      "triangles": 1176,
+      "raw_bytes": 142348,
+      "texture_px": 512,
+      "size_m": [
+        0.77,
+        2.04,
+        0.5
+      ],
+      "nodes": [
+        "Beacon",
+        "export_marker_Body",
+        "export_marker"
+      ],
+      "preview": "assets/blender/previews/v2/export_marker.png",
+      "bytes": 103116,
+      "texture_bytes": 82828,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_Red",
+        "export_marker_PBR"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 2,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/export_marker_v1_vs_v2.jpg"
+    }
   },
   "flare": {
-    "triangles": 348,
-    "bytes": 30912,
-    "size_m": [
-      4.5,
-      7.25,
-      4.17
-    ],
-    "nodes": [
-      "AviationLights",
-      "Flame_Core",
-      "Flame_Tip",
-      "Pilot",
-      "flare_Concrete",
-      "flare_PipeYellow",
-      "flare_Steel",
-      "flare_SteelDark"
-    ],
-    "preview": "assets/blender/previews/flare.png"
+    "v1": {
+      "triangles": 348,
+      "bytes": 30912,
+      "size_m": [
+        4.5,
+        7.25,
+        4.17
+      ],
+      "nodes": [
+        "AviationLights",
+        "Flame_Core",
+        "Flame_Tip",
+        "Pilot",
+        "flare_Concrete",
+        "flare_PipeYellow",
+        "flare_Steel",
+        "flare_SteelDark"
+      ],
+      "preview": "assets/blender/previews/flare.png"
+    },
+    "v2": {
+      "triangles": 7052,
+      "raw_bytes": 529672,
+      "texture_px": 512,
+      "size_m": [
+        4.99,
+        7.35,
+        4.65
+      ],
+      "nodes": [
+        "AviationLights",
+        "Flame_Core",
+        "Flame_Tip",
+        "flare_Body",
+        "Pilot",
+        "flare"
+      ],
+      "preview": "assets/blender/previews/v2/flare.png",
+      "bytes": 273376,
+      "texture_bytes": 177444,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "Emit_Red",
+        "Emit_FlameCore",
+        "Emit_FlameTip",
+        "flare_PBR",
+        "Emit_Pilot"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 2,
+        "infos": 5,
+        "raw_errors": 0,
+        "raw_warnings": 2
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/flare_v1_vs_v2.jpg"
+    }
   },
   "terrain_tile": {
-    "triangles": 1152,
-    "bytes": 28168,
-    "size_m": [
-      40.0,
-      1.07,
-      40.0
-    ],
-    "nodes": [
-      "terrain_tile_DesertNight"
-    ],
-    "preview": "assets/blender/previews/terrain_tile.png"
+    "v1": {
+      "triangles": 1152,
+      "bytes": 28168,
+      "size_m": [
+        40.0,
+        1.07,
+        40.0
+      ],
+      "nodes": [
+        "terrain_tile_DesertNight"
+      ],
+      "preview": "assets/blender/previews/terrain_tile.png"
+    },
+    "v2": {
+      "triangles": 8192,
+      "raw_bytes": 597172,
+      "texture_px": 1024,
+      "size_m": [
+        40.0,
+        1.09,
+        40.0
+      ],
+      "nodes": [
+        "terrain_tile_Body",
+        "terrain_tile"
+      ],
+      "preview": "assets/blender/previews/v2/terrain_tile.png",
+      "bytes": 445772,
+      "texture_bytes": 410576,
+      "images": [
+        "image/webp",
+        "image/webp",
+        "image/webp",
+        "image/webp"
+      ],
+      "materials": [
+        "DesertSand"
+      ],
+      "validator": {
+        "errors": 0,
+        "warnings": 3,
+        "infos": 1,
+        "raw_errors": 0,
+        "raw_warnings": 3
+      },
+      "extensionsRequired": [
+        "EXT_meshopt_compression",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "compare": "assets/blender/previews/v2/terrain_tile_v1_vs_v2.jpg"
+    }
   }
 }

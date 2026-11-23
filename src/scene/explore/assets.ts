@@ -20,6 +20,7 @@ import {
 import { cameraAt, type CameraState, type SceneState } from '../ceremonyTimeline';
 import { GAS_MIN_TO_OPERATE_MMSCFD, TARGET_KBOPD } from '../../data/defaults';
 import { WELLS as WELL_CONFIG } from '../../data/ceremonyConfig';
+import type { KpiId } from '../../data/kpis';
 
 export type V3 = [number, number, number];
 
@@ -277,4 +278,16 @@ export const VIEW_PRESETS: ViewPreset[] = [
 
 export function presetById(id: string): ViewPreset | undefined {
   return VIEW_PRESETS.find((p) => p.id === id);
+}
+
+/** KPIs related to an asset, so selecting it in 3D highlights their tiles and charts. */
+export function relatedKpis(id: string | null | undefined): KpiId[] {
+  if (!id) return [];
+  if (id === 'cpf1') return ['oil', 'export', 'efficiency'];
+  if (id === 'ag25' || id === 'gas-line' || id === 'flare') return ['gas'];
+  if (id === 'export-line') return ['export', 'bsw', 'salt'];
+  if (id === 'gathering') return ['oil', 'wells'];
+  if (id === 'agup-lines') return ['wells', 'oil'];
+  if (id.startsWith('well-')) return ['wells', 'oil'];
+  return [];
 }

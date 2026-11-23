@@ -903,3 +903,400 @@
   font-size: 11px;
   color: var(--ratawi-subtle);
 }
+
+/* ---------------------------------------------------------------------------
+ * Interactive data: KPI tiles, KPI drawer, charts, gauges, well status
+ * ------------------------------------------------------------------------- */
+.reveal-hud.interactive .reveal-kpi.clickable,
+.reveal-hud.interactive .reveal-hero {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.reveal-kpi.clickable {
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.reveal-kpi.clickable:hover,
+.reveal-kpi.clickable:focus-visible {
+  background: linear-gradient(180deg, rgba(77, 208, 225, 0.08), transparent 80%);
+  outline: none;
+}
+
+.reveal-kpi.related {
+  background: linear-gradient(180deg, rgba(255, 179, 0, 0.12), transparent 85%);
+  box-shadow: inset 0 2px 0 #ffb300;
+}
+
+.reveal-kpi.open {
+  background: linear-gradient(180deg, rgba(77, 208, 225, 0.14), transparent 85%);
+  box-shadow: inset 0 2px 0 #4dd0e1;
+}
+
+.reveal-kpi .kpi-tip {
+  position: absolute;
+  left: 20px;
+  bottom: calc(100% + 10px);
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(8, 13, 22, 0.92);
+  border: 1px solid rgba(77, 208, 225, 0.3);
+  color: var(--ratawi-text);
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.reveal-kpi.clickable:hover .kpi-tip {
+  opacity: 1;
+  transform: none;
+}
+
+.explore-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.explore-related .chip,
+.kpi-drawer .chip {
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 208, 225, 0.35);
+  background: rgba(77, 208, 225, 0.06);
+  color: #bff4fb;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.explore-related .chip:hover,
+.kpi-drawer .chip:hover {
+  border-color: #4dd0e1;
+  box-shadow: 0 0 12px rgba(77, 208, 225, 0.3);
+}
+
+.kpi-drawer {
+  position: absolute;
+  left: 56px;
+  bottom: 172px;
+  width: 980px;
+  padding: 16px 20px 14px;
+  border-radius: var(--ratawi-radius);
+  border: 1px solid rgba(77, 208, 225, 0.28);
+  background: var(--ratawi-sheen), rgba(8, 13, 22, 0.84);
+  backdrop-filter: var(--ratawi-backdrop);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  color: var(--ratawi-text-strong);
+  pointer-events: auto;
+  animation: explore-panel-in 0.28s ease-out;
+}
+
+.kpi-drawer.related {
+  border-color: rgba(255, 179, 0, 0.5);
+}
+
+.kpi-drawer header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.kpi-drawer .eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4dd0e1;
+}
+
+.kpi-drawer .big {
+  margin-top: 2px;
+  font-family: var(--ratawi-font-numeric);
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-drawer .big small {
+  margin-left: 6px;
+  font-size: 13px;
+  color: var(--ratawi-muted);
+}
+
+.kpi-drawer .big .sub {
+  margin-left: 14px;
+  font-family: var(--ratawi-font-sans);
+  font-size: 12px;
+  color: var(--ratawi-muted);
+}
+
+.drawer-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.drawer-body {
+  display: grid;
+  grid-template-columns: 540px 1fr;
+  gap: 22px;
+  margin-top: 8px;
+}
+
+.drawer-title {
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lc {
+  position: relative;
+}
+
+.lc svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.lc-tick {
+  font-family: var(--ratawi-font-numeric);
+  font-size: 10px;
+  fill: var(--ratawi-muted);
+}
+
+.lc-ref {
+  font-family: var(--ratawi-font-numeric);
+  font-size: 10px;
+}
+
+.lc-tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(8, 13, 22, 0.95);
+  border: 1px solid rgba(77, 208, 225, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.lc-tip b {
+  display: block;
+  font-family: var(--ratawi-font-numeric);
+  font-size: 15px;
+  color: #fff;
+}
+
+.lc-tip b small {
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--ratawi-muted);
+}
+
+.lc-tip span {
+  font-size: 10px;
+  color: var(--ratawi-muted);
+}
+
+.scrubber input[type='range'] {
+  width: calc(100% - 56px);
+  margin: 2px 16px 0 40px;
+  accent-color: #ffb300;
+  cursor: pointer;
+}
+
+.scrub-read {
+  margin-left: 40px;
+  font-size: 12px;
+  color: var(--ratawi-text);
+  font-family: var(--ratawi-font-numeric);
+}
+
+.scrub-read b {
+  color: #ffb300;
+  margin-right: 6px;
+}
+
+.scrub-read em {
+  margin-left: 10px;
+  font-style: normal;
+  color: #ffb300;
+  font-family: var(--ratawi-font-sans);
+}
+
+.scrub-read .link {
+  margin-left: 10px;
+  border: 0;
+  background: none;
+  color: #4dd0e1;
+  font-family: var(--ratawi-font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.drawer-side {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.gauge {
+  width: 200px;
+  text-align: center;
+}
+
+.gauge svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.gauge-value {
+  font-family: var(--ratawi-font-numeric);
+  font-size: 22px;
+  fill: #f4f9ff;
+}
+
+.gauge-unit {
+  font-size: 10px;
+  fill: var(--ratawi-muted);
+}
+
+.gauge-tick {
+  font-family: var(--ratawi-font-numeric);
+  font-size: 8px;
+}
+
+.gauge-label {
+  margin-top: -4px;
+  font-size: 11px;
+  color: var(--ratawi-muted);
+}
+
+.breakdown {
+  flex: 1;
+  min-width: 170px;
+}
+
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ratawi-border-subtle);
+  font-size: 12px;
+  color: var(--ratawi-muted);
+}
+
+.bd-row b {
+  font-family: var(--ratawi-font-numeric);
+  font-weight: 500;
+  color: var(--ratawi-text);
+}
+
+.bd-row.on {
+  color: var(--ratawi-text);
+}
+
+.bd-row.on b {
+  color: #ffb300;
+}
+
+.wells-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wells-head {
+  font-size: 11px;
+  color: var(--ratawi-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.wells-head b {
+  color: #fff;
+  font-family: var(--ratawi-font-numeric);
+}
+
+.wells-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.well-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(77, 208, 225, 0.25);
+  background: rgba(77, 208, 225, 0.05);
+  color: var(--ratawi-text);
+  font-family: var(--ratawi-font-numeric);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.well-chip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4dd0e1;
+  box-shadow: 0 0 6px #4dd0e1;
+}
+
+.well-chip.standby {
+  border-color: rgba(255, 154, 46, 0.4);
+}
+
+.well-chip.standby i {
+  background: #ff9a2e;
+  box-shadow: 0 0 6px #ff9a2e;
+}
+
+.well-chip.gold {
+  border-color: rgba(255, 179, 0, 0.55);
+  background: rgba(255, 179, 0, 0.08);
+}
+
+.well-chip.gold i {
+  background: #ffb300;
+  box-shadow: 0 0 8px #ffb300;
+}
+
+.well-chip:hover {
+  border-color: #4dd0e1;
+}
+
+.well-chip.sel {
+  border-color: #ffb300;
+  box-shadow: 0 0 12px rgba(255, 179, 0, 0.45);
+}
+
+.chip-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(8, 13, 22, 0.95);
+  border: 1px solid rgba(77, 208, 225, 0.35);
+  font-family: var(--ratawi-font-sans);
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+}

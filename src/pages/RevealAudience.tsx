@@ -97,7 +97,7 @@ export function RevealAudience({
           </div>
         </SceneErrorBoundary>
         <div className="reveal-vignette" />
-        <RevealHud />
+        <RevealHud interactive={!locked} />
         {locked ? null : <ExploreOverlay />}
       </div>
     </SceneClockProvider>

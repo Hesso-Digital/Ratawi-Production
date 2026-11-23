@@ -47,3 +47,23 @@ Suspense and error fallback. Emissive materials become `toneMapped: false` HDR
 colours so they bloom. Draco and KTX2 decoders are self-hosted under
 `public/decoders` (the venue PC is offline) and meshopt is bundled, so updated
 models drop in with no code change.
+
+## Interactive data (KPI drawer)
+
+- Hover a KPI tile for a hint; click it (or the big oil number) to open its
+  drawer. Panels stay collapsed in show mode: opening one starts free roam, and
+  R, an /operator cue or the idle timer collapses them again.
+- Each drawer has the June to December 2026 trend with its reference lines
+  (commitment 90 and target 120 for oil, AG-25 minimum 50 for gas, the BSW and
+  salt limits), month tooltips, and a scrubber. During the replay cue the
+  scrubber follows the replay; drag it to look at any month, then "Follow
+  replay" or "Back to today".
+- Gauges: production versus target, gas versus the AG-25 minimum, efficiency,
+  BSW and salt versus their limits. Oil shows the 105, +5, +10 build-up.
+- Wells: all 32 wells as status chips (25 producing, 7 AGUP, coloured live).
+  Clicking a chip highlights that well in 3D and flies the camera to it.
+- Clicking a 3D asset glows its related KPI tiles and adds links to their
+  charts in the asset panel.
+- Every number comes from `src/data/defaults.ts` (TRAJECTORY and the three
+  snapshots) and `src/data/ceremonyConfig.ts` (MONTHLY_QUALITY, GAS, WELLS),
+  through `src/data/series.ts`; nothing new is invented.
