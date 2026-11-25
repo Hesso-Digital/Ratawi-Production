@@ -40,14 +40,10 @@
 }
 
 /* ---------- Shared frosted glass surface ---------- */
-:root[data-time-of-day='day'] .reveal-brand,
-:root[data-time-of-day='day'] .reveal-hero,
 :root[data-time-of-day='day'] .kpi-drawer,
 :root[data-time-of-day='day'] .explore-panel,
 :root[data-time-of-day='day'] .admin-drawer,
-:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail,
-:root[data-time-of-day='day'] .reveal-hud .oil-timeline:not(.hall),
-:root[data-time-of-day='day'] .reveal-kpi-sheet {
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline:not(.hall):not(.docked) {
   background: var(--ratawi-sheen), var(--day-glass);
   border: 1px solid var(--day-glass-border);
   box-shadow: var(--day-glass-shadow);
@@ -58,22 +54,52 @@
 }
 
 /* ---------- Header card and hero card ---------- */
-:root[data-time-of-day='day'] .reveal-hero {
-  padding: 8px 16px 14px 14px;
-  margin-left: -14px;
-  border-radius: 16px;
+:root[data-time-of-day='day'] {
+  /* Soft light halo so dark type reads straight on the sunlit field. */
+  --day-halo: 0 0 1px rgba(255, 250, 240, 0.9), 0 1px 2px rgba(255, 250, 240, 0.85),
+    0 0 14px rgba(255, 248, 236, 0.75);
 }
 
-:root[data-time-of-day='day'] .reveal-brand {
-  padding: 8px 14px 10px;
-  margin-left: -14px;
-  border-radius: 14px;
-  width: max-content;
+/* Header, hero, area nav and dock sit straight on the field, as in night:
+   no cards, only the light edge scrims in .reveal-vignette behind them. */
+:root[data-time-of-day='day'] .reveal-brand,
+:root[data-time-of-day='day'] .reveal-hero,
+:root[data-time-of-day='day'] .reveal-bottom-dock,
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail,
+:root[data-time-of-day='day'] .explore-bar {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
+:root[data-time-of-day='day'] .reveal-brand,
+:root[data-time-of-day='day'] .reveal-hero,
+:root[data-time-of-day='day'] .reveal-bottom-dock,
+:root[data-time-of-day='day'] .explore-bar,
 :root[data-time-of-day='day'] .reveal-brand *,
-:root[data-time-of-day='day'] .reveal-hero * {
-  text-shadow: none;
+:root[data-time-of-day='day'] .reveal-hero *,
+:root[data-time-of-day='day'] .reveal-bottom-dock *,
+:root[data-time-of-day='day'] .explore-bar * {
+  text-shadow: var(--day-halo);
+}
+
+/* The hero number and its unit always stay inside the hero column. */
+:root[data-time-of-day='day'] .reveal-hero .big {
+  flex-wrap: nowrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+:root[data-time-of-day='day'] .reveal-hero .big .n {
+  font-size: min(var(--hero-size, 164px), 7cqi);
+}
+
+:root[data-time-of-day='day'] .reveal-hero .big .u {
+  flex: none;
+  white-space: nowrap;
+  font-size: clamp(16px, 1.6cqi, 26px);
 }
 
 :root[data-time-of-day='day'] .reveal-brand,
@@ -83,7 +109,11 @@
   color: var(--day-ink-2);
 }
 
-:root[data-time-of-day='day'] .reveal-hero .big .n,
+:root[data-time-of-day='day'] .reveal-hero .big .n {
+  color: var(--day-ink);
+  text-shadow: 0 0 2px rgba(255, 250, 240, 0.9), 0 0 28px rgba(255, 248, 236, 0.85);
+}
+
 :root[data-time-of-day='day'] .kpi-drawer .big {
   color: var(--day-ink);
   text-shadow: none;
@@ -94,6 +124,8 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 14px rgba(255, 248, 236, 0.9));
 }
 
 :root[data-time-of-day='day'] .reveal-hero .scale .track {
@@ -158,26 +190,28 @@
 }
 
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail {
-  border-radius: 14px;
+  border-radius: 0;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi {
+  background: none;
+  border-color: rgba(20, 32, 48, 0.12);
 }
 
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .k,
 :root[data-time-of-day='day'] .reveal-kpi .k {
-  color: var(--day-ink-3);
-  text-shadow: none;
+  color: var(--day-ink-2);
 }
 
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v,
 :root[data-time-of-day='day'] .reveal-kpi .v {
   color: var(--day-ink);
-  text-shadow: none;
 }
 
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v small,
 :root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .s,
 :root[data-time-of-day='day'] .reveal-kpi .s {
   color: var(--day-ink-2);
-  text-shadow: none;
 }
 
 :root[data-time-of-day='day'] .reveal-kpi.clickable:hover,
@@ -206,8 +240,7 @@
 :root[data-time-of-day='day'] .reveal-hud .oil-timeline.hall .oil-timeline-title,
 :root[data-time-of-day='day'] .oil-timeline-title,
 :root[data-time-of-day='day'] .oil-month {
-  color: var(--day-ink-3);
-  text-shadow: none;
+  color: var(--day-ink-2);
 }
 
 :root[data-time-of-day='day'] .oil-month.on {
@@ -331,20 +364,10 @@
 /* ---------- Right side area nav: light glass rail with dark ink ---------- */
 :root[data-time-of-day='day'] .explore-bar {
   opacity: 1;
-  padding: 12px 12px 12px 14px;
-  border-radius: 16px;
-  background: var(--ratawi-sheen), var(--day-glass);
-  border: 1px solid var(--day-glass-border);
-  box-shadow: var(--day-glass-shadow);
-  backdrop-filter: var(--day-blur);
-  -webkit-backdrop-filter: var(--day-blur);
-  pointer-events: auto;
 }
 
 :root[data-time-of-day='day'] .explore-nav-item {
   color: var(--day-ink-2);
-  text-shadow: none;
-  border-radius: 8px;
 }
 
 :root[data-time-of-day='day'] .explore-nav-label {
@@ -352,8 +375,7 @@
 }
 
 :root[data-time-of-day='day'] .explore-nav-num {
-  color: rgba(20, 32, 48, 0.5);
-  text-shadow: none;
+  color: rgba(20, 32, 48, 0.55);
 }
 
 :root[data-time-of-day='day'] .explore-nav-item.mode .explore-nav-label,
@@ -373,11 +395,9 @@
   color: rgba(20, 32, 48, 0.78);
 }
 
-/* Active area: tinted row, dark label, teal number and accent bar. */
+/* Active area: bold dark label, teal number and teal accent mark (no box). */
 :root[data-time-of-day='day'] .explore-nav-item.on {
   color: var(--day-ink);
-  background: linear-gradient(270deg, rgba(0, 166, 196, 0.16), rgba(0, 166, 196, 0.02));
-  box-shadow: inset -3px 0 0 #00a6c4;
 }
 
 :root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-label {
@@ -388,7 +408,6 @@
 :root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-num {
   color: var(--day-cyan);
   font-weight: 500;
-  text-shadow: none;
 }
 
 :root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-mark,
@@ -598,5 +617,74 @@
 
 /* The night vignette is dark; by day keep only a faint warm edge haze. */
 :root[data-time-of-day='day'] .reveal-vignette {
-  opacity: 0.18;
+  opacity: 1;
+  background:
+    radial-gradient(ellipse 75% 70% at 55% 48%, transparent 60%, rgba(248, 242, 230, 0.32) 100%),
+    linear-gradient(90deg, rgba(250, 246, 238, 0.72) 0%, rgba(250, 246, 238, 0.34) 24%, transparent 40%),
+    linear-gradient(270deg, rgba(250, 246, 238, 0.55) 0%, rgba(250, 246, 238, 0.2) 14%, transparent 24%),
+    linear-gradient(0deg, rgba(250, 246, 238, 0.82) 0%, rgba(250, 246, 238, 0.45) 11%, transparent 22%),
+    linear-gradient(180deg, rgba(250, 246, 238, 0.5) 0%, transparent 14%);
+}
+
+/* ---------- Play / timeline bar ---------- */
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline.docked {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-time-of-day='day'] .oil-timeline input[type='range'],
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline.hall input[type='range'],
+:root[data-time-of-day='day'] .scrubber input[type='range'],
+:root[data-time-of-day='day'] .reveal-playback input[type='range'],
+:root[data-time-of-day='day'] .admin-drawer input[type='range'] {
+  color-scheme: light;
+  accent-color: #00809a;
+}
+
+:root[data-time-of-day='day'] .oil-timeline.in-forecast input[type='range'] {
+  accent-color: #c8189f;
+}
+
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline.hall .oil-timeline-title,
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline.hall .oil-timeline-title.live-back {
+  color: var(--day-ink-2);
+  font-weight: 600;
+  text-shadow: var(--day-halo);
+}
+
+:root[data-time-of-day='day'] .oil-timeline .forecast-tag,
+:root[data-time-of-day='day'] .oil-month.forecast.on {
+  color: #c8189f;
+  background: none;
+  text-shadow: var(--day-halo);
+}
+
+:root[data-time-of-day='day'] .oil-forecast-strip i {
+  border-top-color: #c8189f;
+  filter: none;
+}
+
+:root[data-time-of-day='day'] .oil-timeline-actions .chip {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(0, 128, 154, 0.4);
+  color: #005f73;
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .reveal-step.done::before {
+  background: linear-gradient(90deg, #00a6c4, rgba(0, 166, 196, 0.35));
+}
+
+/* Compact screens only: the KPI sheet pops up over the field, so it gets glass there. */
+@container stage (max-width: 700px) or (max-height: 520px) {
+  :root[data-time-of-day='day'] .reveal-kpi-sheet {
+    background: var(--ratawi-sheen), var(--day-glass-strong);
+    border: 1px solid var(--day-glass-border);
+    box-shadow: var(--day-glass-shadow);
+    backdrop-filter: var(--day-blur);
+    -webkit-backdrop-filter: var(--day-blur);
+  }
 }
