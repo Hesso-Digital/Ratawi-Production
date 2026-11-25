@@ -363,3 +363,15 @@
     display: none;
   }
 }
+
+/* Small screens: the AGUP switch keeps only the active label. */
+@media (max-width: 560px) {
+  .agup-switch {
+    gap: 6px;
+    padding: 0 8px;
+  }
+  .agup-switch:not(.on) .agup-switch-label.on,
+  .agup-switch.on .agup-switch-label.off {
+    display: none;
+  }
+}

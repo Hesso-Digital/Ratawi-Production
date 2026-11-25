@@ -9,7 +9,7 @@ export const TIMELINE_DURATION_MS = 7000;
 export const TIMELINE_LAST_INDEX = TRAJECTORY.length - 1;
 
 type AsOfState = {
-  /** Fractional month index along June 2026–April 2027, or null for Live. */
+  /** Fractional month index along June 2026 to May 2027, or null for Live. */
   index: number | null;
   playing: boolean;
 };

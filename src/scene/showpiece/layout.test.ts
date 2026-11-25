@@ -80,7 +80,7 @@ describe('production ribbon', () => {
 
   it('reads milestones from the series: start, recorded peak, AGUP month, last month', () => {
     const ms = ribbonMilestones(TRAJECTORY, oil, PLAYBACK_END_INDEX);
-    expect(ms.map((m) => m.month)).toEqual(['Jun', 'Oct', 'Dec', 'Apr']);
+    expect(ms.map((m) => m.month)).toEqual(['Jun', 'Oct', 'Dec', 'May']);
     expect(ms.map((m) => m.value)).toEqual([oil[0], 108, oil[PLAYBACK_END_INDEX], oil[oil.length - 1]]);
   });
 

@@ -79,7 +79,8 @@ export function cloneSettings(settings: DisplaySettings = DEFAULT_SETTINGS): Dis
 }
 
 /**
- * June 2026 to April 2027 series from the requirements document.
+ * June 2026 to May 2027 series. June to April come from the requirements
+ * document; May 2027 is the forecast extension described below.
  * January to April wells, export and gas were not specified; those companion
  * values after December are assumed (32 wells, export two below oil, gas as in Step 2).
  */
@@ -98,6 +99,62 @@ export const TRAJECTORY: MonthPoint[] = [
 ];
 
 export const TODAY_INDEX = 5;
+
+/** Months of forecast shown after the latest actual month (December 2026 to May 2027). */
+export const FORECAST_HORIZON_MONTHS = 6;
+
+/**
+ * Least-squares straight line through the last `n` points, evaluated one step
+ * past the end. Used to extend the requirement document's ramp-up plan.
+ */
+export function linearNext(values: readonly number[], n = 4): number {
+  const ys = values.slice(-n);
+  const k = ys.length;
+  if (k === 0) return 0;
+  if (k === 1) return ys[0];
+  const mx = (k - 1) / 2;
+  const my = ys.reduce((a, b) => a + b, 0) / k;
+  let sxy = 0;
+  let sxx = 0;
+  ys.forEach((y, i) => {
+    sxy += (i - mx) * (y - my);
+    sxx += (i - mx) * (i - mx);
+  });
+  const slope = sxx ? sxy / sxx : 0;
+  return Math.round((my + slope * (k - mx)) * 10) / 10;
+}
+
+/**
+ * Forecast method, stated plainly:
+ *  - December 2026 to April 2027 follow the ramp-up plan in the requirements
+ *    document (AGUP RFSU takes oil to 120 kbopd in December, then about
+ *    2 to 3 kbopd a month).
+ *  - The sixth month, May 2027, extends that plan with a straight-line fit of
+ *    January to April (about +2.3 kbopd a month), giving 132 kbopd.
+ *  - Wells stay at 32, export stays 2 kbopd below oil and gas stays at the
+ *    Step 2 rate, as in the plan.
+ * Which forecast the screen shows follows the Current / AGUP online switch:
+ * with AGUP online it is this plan, shifted so December lands on the AGUP
+ * online values; in Current it holds at today's values (see snapshotAtMonth).
+ */
+const planOil = TRAJECTORY.filter((m) => m.kind === 'forecast').map((m) => m.oil);
+const mayOil = linearNext(planOil.slice(1), 4);
+TRAJECTORY.push({
+  key: '2027-05',
+  label: 'May',
+  year: 2027,
+  monthIndex: 11,
+  oil: mayOil,
+  wells: 32,
+  exportKbopd: Math.round((mayOil - 2) * 10) / 10,
+  gas: GAS_STEP2_MMSCFD,
+  kind: 'forecast',
+});
+
+/** First forecast month on the timeline (December 2026). */
+export const FORECAST_START_INDEX = TODAY_INDEX + 1;
+/** Last forecast month on the timeline (May 2027). */
+export const FORECAST_END_INDEX = Math.min(TRAJECTORY.length - 1, TODAY_INDEX + FORECAST_HORIZON_MONTHS);
 export const PLAYBACK_END_INDEX = 6;
 
 export function lerp(a: number, b: number, t: number) {

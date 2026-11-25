@@ -44,7 +44,8 @@ export function scalePolygon(poly: readonly Vec2[], k: number, center: Vec2 = FI
 
 /** Exploded framing at 16:9: from the south-east, a little above the stack. */
 export const EXPLODED_CAMERA: CameraState = {
-  position: [112, 80, 72],
+  // Kept relative to the field centre so the shot follows the concession outline.
+  position: [FIELD_CENTER[0] + 128, 84, FIELD_CENTER[1] + 82],
   target: [FIELD_CENTER[0], 11, FIELD_CENTER[1]],
   fov: 32,
 };
@@ -184,6 +185,25 @@ function mix(a: number[], b: number[], k: number): [number, number, number] {
   const t = Math.max(0, Math.min(1, k));
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
+/** Neon magenta for forecast months (sRGB 0..1), matching CHART.forecast #ff4fd8. */
+export const FORECAST_RGB: [number, number, number] = [1.0, 0.31, 0.85];
+
+/**
+ * Colour of the ribbon at fractional month `i`: the value shade up to the
+ * latest actual month, then blending into the forecast magenta over half a month.
+ */
+export function ribbonColorAt(
+  i: number,
+  value: number,
+  commitment: number,
+  target: number,
+  lastActualIndex: number,
+): [number, number, number] {
+  const base = ribbonColor(value, commitment, target);
+  const k = Math.max(0, Math.min(1, (i - lastActualIndex) / 0.5));
+  return k <= 0 ? base : mix(base, FORECAST_RGB, k);
+}
+
 export function ribbonColor(value: number, commitment: number, target: number): [number, number, number] {
   if (value <= commitment) return mix(BLUE, CYAN, commitment > 0 ? value / commitment : 1);
   if (value >= target) return [GOLD[0], GOLD[1], GOLD[2]];

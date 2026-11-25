@@ -36,7 +36,7 @@ export function TrajectoryChart({ oil, playback }: { oil: number; playback: { in
   return (
     <section className="panel chart-panel" data-entrance>
       <div className="chart-top">
-        <div className="eyebrow">Production trajectory  ·  Jun 2026 to Apr 2027</div>
+        <div className="eyebrow">Production trajectory  ·  Jun 2026 to May 2027</div>
         <div className="chart-legend">
           <span>
             <b style={{ color: 'var(--ratawi-cyan)' }}>Oil</b> actual / forecast

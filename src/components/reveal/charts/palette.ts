@@ -5,6 +5,8 @@ export const CHART = {
   gas: '#b08cff',
   export: '#7fe3c4',
   red: '#ff3333',
+  /** Neon magenta for forecast months: apart from the cyan / gold flows, violet gas and red limits. */
+  forecast: '#ff4fd8',
   grid: 'rgba(77, 208, 225, 0.12)',
   axis: '#6f8a97',
   text: '#c8d4dc',

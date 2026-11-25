@@ -113,7 +113,7 @@ export const OIL_STEPS = [
 
 export const GAS_STEP2 = GAS.step2Mmscfd;
 
-/** Full viewer timeline: June 2026 to April 2027. */
+/** Full viewer timeline: June 2026 to May 2027 (forecast from December). */
 export const TIMELINE_MONTHS = TRAJECTORY;
 
 function qualityAt(index: number) {
@@ -153,7 +153,7 @@ function lerpTrajectory(index: number): Snapshot {
 }
 
 /**
- * KPI snapshot at a date on the June 2026–April 2027 series.
+ * KPI snapshot at a date on the June 2026 to May 2027 series.
  * Historical months (through November) always use recorded actuals.
  * Future months: if AGUP is online, the series forecast is shifted so December
  * lands on the AGUP online values; if not, future actuals hold at Current.

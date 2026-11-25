@@ -77,6 +77,23 @@ export function AdminMenu() {
 
   return (
     <div className={`admin-menu${open ? ' open' : ''}${visible || open ? ' visible' : ''}`}>
+      <div className="admin-menu-row">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={online}
+        aria-label={online ? 'AGUP online. Switch back to current' : 'Current. Switch to AGUP online'}
+        title={online ? 'AGUP online. Click to go back to current' : 'Current. Click to bring AGUP online'}
+        data-agup-switch=""
+        className={`agup-switch${online ? ' on' : ''}`}
+        onClick={toggleAgup}
+      >
+        <span className="agup-switch-label off">Current</span>
+        <span className="agup-switch-track" aria-hidden="true">
+          <i />
+        </span>
+        <span className="agup-switch-label on">AGUP online</span>
+      </button>
       <button
         type="button"
         className="admin-menu-btn"
@@ -90,6 +107,7 @@ export function AdminMenu() {
       >
         <MenuIcon />
       </button>
+      </div>
       {open ? (
         <aside className="admin-drawer" role="dialog" aria-label="Admin menu">
           <header className="admin-drawer-head">
@@ -122,21 +140,6 @@ export function AdminMenu() {
             </div>
           ) : (
             <div className="admin-drawer-body">
-              <div className="admin-section">
-                <div className="admin-label">Production state</div>
-                <div className="admin-toggle" role="group" aria-label="Production state">
-                  <button type="button" className={`chip${online ? '' : ' on'}`} onClick={() => store.resetToCurrent()}>
-                    Current
-                  </button>
-                  <button type="button" className={`chip${online ? ' on' : ''}`} onClick={() => store.bringAgupOnline()}>
-                    AGUP online
-                  </button>
-                </div>
-                <button type="button" className="btn primary admin-wide" onClick={toggleAgup}>
-                  {online ? 'Reset to current' : 'Bring AGUP online'}
-                </button>
-              </div>
-
               <div className="admin-section">
                 <button type="button" className="btn admin-wide" onClick={() => setPage('edit')}>
                   Edit KPI numbers

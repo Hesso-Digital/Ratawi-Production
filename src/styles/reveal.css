@@ -1758,6 +1758,93 @@ button.reveal-compass:focus-visible {
   pointer-events: none;
 }
 
+.admin-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Current / AGUP online switch beside the three dot menu. Always shown (the
+   HUD dim still fades it); one click runs the one step AGUP update. */
+.agup-switch {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(77, 208, 225, 0.22);
+  border-radius: 999px;
+  background: rgba(8, 14, 22, 0.42);
+  color: rgba(200, 220, 240, 0.6);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  opacity: 0.78;
+  transition: opacity 0.35s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.admin-menu.visible .agup-switch,
+.agup-switch:hover,
+.agup-switch:focus-visible {
+  opacity: 1;
+  outline: none;
+  border-color: rgba(77, 208, 225, 0.5);
+}
+
+.agup-switch-label {
+  white-space: nowrap;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.agup-switch:not(.on) .agup-switch-label.off {
+  color: #e8f6fb;
+}
+
+.agup-switch.on .agup-switch-label.on {
+  color: #ffd27a;
+  text-shadow: 0 0 10px rgba(255, 179, 0, 0.55);
+}
+
+.agup-switch-track {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(77, 208, 225, 0.18);
+  border: 1px solid rgba(77, 208, 225, 0.45);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.agup-switch-track i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4dd0e1;
+  box-shadow: 0 0 8px rgba(77, 208, 225, 0.8);
+  transition: transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1), background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.agup-switch.on .agup-switch-track {
+  background: rgba(255, 179, 0, 0.2);
+  border-color: rgba(255, 179, 0, 0.7);
+}
+
+.agup-switch.on .agup-switch-track i {
+  transform: translateX(14px);
+  background: #ffb300;
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.9);
+}
+
+:root[data-time-of-day='day'] .agup-switch {
+  background: rgba(8, 14, 22, 0.62);
+}
+
 .admin-menu-btn {
   pointer-events: auto;
   width: 36px;

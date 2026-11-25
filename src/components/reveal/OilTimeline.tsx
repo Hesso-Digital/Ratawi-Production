@@ -77,6 +77,7 @@ export function OilTimeline({
     (collapsible && !expanded && !hall) ? 'collapsed' : '',
     playing ? 'playing' : '',
     live ? 'is-live' : '',
+    !live && cursor > TODAY_INDEX + 0.5 ? 'in-forecast' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -91,10 +92,12 @@ export function OilTimeline({
             onClick={() => asOfStore.live()}
           >
             {`As of ${month.label} ${month.year}`}
+            {cursor > TODAY_INDEX + 0.5 ? <span className="forecast-tag"> · Forecast</span> : null}
           </button>
         ) : (
           <div className="oil-timeline-title">
             {live ? 'Live' : `As of ${month.label} ${month.year}`}
+            {!live && cursor > TODAY_INDEX + 0.5 ? <span className="forecast-tag"> · Forecast</span> : null}
           </div>
         )}
         {hall ? null : (
@@ -135,6 +138,9 @@ export function OilTimeline({
         onPointerDown={() => scrubAsOf(cursor)}
         onChange={(e) => scrubAsOf(Number(e.target.value))}
       />
+      <div className="oil-forecast-strip" aria-hidden="true">
+        <i style={{ left: `${(TODAY_INDEX / TIMELINE_LAST_INDEX) * 100}%` }} />
+      </div>
       {showMonths ? (
         <div
           className="oil-months"

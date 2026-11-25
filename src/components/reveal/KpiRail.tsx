@@ -1,4 +1,8 @@
+import { FORECAST_END_INDEX, TRAJECTORY } from '../../data/defaults';
 import { KPIS } from '../../data/kpis';
+import { isAgupOnline } from '../../data/presets';
+import { snapshotAtMonth } from '../../data/series';
+import { useCeremonyStore } from '../../data/store';
 import type { SceneState } from '../../scene/ceremonyTimeline';
 import { relatedKpis } from '../../scene/explore/assets';
 import { exploreStore, useExploreState } from '../../scene/explore/exploreStore';
@@ -7,6 +11,10 @@ import { CountText } from '../CountText';
 export function KpiRail({ state, interactive = false }: { state: SceneState; interactive?: boolean }) {
   const { selectedId, kpiId } = useExploreState();
   const related = interactive ? relatedKpis(selectedId) : [];
+  const store = useCeremonyStore();
+  const online = isAgupOnline(store.snapshot, store.presets) || state.step >= 2;
+  const forecast = snapshotAtMonth(FORECAST_END_INDEX, store.presets, online);
+  const end = TRAJECTORY[FORECAST_END_INDEX];
   return (
     <div className="reveal-rail">
       {KPIS.map((kpi) => {
@@ -42,7 +50,14 @@ export function KpiRail({ state, interactive = false }: { state: SceneState; int
               <i />
               {kpi.sub(state)}
             </div>
-            {interactive ? <div className="kpi-tip">June 2026 to April 2027 · click to open</div> : null}
+            {interactive ? (
+              <div className="kpi-tip">
+                June 2026 to {end.label} {end.year} · click to open
+                <span className="kpi-forecast">
+                  Forecast {end.label} {end.year}: {kpi.value({ ...state, ...forecast }).toFixed(kpi.decimals)} {kpi.unit}
+                </span>
+              </div>
+            ) : null}
           </div>
         );
       })}

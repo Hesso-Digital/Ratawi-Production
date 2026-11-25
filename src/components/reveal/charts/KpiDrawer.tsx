@@ -1,11 +1,13 @@
 /**
  * KPI detail drawer: opens from a KPI tile (or the hero number) in explore
  * mode. Trend charts with commitment / target / limit lines, gauges, and for
- * wells the clickable well status chart. Oil uses the June 2026–April 2027
- * viewer timeline (Play / Pause / Live), not the admin ceremony replay.
+ * wells the clickable well status chart. Every chart uses the June 2026 to
+ * May 2027 viewer timeline, forecast months in neon magenta (Play / Pause / Live), not the admin ceremony replay.
  */
 import { KPIS, type KpiId } from '../../../data/kpis';
-import { KPI_SERIES, MONTHS, TIMELINE_MONTHS, TODAY_INDEX, valueAt } from '../../../data/series';
+import { KPI_SERIES, TIMELINE_MONTHS, TODAY_INDEX, snapshotAtMonth, valueAt } from '../../../data/series';
+import { isAgupOnline } from '../../../data/presets';
+import type { Snapshot } from '../../../data/types';
 import { asOfStore, useAsOfState } from '../../../data/asOfStore';
 import { BUDGET_KBOPD, GAS_MIN_TO_OPERATE_MMSCFD, LIMITS, TARGET_KBOPD } from '../../../data/defaults';
 import { useCeremonyStore } from '../../../data/store';
@@ -17,6 +19,16 @@ import { Gauge } from './Gauge';
 import { LineChart } from './LineChart';
 import { WellStatusChart } from './WellStatusChart';
 import { CHART, toneColor } from './palette';
+
+const SNAP_KEY: Record<KpiId, keyof Snapshot> = {
+  oil: 'oil',
+  wells: 'wells',
+  export: 'exportKbopd',
+  gas: 'gas',
+  bsw: 'bsw',
+  salt: 'salt',
+  efficiency: 'efficiency',
+};
 
 const FOCUS: Record<KpiId, { kind: 'asset' | 'preset'; id: string; label: string }> = {
   oil: { kind: 'asset', id: 'cpf1', label: 'Show CPF-1' },
@@ -126,14 +138,18 @@ function Side({ id, state, gold }: { id: KpiId; state: SceneState; gold: boolean
 export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneState; relatedIds: KpiId[] }) {
   const kpi = KPIS.find((k) => k.id === id)!;
   const series = KPI_SERIES[id];
-  const presets = useCeremonyStore().presets;
+  const store = useCeremonyStore();
+  const presets = store.presets;
   const gold = state.gold > 0.5 && (id === 'oil' || id === 'wells');
   const color = toneColor(series.tone, gold);
   const asOf = useAsOfState();
   const oilSeries = id === 'oil';
-  const months = oilSeries ? TIMELINE_MONTHS : MONTHS;
-  const values = oilSeries ? TIMELINE_MONTHS.map((m) => m.oil) : series.values;
-  const cursor = oilSeries ? (asOf.index ?? TODAY_INDEX) : (asOf.index != null && asOf.index <= MONTHS.length - 1 ? asOf.index : TODAY_INDEX);
+  const online = isAgupOnline(store.snapshot, presets) || state.step >= 2;
+  // Actuals through November, then the six month forecast (see defaults.ts),
+  // the same month values the HUD and the 3D ribbon show for each date.
+  const months = TIMELINE_MONTHS;
+  const values = months.map((_, i) => snapshotAtMonth(i, presets, online)[SNAP_KEY[id]]);
+  const cursor = asOf.index ?? TODAY_INDEX;
   const monthLabel = months[Math.min(months.length - 1, Math.round(cursor))]?.label ?? '';
   const focus = FOCUS[id];
   const oilRefs = oilSeries
@@ -143,7 +159,7 @@ export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneSt
       ]
     : series.refs;
 
-  const points = months.map((m, i) => ({ label: m.label, value: values[i] ?? 0, forecast: m.kind === 'forecast' }));
+  const points = months.map((m, i) => ({ label: m.label, year: m.year, value: values[i] ?? 0, forecast: i > TODAY_INDEX }));
 
   return (
     <section className={`kpi-drawer ${relatedIds.includes(id) ? 'related' : ''}`} role="dialog" aria-label={`${kpi.label} details`} data-kpi={id}>
@@ -171,7 +187,9 @@ export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneSt
       </header>
       <div className="drawer-body">
         <div className="drawer-chart">
-          <div className="drawer-title">{oilSeries ? 'June 2026 to April 2027' : 'June to December 2026'}</div>
+          <div className="drawer-title">
+            June 2026 to May 2027 <span className="forecast-chip">Forecast Dec to May</span>
+          </div>
           <LineChart
             points={points}
             domain={oilSeries ? [0, 140] : series.domain}
@@ -180,6 +198,7 @@ export function KpiDrawer({ id, state, relatedIds }: { id: KpiId; state: SceneSt
             unit={kpi.unit}
             decimals={kpi.decimals}
             cursor={cursor}
+            forecastFrom={TODAY_INDEX}
             onHover={(i) => {
               exploreStore.touch();
               if (i != null) asOfStore.setIndex(i);

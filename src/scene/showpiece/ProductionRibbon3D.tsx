@@ -1,6 +1,7 @@
 /**
- * 3D production ribbon: the June 2026 to April 2027 oil series as a glowing
- * band rising over the field, cyan to gold by value, with a soft curtain down
+ * 3D production ribbon: the June 2026 to May 2027 oil series as a glowing
+ * band rising over the field, cyan to gold by value and neon magenta for the
+ * forecast months after November, with a soft curtain down
  * to the ground, a month axis, commitment and target reference lines and the
  * milestones read from the series. It draws itself on when the view opens and
  * follows the HUD timeline: scrubbing or playing the timeline moves the head.
@@ -11,13 +12,13 @@ import { useMemo, useRef } from 'react';
 import { BufferAttribute, BufferGeometry, Color, DoubleSide, SRGBColorSpace, MeshBasicMaterial, type Group, type Mesh } from 'three';
 import { asOfStore, TIMELINE_LAST_INDEX, useAsOfState } from '../../data/asOfStore';
 import { WORDING } from '../../data/ceremonyConfig';
-import { PLAYBACK_END_INDEX, TRAJECTORY } from '../../data/defaults';
+import { PLAYBACK_END_INDEX, TODAY_INDEX, TRAJECTORY } from '../../data/defaults';
 import { isAgupOnline } from '../../data/presets';
 import { snapshotAtMonth } from '../../data/series';
 import { useCeremonyStore } from '../../data/store';
 import { ribbonBlend, useViewMode } from '../../state/sceneSettings';
 import type { QualityProfile } from '../quality';
-import { RIBBON, ribbonColor, ribbonMilestones, ribbonX, ribbonY, ribbonZ, sampleSeries } from './layout';
+import { RIBBON, ribbonColorAt, ribbonMilestones, ribbonX, ribbonY, ribbonZ, sampleSeries } from './layout';
 
 type V3 = [number, number, number];
 const lin = new Color();
@@ -38,7 +39,7 @@ function buildBand(samples: Array<{ i: number; v: number }>, commitment: number,
     const z = ribbonZ(i, MONTHS);
     const x = ribbonX(i, MONTHS);
     const y = ribbonY(v);
-    const [r0, g0, b0] = toLinear(ribbonColor(v, commitment, target));
+    const [r0, g0, b0] = toLinear(ribbonColorAt(i, v, commitment, target, TODAY_INDEX));
     const [r, g, b] = [r0 * 0.72, g0 * 0.72, b0 * 0.72];
     const half = RIBBON.width / 2;
     // Band: tilted toward the camera so it catches light like a sheet; brighter leading edge.
@@ -82,10 +83,19 @@ export function ProductionRibbon3D({ quality }: { quality: QualityProfile }) {
   const geo = useMemo(() => buildBand(samples, commitmentKbopd, targetKbopd), [samples, commitmentKbopd, targetKbopd]);
   const edge = useMemo(() => samples.map(({ i, v }) => [ribbonX(i, MONTHS) + RIBBON.width * 0.15, ribbonY(v), ribbonZ(i, MONTHS)] as V3), [samples]);
   const edgeColors = useMemo(
-    () => samples.map(({ v }) => ribbonColor(v, commitmentKbopd, targetKbopd).map((c) => c * 0.9) as [number, number, number]),
+    () => samples.map(({ i, v }) => ribbonColorAt(i, v, commitmentKbopd, targetKbopd, TODAY_INDEX).map((c) => c * 0.9) as [number, number, number]),
     [samples, commitmentKbopd, targetKbopd],
   );
   const milestones = useMemo(() => ribbonMilestones(TRAJECTORY, values, PLAYBACK_END_INDEX), [values]);
+  // Dashed neon overlay along the forecast months, lifted just above the band edge.
+  const forecastEdge = useMemo(
+    () =>
+      samples
+        .filter(({ i }) => i >= TODAY_INDEX - 1e-6)
+        .map(({ i, v }) => [ribbonX(i, MONTHS) + RIBBON.width * 0.15, ribbonY(v) + 0.9, ribbonZ(i, MONTHS)] as V3),
+    [samples],
+  );
+  const forecastMid = Math.min(TRAJECTORY.length - 1, TODAY_INDEX + (TRAJECTORY.length - 1 - TODAY_INDEX) / 2);
 
   const mats = useMemo(
     () => ({
@@ -99,6 +109,7 @@ export function ProductionRibbon3D({ quality }: { quality: QualityProfile }) {
   const head = useRef<Mesh>(null);
   const edgeRef = useRef<{ geometry: { instanceCount: number }; material: { opacity: number } } | null>(null);
   const refLines = useRef<Array<{ material: { opacity: number } } | null>>([]);
+  const forecastRef = useRef<{ material: { opacity: number } } | null>(null);
   /** Draw-on progress 0→1, eased after the view opens. */
   const drawOn = useRef(0);
 
@@ -128,6 +139,8 @@ export function ProductionRibbon3D({ quality }: { quality: QualityProfile }) {
       e.material.opacity = b;
     }
     for (const l of refLines.current) if (l) l.material.opacity = b * 0.7;
+    const fl = forecastRef.current;
+    if (fl) fl.material.opacity = b * Math.max(0, Math.min(1, (f * TIMELINE_LAST_INDEX - TODAY_INDEX) / 1.5));
     const h = head.current;
     if (h) {
       const s = samples[Math.min(samples.length - 1, quads)];
@@ -173,6 +186,20 @@ export function ProductionRibbon3D({ quality }: { quality: QualityProfile }) {
           opacity={0}
         />
       ))}
+      {forecastEdge.length > 1 ? (
+        <Line
+          ref={forecastRef as never}
+          points={forecastEdge}
+          color="#ff4fd8"
+          lineWidth={2}
+          dashed
+          dashSize={0.9}
+          gapSize={0.7}
+          transparent
+          opacity={0}
+          toneMapped={false}
+        />
+      ) : null}
       <mesh ref={head}>
         <sphereGeometry args={[0.7, 16, 12]} />
         <meshBasicMaterial color="#fff4d6" toneMapped={false} />
@@ -197,21 +224,32 @@ export function ProductionRibbon3D({ quality }: { quality: QualityProfile }) {
               zIndexRange={[11, 0]}
               style={{ pointerEvents: 'none' }}
             >
-              <div className={`xv-milestone${m.index <= cursorIndex + 1e-6 ? ' on' : ''}${m.value >= targetKbopd - 1e-6 ? ' gold' : ''}`}>
+              <div
+                className={`xv-milestone${m.index <= cursorIndex + 1e-6 ? ' on' : ''}${m.index > TODAY_INDEX ? ' forecast' : m.value >= targetKbopd - 1e-6 ? ' gold' : ''}`}
+              >
                 <span>{m.tag}</span>
                 <b>{Math.round(m.value)}</b>
               </div>
             </Html>
           ))}
+          <Html
+            position={[ribbonX(forecastMid, MONTHS), ribbonY(values[Math.round(forecastMid)] ?? 0) + 8, ribbonZ(forecastMid, MONTHS)]}
+            center
+            zIndexRange={[11, 0]}
+            style={{ pointerEvents: 'none' }}
+          >
+            <div className="xv-forecast-label">Forecast · Dec to {TRAJECTORY[TRAJECTORY.length - 1].label}</div>
+          </Html>
           {TRAJECTORY.map((m, i) => (
             <Html key={m.key} position={[ribbonX(i, MONTHS) + 3, 0.6, ribbonZ(i, MONTHS)]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-              <div className={`xv-month${Math.round(cursorIndex) === i ? ' on' : ''}${m.kind === 'forecast' ? ' forecast' : ''}`}>{m.label}</div>
+              <div className={`xv-month${Math.round(cursorIndex) === i ? ' on' : ''}${i > TODAY_INDEX ? ' forecast' : ''}`}>{m.label}</div>
             </Html>
           ))}
           {asOf.index != null && cursorMonth ? (
             <Html position={[ribbonX(cursorIndex, MONTHS), ribbonY(cursorValue) - RIBBON.height - 2, ribbonZ(cursorIndex, MONTHS)]} center zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
               <div className="xv-cursor">
                 {cursorMonth.label} {cursorMonth.year} · <b>{cursorValue.toFixed(1)}</b> kbopd
+                {cursorIndex > TODAY_INDEX + 0.5 ? <span className="forecast-tag"> · Forecast</span> : null}
               </div>
             </Html>
           ) : null}

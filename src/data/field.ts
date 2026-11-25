@@ -18,18 +18,26 @@ export const CPF: Grid = [6.2, 6.5];
 export const AG25: Grid = [4.5, 8.7];
 
 /**
- * Official red-line photograph is an elongated 8-vertex chamfered outline
- * (aspect N/E ≈ 1.72), not a circle and not a 5-gon. See OPEN_QUESTIONS.concessionShape.
+ * Official red-line photograph is an elongated 8-vertex chamfered outline, not
+ * a circle and not a 5-gon. See OPEN_QUESTIONS.concessionShape.
+ *
+ * 25 Nov 2026 (BA review): the traced outline (aspect N/E 1.72) is stretched
+ * north to south by 1.17 and east to west by 1.04 about its centroid, so it
+ * reads as elongated as Gulmira's original map (aspect about 1.94), and it is
+ * moved 3.8 grid east and 0.8 south so every asset sits inside the line: all
+ * 32 wells, CPF-1, AG-25, the SPP solar farm and the export corridor, with at
+ * least 1.4 grid (about 5.5 world units) to spare. Asset positions are
+ * unchanged, so camera shots, highlights and clicks keep their targets.
  */
 export const CONCESSION: Grid[] = [
-  [-0.73, -5.732],
-  [8.344, -5.059],
-  [10.025, -2.483],
-  [10.025, 10.513],
-  [6.776, 15.554],
-  [-1.29, 15.666],
-  [-2.411, 11.409],
-  [-2.231, -2.259],
+  [2.898, -6.706],
+  [12.335, -5.918],
+  [14.083, -2.904],
+  [14.083, 12.301],
+  [10.704, 18.199],
+  [2.316, 18.33],
+  [1.15, 13.349],
+  [1.337, -2.642],
 ];
 
 /** SPP footprint from the satellite (stepped rectangle, western bay, northern step). Centroid ≈ 3.2 km east, 7.2 km north of CPF-1. */
