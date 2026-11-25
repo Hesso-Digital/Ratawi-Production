@@ -45,22 +45,7 @@
   transition: opacity 1s ease;
 }
 
-:root[data-time-of-day='day'] .reveal-vignette {
-  opacity: 0.8;
-}
 
-
-:root[data-time-of-day='day'] .scene-toggle {
-  background: rgba(8, 14, 22, 0.78);
-  border-color: rgba(16, 24, 36, 0.55);
-  color: #f4f7fb;
-  opacity: 0.92;
-}
-
-:root[data-time-of-day='day'] .scene-toggle:hover,
-:root[data-time-of-day='day'] .scene-toggle:focus-visible {
-  background: rgba(8, 14, 22, 0.92);
-}
 
 /* Quiet section name at the lower-left edge while the tour runs. */
 .field-tour-caption {

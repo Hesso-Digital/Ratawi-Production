@@ -7,6 +7,7 @@ import './styles/app.css';
 import './styles/reveal.css';
 import './styles/responsive.css';
 import './styles/forecast.css';
+import './styles/day.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

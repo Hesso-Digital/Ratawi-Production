@@ -145,7 +145,17 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
   const energyMaterial = useMemo(() => createEnergyFlowMaterial({ crackle: rich }), [rich]);
   // Flows off (night or day): plain steel pipes. Day with flows on: gold / graphite linework.
   const steelMaterial = useMemo(() => new MeshStandardMaterial({ color: STEEL, metalness: 0.75, roughness: 0.32, envMapIntensity: 1.2 }), []);
-  const lineMaterial = useMemo(() => new MeshStandardMaterial({ vertexColors: true, metalness: 0.55, roughness: 0.4, transparent: true, opacity: 1 }), []);
+  const lineMaterial = useMemo(() => {
+    const m = new MeshStandardMaterial({ vertexColors: true, metalness: 0.55, roughness: 0.4, transparent: true, opacity: 1 });
+    // Day only (this material is shown by day): a slight self glow so gold and graphite lines still pop in sunlight.
+    m.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <emissivemap_fragment>',
+        '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vColor * 0.35;',
+      );
+    };
+    return m;
+  }, []);
 
   const energyRef = useRef<Mesh>(null);
   const pipesRef = useRef<Mesh>(null);
@@ -167,7 +177,7 @@ export function FlowLines({ quality }: { quality: QualityProfile }) {
     const u = energyMaterial.uniforms;
     u.uTime.value = t;
     // Additive light washes out on bright sand: keep a lighter energy layer by day.
-    u.uOpacity.value = 1 - 0.55 * day;
+    u.uOpacity.value = 1 - 0.3 * day;
     const areaId = exploreStore.get().areaId;
     const gains = u.uGain.value as number[];
     gains[G.oilN] = focusGain(areaId, 'oil', SAMPLE_NORTH);

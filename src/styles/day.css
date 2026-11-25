@@ -1,0 +1,602 @@
+/*
+ * Day theme: light frosted glass over a sunlit field.
+ * Night styles live in the other sheets and stay untouched; every rule here is
+ * scoped to :root[data-time-of-day='day'] and this sheet loads last.
+ */
+:root[data-time-of-day='day'] {
+  --day-glass: rgba(255, 252, 246, 0.74);
+  --day-glass-strong: rgba(255, 252, 246, 0.9);
+  --day-glass-border: rgba(92, 72, 40, 0.16);
+  --day-glass-shadow: 0 10px 28px rgba(74, 52, 20, 0.16), 0 2px 6px rgba(74, 52, 20, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --day-blur: blur(16px) saturate(1.35);
+  --day-ink: #142030;
+  --day-ink-2: #3b4a5a;
+  --day-ink-3: #5d6b78;
+  --day-cyan: #00809a;
+  --day-gold: #a46b00;
+  --day-red: #c62828;
+
+  /* Retune the shared tokens so components that read them flip to dark ink. */
+  --ratawi-text: #2c3a48;
+  --ratawi-text-strong: #142030;
+  --ratawi-muted: #5d6b78;
+  --ratawi-subtle: rgba(60, 74, 88, 0.6);
+  --ratawi-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%);
+  --ratawi-glass-border: rgba(92, 72, 40, 0.16);
+  --ratawi-border-subtle: rgba(40, 50, 70, 0.1);
+  /* Accents tuned for contrast on light glass. */
+  --ratawi-cyan: #00a6c4;
+  --ratawi-gold: #b87a00;
+  --ratawi-gold-deep: #8f5c00;
+  --ratawi-success: #00875a;
+  --ratawi-critical: #c62828;
+  --ratawi-export: #138a6a;
+}
+
+:root[data-time-of-day='day'] .oil-compare small.down,
+:root[data-time-of-day='day'] .field-error {
+  color: var(--day-red);
+}
+
+/* ---------- Shared frosted glass surface ---------- */
+:root[data-time-of-day='day'] .reveal-brand,
+:root[data-time-of-day='day'] .reveal-hero,
+:root[data-time-of-day='day'] .kpi-drawer,
+:root[data-time-of-day='day'] .explore-panel,
+:root[data-time-of-day='day'] .admin-drawer,
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail,
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline:not(.hall),
+:root[data-time-of-day='day'] .reveal-kpi-sheet {
+  background: var(--ratawi-sheen), var(--day-glass);
+  border: 1px solid var(--day-glass-border);
+  box-shadow: var(--day-glass-shadow);
+  backdrop-filter: var(--day-blur);
+  -webkit-backdrop-filter: var(--day-blur);
+  color: var(--day-ink);
+  text-shadow: none;
+}
+
+/* ---------- Header card and hero card ---------- */
+:root[data-time-of-day='day'] .reveal-hero {
+  padding: 8px 16px 14px 14px;
+  margin-left: -14px;
+  border-radius: 16px;
+}
+
+:root[data-time-of-day='day'] .reveal-brand {
+  padding: 8px 14px 10px;
+  margin-left: -14px;
+  border-radius: 14px;
+  width: max-content;
+}
+
+:root[data-time-of-day='day'] .reveal-brand *,
+:root[data-time-of-day='day'] .reveal-hero * {
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .reveal-brand,
+:root[data-time-of-day='day'] .reveal-clock,
+:root[data-time-of-day='day'] .reveal-hero .label,
+:root[data-time-of-day='day'] .reveal-hero .big .u {
+  color: var(--day-ink-2);
+}
+
+:root[data-time-of-day='day'] .reveal-hero .big .n,
+:root[data-time-of-day='day'] .kpi-drawer .big {
+  color: var(--day-ink);
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .reveal-hud.gold .reveal-hero .big .n {
+  background: linear-gradient(180deg, #c98a10 0%, #a46b00 55%, #7a4d00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:root[data-time-of-day='day'] .reveal-hero .scale .track {
+  background: rgba(20, 32, 48, 0.12);
+}
+
+:root[data-time-of-day='day'] .reveal-hero .scale .fill {
+  background: linear-gradient(90deg, rgba(0, 128, 154, 0.25), #00a6c4);
+}
+
+:root[data-time-of-day='day'] .reveal-hud.gold .reveal-hero .scale .fill {
+  background: linear-gradient(90deg, rgba(196, 136, 0, 0.25), #d89a12);
+}
+
+:root[data-time-of-day='day'] .reveal-hero .scale .tick {
+  background: rgba(20, 32, 48, 0.45);
+}
+
+:root[data-time-of-day='day'] .reveal-hero .status {
+  border-color: rgba(0, 128, 154, 0.45);
+  background: rgba(0, 166, 196, 0.1);
+  color: var(--day-cyan);
+}
+
+:root[data-time-of-day='day'] .reveal-hud.gold .reveal-hero .status {
+  border-color: rgba(164, 107, 0, 0.5);
+  background: rgba(216, 154, 18, 0.14);
+  color: var(--day-gold);
+}
+
+:root[data-time-of-day='day'] .reveal-step .dot {
+  background: #fffaf0;
+  border-color: rgba(20, 32, 48, 0.4);
+}
+
+:root[data-time-of-day='day'] .reveal-caption,
+:root[data-time-of-day='day'] .reveal-count .n {
+  color: var(--day-ink);
+  text-shadow: 0 0 14px rgba(255, 252, 246, 0.9);
+}
+
+:root[data-time-of-day='day'] .reveal-count::before {
+  background: radial-gradient(circle, rgba(255, 252, 246, 0.8) 35%, rgba(255, 252, 246, 0) 70%);
+}
+
+:root[data-time-of-day='day'] .reveal-count .chips b {
+  border-color: rgba(164, 107, 0, 0.45);
+  color: var(--day-ink-2);
+}
+
+:root[data-time-of-day='day'] .reveal-count .chips b.on {
+  background: rgba(216, 154, 18, 0.2);
+  color: var(--day-gold);
+  box-shadow: none;
+}
+
+/* ---------- Bottom KPI dock ---------- */
+:root[data-time-of-day='day'] .stage::after {
+  box-shadow: inset 0 0 160px rgba(90, 66, 30, 0.14);
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 120px);
+  mask-image: linear-gradient(to top, transparent 0, #000 120px);
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-rail {
+  border-radius: 14px;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .k,
+:root[data-time-of-day='day'] .reveal-kpi .k {
+  color: var(--day-ink-3);
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v,
+:root[data-time-of-day='day'] .reveal-kpi .v {
+  color: var(--day-ink);
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .v small,
+:root[data-time-of-day='day'] .reveal-bottom-dock .reveal-kpi .s,
+:root[data-time-of-day='day'] .reveal-kpi .s {
+  color: var(--day-ink-2);
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .reveal-kpi.clickable:hover,
+:root[data-time-of-day='day'] .reveal-kpi.clickable:focus-visible {
+  background: linear-gradient(180deg, rgba(0, 166, 196, 0.1), transparent 80%);
+}
+
+:root[data-time-of-day='day'] .reveal-kpi.open {
+  background: linear-gradient(180deg, rgba(0, 166, 196, 0.16), transparent 85%);
+  box-shadow: inset 0 2px 0 #00a6c4;
+}
+
+:root[data-time-of-day='day'] .reveal-kpi.related {
+  background: linear-gradient(180deg, rgba(216, 154, 18, 0.16), transparent 85%);
+  box-shadow: inset 0 2px 0 #d89a12;
+}
+
+:root[data-time-of-day='day'] .reveal-bottom-dock .oil-timeline.hall {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-time-of-day='day'] .reveal-hud .oil-timeline.hall .oil-timeline-title,
+:root[data-time-of-day='day'] .oil-timeline-title,
+:root[data-time-of-day='day'] .oil-month {
+  color: var(--day-ink-3);
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .oil-month.on {
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .oil-month.forecast,
+:root[data-time-of-day='day'] .xv-month.forecast {
+  color: #c8189f;
+}
+
+:root[data-time-of-day='day'] .reveal-kpi-toggle {
+  background: var(--day-glass-strong);
+  border-color: var(--day-glass-border);
+  color: var(--day-ink);
+}
+
+/* KPI tooltips, chart tips and chip tips */
+:root[data-time-of-day='day'] .reveal-kpi .kpi-tip,
+:root[data-time-of-day='day'] .lc-tip,
+:root[data-time-of-day='day'] .chip-tip {
+  background: var(--day-glass-strong);
+  border: 1px solid var(--day-glass-border);
+  box-shadow: 0 8px 22px rgba(74, 52, 20, 0.18);
+  backdrop-filter: var(--day-blur);
+  -webkit-backdrop-filter: var(--day-blur);
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .lc-tip b,
+:root[data-time-of-day='day'] .wells-head b {
+  color: var(--day-ink);
+}
+
+/* ---------- Drawers, panels, charts ---------- */
+:root[data-time-of-day='day'] .kpi-drawer.related {
+  border-color: rgba(164, 107, 0, 0.45);
+}
+
+:root[data-time-of-day='day'] .kpi-drawer .eyebrow,
+:root[data-time-of-day='day'] .explore-panel .eyebrow,
+:root[data-time-of-day='day'] .scrub-read .link {
+  color: var(--day-cyan);
+}
+
+:root[data-time-of-day='day'] .explore-panel dd,
+:root[data-time-of-day='day'] .explore-close:hover {
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .scrub-read b,
+:root[data-time-of-day='day'] .scrub-read em,
+:root[data-time-of-day='day'] .bd-row.on b {
+  color: var(--day-gold);
+}
+
+:root[data-time-of-day='day'] .lc-tick,
+:root[data-time-of-day='day'] .gauge-unit {
+  fill: var(--day-ink-3);
+}
+
+:root[data-time-of-day='day'] .gauge-value {
+  fill: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .lc-legend text:first-of-type {
+  fill: var(--day-ink-2);
+}
+
+:root[data-time-of-day='day'] .explore-related .chip,
+:root[data-time-of-day='day'] .kpi-drawer .chip,
+:root[data-time-of-day='day'] .oil-timeline-actions .chip,
+:root[data-time-of-day='day'] .admin-toggle .chip,
+:root[data-time-of-day='day'] .op-rehearsal .chip {
+  border-color: rgba(0, 128, 154, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+  color: #005f73;
+}
+
+:root[data-time-of-day='day'] .oil-timeline-actions .chip.on,
+:root[data-time-of-day='day'] .admin-toggle .chip.on {
+  border-color: #00809a;
+  background: rgba(0, 166, 196, 0.14);
+  color: var(--day-ink);
+  box-shadow: none;
+}
+
+:root[data-time-of-day='day'] .explore-status {
+  border-color: rgba(0, 128, 154, 0.45);
+  color: #005f73;
+}
+
+:root[data-time-of-day='day'] .explore-status.gold {
+  border-color: rgba(164, 107, 0, 0.5);
+  color: #7a4d00;
+}
+
+:root[data-time-of-day='day'] .explore-status.gas {
+  border-color: rgba(110, 70, 200, 0.45);
+  color: #5a35a8;
+}
+
+:root[data-time-of-day='day'] .explore-status.standby {
+  border-color: rgba(190, 100, 10, 0.45);
+  color: #8a4a00;
+}
+
+:root[data-time-of-day='day'] .well-chip {
+  border-color: rgba(0, 128, 154, 0.3);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .explore-hint {
+  background: var(--day-glass-strong);
+  border: 1px solid var(--day-glass-border);
+  color: var(--day-ink);
+  box-shadow: 0 6px 18px rgba(74, 52, 20, 0.14);
+}
+
+/* ---------- Right side area nav: light glass rail with dark ink ---------- */
+:root[data-time-of-day='day'] .explore-bar {
+  opacity: 1;
+  padding: 12px 12px 12px 14px;
+  border-radius: 16px;
+  background: var(--ratawi-sheen), var(--day-glass);
+  border: 1px solid var(--day-glass-border);
+  box-shadow: var(--day-glass-shadow);
+  backdrop-filter: var(--day-blur);
+  -webkit-backdrop-filter: var(--day-blur);
+  pointer-events: auto;
+}
+
+:root[data-time-of-day='day'] .explore-nav-item {
+  color: var(--day-ink-2);
+  text-shadow: none;
+  border-radius: 8px;
+}
+
+:root[data-time-of-day='day'] .explore-nav-label {
+  font-weight: 500;
+}
+
+:root[data-time-of-day='day'] .explore-nav-num {
+  color: rgba(20, 32, 48, 0.5);
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.mode .explore-nav-label,
+:root[data-time-of-day='day'] .explore-nav-item kbd {
+  color: var(--day-ink-3);
+}
+
+:root[data-time-of-day='day'] .explore-nav-item:hover,
+:root[data-time-of-day='day'] .explore-nav-item:focus-visible,
+:root[data-time-of-day='day'] .explore-nav-item:hover .explore-nav-label,
+:root[data-time-of-day='day'] .explore-nav-item:focus-visible .explore-nav-label {
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .explore-nav-item:hover .explore-nav-num,
+:root[data-time-of-day='day'] .explore-nav-item:focus-visible .explore-nav-num {
+  color: rgba(20, 32, 48, 0.78);
+}
+
+/* Active area: tinted row, dark label, teal number and accent bar. */
+:root[data-time-of-day='day'] .explore-nav-item.on {
+  color: var(--day-ink);
+  background: linear-gradient(270deg, rgba(0, 166, 196, 0.16), rgba(0, 166, 196, 0.02));
+  box-shadow: inset -3px 0 0 #00a6c4;
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-label {
+  color: var(--day-ink);
+  font-weight: 600;
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-num {
+  color: var(--day-cyan);
+  font-weight: 500;
+  text-shadow: none;
+}
+
+:root[data-time-of-day='day'] .explore-nav-item.on .explore-nav-mark,
+:root[data-time-of-day='day'] .explore-nav-item:focus-visible .explore-nav-mark {
+  background: #00a6c4;
+  box-shadow: none;
+}
+
+/* ---------- 3D labels and pills ---------- */
+:root[data-time-of-day='day'] .area-marker,
+:root[data-time-of-day='day'] .reveal-tag {
+  background: var(--day-glass-strong);
+  border: 1px solid var(--day-glass-border);
+  color: var(--day-ink);
+  text-shadow: none;
+  box-shadow: 0 4px 14px rgba(74, 52, 20, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+:root[data-time-of-day='day'] .reveal-tag .t {
+  color: var(--day-ink-2);
+}
+
+:root[data-time-of-day='day'] .area-marker .n {
+  background: rgba(0, 166, 196, 0.14);
+  color: var(--day-cyan);
+}
+
+:root[data-time-of-day='day'] .area-marker:hover,
+:root[data-time-of-day='day'] .area-marker.on {
+  border-color: #c98a10;
+  color: var(--day-ink);
+  box-shadow: 0 4px 16px rgba(164, 107, 0, 0.28);
+}
+
+:root[data-time-of-day='day'] .area-marker.on .n,
+:root[data-time-of-day='day'] .area-marker:hover .n {
+  background: rgba(216, 154, 18, 0.2);
+  color: var(--day-gold);
+}
+
+:root[data-time-of-day='day'] .scene-tag {
+  color: var(--day-ink);
+  background: var(--day-glass-strong);
+  border-color: var(--day-glass-border);
+  box-shadow: 0 3px 10px rgba(74, 52, 20, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+:root[data-time-of-day='day'] .ribbon-month {
+  color: var(--day-ink-2);
+  text-shadow: 0 0 8px rgba(255, 252, 246, 0.9);
+}
+
+:root[data-time-of-day='day'] .ribbon-callout {
+  color: var(--day-ink);
+  text-shadow: 0 0 10px rgba(255, 252, 246, 0.95);
+}
+
+:root[data-time-of-day='day'] .ribbon-callout .m {
+  color: var(--day-ink-3);
+}
+
+:root[data-time-of-day='day'] .ribbon-callout.gold .v {
+  color: var(--day-gold);
+}
+
+:root[data-time-of-day='day'] .forecast-tag,
+:root[data-time-of-day='day'] .xv-forecast-label {
+  color: #c8189f;
+  text-shadow: none;
+  background: rgba(255, 252, 246, 0.85);
+}
+
+:root[data-time-of-day='day'] .xv-cursor {
+  color: var(--day-ink);
+  background: var(--day-glass-strong);
+}
+
+/* ---------- Top right: Current / AGUP online switch and menu ---------- */
+:root[data-time-of-day='day'] .agup-switch {
+  background: var(--day-glass-strong);
+  border-color: var(--day-glass-border);
+  color: var(--day-ink-3);
+  box-shadow: 0 4px 14px rgba(74, 52, 20, 0.14);
+  backdrop-filter: var(--day-blur);
+  -webkit-backdrop-filter: var(--day-blur);
+}
+
+:root[data-time-of-day='day'] .agup-switch:not(.on) .agup-switch-label.off {
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .agup-switch.on .agup-switch-label.on {
+  color: var(--day-gold);
+}
+
+:root[data-time-of-day='day'] .agup-switch-track {
+  background: rgba(0, 166, 196, 0.14);
+  border-color: rgba(0, 128, 154, 0.5);
+}
+
+:root[data-time-of-day='day'] .agup-switch-track i {
+  background: #00a6c4;
+  box-shadow: 0 1px 3px rgba(0, 60, 80, 0.4);
+}
+
+:root[data-time-of-day='day'] .agup-switch.on .agup-switch-track {
+  background: rgba(216, 154, 18, 0.2);
+  border-color: rgba(164, 107, 0, 0.6);
+}
+
+:root[data-time-of-day='day'] .agup-switch.on .agup-switch-track i {
+  background: #d89a12;
+  box-shadow: 0 1px 3px rgba(100, 60, 0, 0.4);
+}
+
+:root[data-time-of-day='day'] .admin-menu-btn {
+  color: var(--day-ink-2);
+  background: var(--day-glass);
+  box-shadow: 0 3px 10px rgba(74, 52, 20, 0.12);
+}
+
+:root[data-time-of-day='day'] .admin-menu-btn:hover,
+:root[data-time-of-day='day'] .admin-menu-btn:focus-visible {
+  color: var(--day-ink);
+  background: var(--day-glass-strong);
+}
+
+:root[data-time-of-day='day'] .admin-avatar {
+  background: rgba(0, 166, 196, 0.14);
+  color: #005f73;
+}
+
+:root[data-time-of-day='day'] .admin-operator-link {
+  color: #005f73;
+}
+
+:root[data-time-of-day='day'] .admin-hint kbd {
+  background: rgba(0, 166, 196, 0.12);
+  color: #005f73;
+}
+
+:root[data-time-of-day='day'] .op-grid input,
+:root[data-time-of-day='day'] .op-field select,
+:root[data-time-of-day='day'] .op-select,
+:root[data-time-of-day='day'] .pin-gate input {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--day-ink);
+  border-color: rgba(40, 50, 70, 0.2);
+}
+
+/* ---------- Scene toggles, compass, tour caption ---------- */
+:root[data-time-of-day='day'] .scene-toggle {
+  background: var(--day-glass);
+  border-color: var(--day-glass-border);
+  color: var(--day-ink-2);
+  box-shadow: 0 3px 10px rgba(74, 52, 20, 0.12);
+  backdrop-filter: var(--day-blur);
+  -webkit-backdrop-filter: var(--day-blur);
+  opacity: 1;
+}
+
+:root[data-time-of-day='day'] .scene-toggle[data-state='off'] {
+  color: var(--day-ink-3);
+}
+
+:root[data-time-of-day='day'] .scene-toggle:hover,
+:root[data-time-of-day='day'] .scene-toggle:focus-visible,
+:root[data-time-of-day='day'] .scene-toggle[data-state='active'],
+:root[data-time-of-day='day'] .scene-toggle[data-field-tour-control][aria-pressed='true'] {
+  background: var(--day-glass-strong);
+  border-color: rgba(164, 107, 0, 0.55);
+  color: var(--day-gold);
+}
+
+:root[data-time-of-day='day'] button.reveal-compass {
+  filter: drop-shadow(0 2px 6px rgba(74, 52, 20, 0.25));
+}
+
+:root[data-time-of-day='day'] button.reveal-compass svg circle {
+  fill: rgba(255, 252, 246, 0.82);
+  stroke: rgba(40, 50, 70, 0.25);
+}
+
+/* Compass needle: north tip in deep red, tail in ink. */
+:root[data-time-of-day='day'] button.reveal-compass svg path:first-child {
+  fill: var(--day-red);
+}
+
+:root[data-time-of-day='day'] button.reveal-compass svg path:last-child {
+  fill: rgba(20, 32, 48, 0.45);
+}
+
+:root[data-time-of-day='day'] button.reveal-compass svg text,
+:root[data-time-of-day='day'] button.reveal-compass .lbl {
+  fill: var(--day-ink);
+  color: var(--day-ink);
+}
+
+:root[data-time-of-day='day'] .field-tour-caption {
+  color: rgba(20, 32, 48, 0.6);
+  text-shadow: 0 1px 3px rgba(255, 250, 240, 0.7);
+}
+
+/* The night vignette is dark; by day keep only a faint warm edge haze. */
+:root[data-time-of-day='day'] .reveal-vignette {
+  opacity: 0.18;
+}

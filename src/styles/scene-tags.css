@@ -67,12 +67,6 @@
   background: linear-gradient(rgba(255, 80, 90, 0.5), rgba(255, 80, 90, 0));
 }
 /* Day (sand model): light paper chips with dark ink. */
-:root[data-time-of-day='day'] .scene-tag {
-  color: #1d232c;
-  background: rgba(255, 252, 246, 0.82);
-  border-color: rgba(40, 50, 70, 0.18);
-  box-shadow: 0 2px 8px rgba(60, 40, 10, 0.12);
-}
 :root[data-time-of-day='day'] .scene-tag::after {
   background: linear-gradient(rgba(40, 50, 70, 0.45), rgba(40, 50, 70, 0));
 }

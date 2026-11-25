@@ -67,7 +67,19 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
         .replace('#include <common>', '#include <common>\nvarying vec3 vWp;')
         .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vWp;\nuniform float uDay;')
+        .replace(
+          '#include <common>',
+          `#include <common>
+        varying vec3 vWp;
+        uniform float uDay;
+        float rHash2(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
+        float rNoise(vec2 q) {
+          vec2 i = floor(q);
+          vec2 f = fract(q);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(rHash2(i), rHash2(i + vec2(1.0, 0.0)), u.x), mix(rHash2(i + vec2(0.0, 1.0)), rHash2(i + vec2(1.0, 1.0)), u.x), u.y);
+        }`,
+        )
         .replace(
           '#include <color_fragment>',
           `#include <color_fragment>
@@ -77,9 +89,26 @@ export function FieldTerrain({ quality }: { quality: QualityProfile }) {
           // Day (concept 04): warm off-white sand clay; the texture contrast is softened so the relief reads through light and shadow.
           float l = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
           vec3 clay = mix(vec3(0.50, 0.41, 0.29), vec3(0.60, 0.50, 0.37), smoothstep(0.55, 0.85, l)) * (0.86 + 0.22 * l);
-          float field = smoothstep(14.0, 0.0, length(vWp.xz) - 34.0);
-          clay *= mix(1.0, 1.04, field);
-          diffuseColor.rgb = mix(night, mix(diffuseColor.rgb, clay, 0.9), uDay);
+          // Day ground texture: compacted sand with gravel patches and wind streaks
+          // at three scales, so the field is not one flat colour.
+          vec2 p = vWp.xz;
+          float n1 = rNoise(p * 0.08) * 0.65 + rNoise(p * 0.21 + 5.0) * 0.35;
+          float n2 = rNoise(p * 0.35 + 11.0);
+          float n3 = rNoise(vec2(p.x * 0.9 + p.y * 0.25, p.y * 0.12));
+          float tex = (n1 - 0.5) * 0.16 + (n2 - 0.5) * 0.10 + (n3 - 0.5) * 0.08;
+          clay *= 1.0 + tex;
+          clay = mix(clay, clay * vec3(0.86, 0.84, 0.86), smoothstep(0.62, 0.8, n1) * 0.6);
+          // Sun wash: brighter and warmer toward the south-east sun, cooler and
+          // dimmer to the north-west, crossed by soft diagonal light shafts.
+          vec2 sunDir = normalize(vec2(0.79, 0.61));
+          float along = dot(p, sunDir);
+          float across = dot(p, vec2(-sunDir.y, sunDir.x));
+          float wash = smoothstep(-130.0, 110.0, along);
+          float shafts = 0.5 + 0.5 * sin(across * 0.045 + rNoise(p * 0.01) * 2.5);
+          shafts = smoothstep(0.35, 1.0, shafts);
+          clay *= mix(0.84, 1.1, wash) * (0.97 + 0.07 * shafts);
+          clay = mix(clay * vec3(0.94, 0.97, 1.04), clay * vec3(1.05, 1.0, 0.92), wash);
+          diffuseColor.rgb = mix(night, mix(diffuseColor.rgb, clay, 0.82), uDay);
         }`,
         )
         .replace(
